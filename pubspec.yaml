@@ -18,6 +18,8 @@ dependencies:
   dio: ^5.9.0
   # Fpdart: Để xử lý lỗi chuyên nghiệp (Either<Left, Right>) thay vì try-catch lồng nhau
   fpdart: ^1.2.0
+  # Connectivity_plus: Kiểm tra kết nối internet
+  connectivity_plus: ^6.1.3
   # --- 3. DATA LAYER: Models & Storage (Cho thư mục data/models) ---
   # Json_annotation: Giúp tạo code parse JSON tự động
   json_annotation: ^4.9.0
