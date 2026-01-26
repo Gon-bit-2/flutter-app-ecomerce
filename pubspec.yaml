@@ -1,0 +1,60 @@
+name: app_fe_ecomerce
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk:
+      flutter
+      # --- 1. CORE: Dependency Injection (Cho thư mục lib/core/di) ---
+  get_it: ^9.2.0
+  injectable: ^2.7.1+4
+  # --- 2. CORE: Network & Error Handling (Cho thư mục lib/core/network & error) ---
+  # Dio: Để gọi API (Login, Get Products...)
+  dio: ^5.9.0
+  # Fpdart: Để xử lý lỗi chuyên nghiệp (Either<Left, Right>) thay vì try-catch lồng nhau
+  fpdart: ^1.2.0
+  # --- 3. DATA LAYER: Models & Storage (Cho thư mục data/models) ---
+  # Json_annotation: Giúp tạo code parse JSON tự động
+  json_annotation: ^4.9.0
+  # Shared_preferences: Lưu Token đăng nhập xuống máy
+  shared_preferences: ^2.5.4
+  # --- 4. PRESENTATION LAYER: State Management (Cho thư mục presentation/bloc) ---
+  # Flutter_bloc: Quản lý trạng thái (Loading, Success, Error)
+  flutter_bloc: ^9.1.1
+  # Equatable: So sánh các object State để tránh render lại không cần thiết
+  equatable: ^2.0.8
+  # --- 5. UI & ROUTING (Cho thư mục presentation/pages & app_router.dart) ---
+  # Go_router: Điều hướng màn hình chuyên nghiệp
+  go_router: ^17.0.1
+  # Google_fonts: Font chữ đẹp
+  google_fonts: ^8.0.0
+  # Cached_network_image: Load ảnh sản phẩm và lưu cache (đỡ tốn 4G của user)
+  cached_network_image: ^3.4.1
+  # Flutter_svg: Hiển thị icon vector sắc nét
+  flutter_svg: ^2.2.3
+  # Flutter_screenutil: Giúp UI co giãn theo kích thước màn hình (rất quan trọng)
+  flutter_screenutil: ^5.9.3
+  # Intl: Format tiền tệ (VND), ngày tháng
+  intl: ^0.20.2
+  # Fluttertoast: Hiển thị thông báo nhỏ
+  fluttertoast: ^9.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # --- CODE GENERATION (Công cụ sinh code tự động) ---
+  # Build_runner: "Tổng chỉ huy" chạy các tool sinh code bên dưới
+  build_runner: ^2.10.5
+  # Sinh code cho Dependency Injection (Injectable)
+  injectable_generator: ^2.12.0
+  # Sinh code cho Model (fromJson/toJson)
+  json_serializable: ^6.11.4
+flutter:
+  uses-material-design: true
