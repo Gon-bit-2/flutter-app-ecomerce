@@ -2,23 +2,22 @@
 
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../constants/app_constants.dart';
+import '../../features/auth/data/datasources/auth_local_datasource.dart';
 
 // Interceptor tự động thêm token vào mỗi request
 @injectable
 class AuthInterceptor extends Interceptor {
-  final SharedPreferences _prefs;
+  final AuthLocalDataSource _localDataSource;
 
-  AuthInterceptor(this._prefs);
+  AuthInterceptor(this._localDataSource);
 
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Lấy token từ SharedPreferences
-    final token = _prefs.getString(AppConstants.accessTokenKey);
+    // Lấy token từ storage
+    final token = await _localDataSource.getAccessToken();
 
     // Nếu có token thì thêm vào header
     if (token != null && token.isNotEmpty) {
@@ -30,16 +29,11 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     // Xử lý lỗi 401 Unauthorized (token hết hạn)
     if (err.response?.statusCode == 401) {
       // TODO: Implement refresh token logic here
-      // 1. Gọi API refresh token
-      // 2. Lưu token mới
-      // 3. Retry request ban đầu
-
-      // Tạm thời: xóa token và chuyển về màn hình login
-      _prefs.remove(AppConstants.accessTokenKey);
+      await _localDataSource.clearTokens();
     }
 
     handler.next(err);

@@ -1,5 +1,6 @@
 // lib/main.dart
 
+import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Để UI co giãn
 import 'injection_container.dart'; // Import file cấu hình DI
@@ -33,9 +34,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
             useMaterial3: true,
           ),
-          home: const Scaffold(
-            body: Center(child: Text("Setup xong! Sẵn sàng chiến đấu!")),
-          ),
+          home: const LoginPage(),
         );
       },
     );
