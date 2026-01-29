@@ -22,10 +22,7 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<AuthBloc>(),
-      child: const LoginView(),
-    );
+    return const LoginView();
   }
 }
 
@@ -116,7 +113,7 @@ class _LoginViewState extends State<LoginView> {
                   backgroundColor: AppColors.success,
                 ),
               );
-              // context.go('/home'); // Uncomment when routing is ready
+              Navigator.pop(context);
             }
             if (state is AuthGoogleUrlSuccess) {
               final uri = Uri.parse(state.url);

@@ -213,10 +213,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> setup2fa() async {
+  Future<Either<Failure, Map<String, dynamic>>> setup2FA() async {
     try {
-      await remoteDataSource.setup2fa();
-      return const Right(null);
+      final result = await remoteDataSource.setup2FA();
+      return Right(result);
     } on DioException catch (e) {
       return Left(_handleError(e));
     } catch (e) {
@@ -225,12 +225,12 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> disable2fa({
+  Future<Either<Failure, void>> disable2FA({
     String? totpCode,
     String? code,
   }) async {
     try {
-      await remoteDataSource.disable2fa(totpCode: totpCode, code: code);
+      await remoteDataSource.disable2FA(totpCode: totpCode, code: code);
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleError(e));

@@ -77,6 +77,23 @@ class AuthLoginStarted extends AuthEvent {
 // Sự kiện: Người dùng bấm Logout
 class AuthLogoutRequested extends AuthEvent {}
 
+// Sự kiện: Setup 2FA
+class AuthSetup2FAStarted extends AuthEvent {}
+
+// Sự kiện: Disable 2FA
+class AuthDisable2FAStarted extends AuthEvent {
+  final String? totpCode;
+  final String? code;
+
+  const AuthDisable2FAStarted({this.totpCode, this.code});
+
+  @override
+  List<Object> get props => [];
+}
+
+// Sự kiện: Check authentication status khi app khởi động
+class AuthCheckStatus extends AuthEvent {}
+
 // Sự kiện: Yêu cầu gửi OTP
 class AuthSendOtpStarted extends AuthEvent {
   final String email;

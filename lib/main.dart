@@ -1,9 +1,13 @@
 // lib/main.dart
 
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
+import 'package:app_fe_ecomerce/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Để UI co giãn
 import 'injection_container.dart'; // Import file cấu hình DI
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'features/auth/presentation/bloc/auth/auth_bloc.dart';
 
 void main() async {
   // 1. Đảm bảo Flutter Binding được khởi tạo trước
@@ -27,14 +31,40 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          title: 'E-Commerce App',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-            useMaterial3: true,
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthBloc>(
+              create: (context) => GetIt.I<AuthBloc>()..add(AuthCheckStatus()),
+            ),
+          ],
+          child: MaterialApp(
+            title: 'E-Commerce App',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF1A94FF),
+              ),
+              primaryColor: const Color(0xFF1A94FF),
+              useMaterial3: true,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Color(0xFF1A94FF),
+                foregroundColor: Colors.white,
+              ),
+            ),
+            home: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                if (state is AuthSuccess) {
+                  return const HomePage();
+                } else if (state is AuthUnauthenticated) {
+                  return const LoginPage();
+                }
+                // Loading or initial state
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              },
+            ),
           ),
-          home: const LoginPage(),
         );
       },
     );

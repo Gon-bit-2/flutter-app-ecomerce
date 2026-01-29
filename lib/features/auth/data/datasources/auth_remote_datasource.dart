@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:injectable/injectable.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/dio_client.dart';
@@ -50,8 +51,8 @@ abstract class AuthRemoteDataSource {
     required String newPassword,
     required String confirmNewPassword,
   }); // New
-  Future<void> setup2fa(); // New
-  Future<void> disable2fa({String? totpCode, String? code}); // New
+  Future<Map<String, dynamic>> setup2FA(); // Returns QR code data
+  Future<void> disable2FA({String? totpCode, String? code});
   Future<UserModel> getProfile();
 }
 
@@ -183,8 +184,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<String> googleLink() async {
     final response = await _dioClient.get(AppConstants.googleLinkEndpoint);
-    return response.data['url']; // Assuming { "url": "..." } or direct string?
-    // API_LIST says: GET /auth/google-link, No Body. Response? Usually JSON with url.
+    if (response.data is String) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(response.data);
+        return data['url'];
+      } catch (e) {
+        // Fallback: maybe the string itself is the url? Unlikely given the JSON format.
+        // Or if jsonDecode fails
+        throw Exception(
+          "Failed to parse Google Link response: ${response.data}",
+        );
+      }
+    }
+    // If it's already a Map (Dio handled it)
+    if (response.data is Map<String, dynamic>) {
+      return response.data['url'];
+    }
+    // Fallback for dynamic/other types
+    return (response.data as Map)['url'];
   }
 
   @override
@@ -215,12 +232,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> setup2fa() async {
-    await _dioClient.post(AppConstants.setup2faEndpoint);
+  Future<Map<String, dynamic>> setup2FA() async {
+    final response = await _dioClient.post(
+      AppConstants.setup2faEndpoint,
+      data: {},
+    );
+    return response.data as Map<String, dynamic>;
   }
 
   @override
-  Future<void> disable2fa({String? totpCode, String? code}) async {
+  Future<void> disable2FA({String? totpCode, String? code}) async {
     await _dioClient.post(
       AppConstants.disable2faEndpoint,
       data: {

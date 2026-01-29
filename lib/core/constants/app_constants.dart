@@ -39,4 +39,9 @@ class AppConstants {
   static const String forgotPasswordEndpoint = '/auth/forgot-password';
   static const String setup2faEndpoint = '/auth/2fa/setup';
   static const String disable2faEndpoint = '/auth/2fa/disable';
+
+  // Product & Category Endpoints
+  static const String categoriesEndpoint = '/categories';
+  static const String productsEndpoint = '/product';
+  static const String manageProductsEndpoint = '/manage-product/products';
 }

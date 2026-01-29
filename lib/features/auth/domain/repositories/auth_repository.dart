@@ -59,13 +59,10 @@ abstract class AuthRepository {
   });
 
   // Setup 2FA
-  Future<Either<Failure, void>>
-  setup2fa(); // Returns secret/QR? API list says "POST /auth/2fa/setup", response {} -> wait. API LIST says "Headers: Authorization". Response: `{}`. So void.
-  // Actually, usually setup2fa returns a QR code or secret. API List says `{}`. Maybe it sends email? Or maybe the doc is incomplete.
-  // I will stick to returning void as per doc.
+  Future<Either<Failure, Map<String, dynamic>>> setup2FA();
 
   // Disable 2FA
-  Future<Either<Failure, void>> disable2fa({String? totpCode, String? code});
+  Future<Either<Failure, void>> disable2FA({String? totpCode, String? code});
 
   // Xử lý Social Login từ Deep Link
   Future<Either<Failure, UserEntity>> processSocialLogin({

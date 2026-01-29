@@ -51,3 +51,22 @@ class AuthVerifyOtpSuccess extends AuthState {}
 
 // 8. Đổi mật khẩu thành công
 class AuthResetPasswordSuccessResult extends AuthState {}
+
+// 9. Logout thành công
+class AuthLogoutSuccess extends AuthState {}
+
+// 10. Setup 2FA thành công (trả về dữ liệu QR code)
+class AuthSetup2FASuccess extends AuthState {
+  final Map<String, dynamic> data; // QR code, secret, etc.
+
+  const AuthSetup2FASuccess(this.data);
+
+  @override
+  List<Object> get props => [data];
+}
+
+// 11. Disable 2FA thành công
+class AuthDisable2FASuccess extends AuthState {}
+
+// 12. Unauthenticated (không có token hoặc token hết hạn)
+class AuthUnauthenticated extends AuthState {}
