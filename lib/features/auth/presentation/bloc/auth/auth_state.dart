@@ -58,11 +58,12 @@ class AuthLogoutSuccess extends AuthState {}
 // 10. Setup 2FA thành công (trả về dữ liệu QR code)
 class AuthSetup2FASuccess extends AuthState {
   final Map<String, dynamic> data; // QR code, secret, etc.
+  final UserEntity? user;
 
-  const AuthSetup2FASuccess(this.data);
+  const AuthSetup2FASuccess(this.data, {this.user});
 
   @override
-  List<Object> get props => [data];
+  List<Object> get props => [data, if (user != null) user!];
 }
 
 // 11. Disable 2FA thành công

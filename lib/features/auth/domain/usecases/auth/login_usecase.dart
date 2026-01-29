@@ -17,6 +17,8 @@ class LoginUseCase implements UseCase<UserEntity, LoginParams> {
     return await authRepository.login(
       email: params.email,
       password: params.password,
+      code: params.code,
+      totpCode: params.totpCode,
     );
   }
 }
@@ -25,6 +27,13 @@ class LoginUseCase implements UseCase<UserEntity, LoginParams> {
 class LoginParams {
   final String email;
   final String password;
+  final String? code;
+  final String? totpCode;
 
-  LoginParams({required this.email, required this.password});
+  LoginParams({
+    required this.email,
+    required this.password,
+    this.code,
+    this.totpCode,
+  });
 }

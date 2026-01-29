@@ -53,7 +53,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginStarted>((event, emit) async {
       emit(AuthLoading());
       final result = await _loginUseCase(
-        LoginParams(email: event.email, password: event.password),
+        LoginParams(
+          email: event.email,
+          password: event.password,
+          code: event.code,
+          totpCode: event.totpCode,
+        ),
       );
       result.fold(
         (failure) => emit(AuthFailure(failure.message)),
@@ -170,23 +175,45 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     // 10. Setup 2FA
     on<AuthSetup2FAStarted>((event, emit) async {
+      UserEntity? currentUser;
+      if (state is AuthSuccess) {
+        currentUser = (state as AuthSuccess).user;
+      }
+
       emit(AuthLoading());
       final result = await _setup2FAUseCase(NoParams());
-      result.fold(
-        (failure) => emit(AuthFailure(failure.message)),
-        (data) => emit(AuthSetup2FASuccess(data)),
-      );
+      result.fold((failure) {
+        emit(AuthFailure(failure.message));
+        if (currentUser != null) emit(AuthSuccess(currentUser));
+      }, (data) => emit(AuthSetup2FASuccess(data, user: currentUser)));
     });
 
     // 11. Disable 2FA
     on<AuthDisable2FAStarted>((event, emit) async {
+      UserEntity? currentUser;
+      if (state is AuthSuccess) {
+        currentUser = (state as AuthSuccess).user;
+      }
+
       emit(AuthLoading());
       final result = await _disable2FAUseCase(
         Disable2FAParams(totpCode: event.totpCode, code: event.code),
       );
       result.fold(
-        (failure) => emit(AuthFailure(failure.message)),
-        (_) => emit(AuthDisable2FASuccess()),
+        (failure) {
+          emit(AuthFailure(failure.message));
+          if (currentUser != null) {
+            emit(AuthSuccess(currentUser));
+          }
+        },
+        (_) {
+          emit(AuthDisable2FASuccess());
+          if (currentUser != null) {
+            emit(AuthSuccess(currentUser.copyWith(nullTotpSecret: true)));
+          } else {
+            add(AuthCheckStatus());
+          }
+        },
       );
     });
 

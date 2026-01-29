@@ -67,11 +67,23 @@ class AuthSocialLoginTokenReceived extends AuthEvent {
 class AuthLoginStarted extends AuthEvent {
   final String email;
   final String password;
+  final String? code;
+  final String? totpCode;
 
-  const AuthLoginStarted({required this.email, required this.password});
+  const AuthLoginStarted({
+    required this.email,
+    required this.password,
+    this.code,
+    this.totpCode,
+  });
 
   @override
-  List<Object> get props => [email, password];
+  List<Object> get props => [
+    email,
+    password,
+    if (code != null) code!,
+    if (totpCode != null) totpCode!,
+  ];
 }
 
 // Sự kiện: Người dùng bấm Logout

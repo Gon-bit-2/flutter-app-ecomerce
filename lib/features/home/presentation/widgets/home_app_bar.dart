@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
-import '../../../product/presentation/pages/add_product_page.dart';
+import '../../../shop/presentation/pages/my_shop_page.dart';
 
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
@@ -60,9 +60,7 @@ class HomeAppBar extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const AddProductPage(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const MyShopPage()),
                       );
                     },
                     child: Icon(Icons.store, color: Colors.white, size: 24.sp),

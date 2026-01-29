@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'dart:convert';
+import '../../../../core/constants/app_constants.dart';
 import '../../domain/entities/product.dart';
 import 'sku_model.dart';
 
@@ -26,8 +28,111 @@ class ProductModel extends Product {
     super.isPreferred,
   }) : super(skus: skus);
 
-  factory ProductModel.fromJson(Map<String, dynamic> json) =>
-      _$ProductModelFromJson(json);
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    Map<String, dynamic> params = Map<String, dynamic>.from(json);
+
+    // Helper to fix URL prefix
+    String fixUrl(String url) {
+      if (url.startsWith('http')) return url;
+      return url.startsWith('/')
+          ? '${AppConstants.baseUrl}$url'
+          : '${AppConstants.baseUrl}/$url';
+    }
+
+    // Helper to extract clean URL from potentially messy strings
+    String cleanUrl(dynamic input) {
+      if (input == null) return '';
+      String str = input.toString().trim();
+
+      // Handle "url: " prefix
+      if (str.toLowerCase().startsWith('url:')) {
+        str = str.substring(4).trim();
+      }
+
+      // Handle accidentally JSON stringified values (e.g. "[\"url\"]")
+      if (str.startsWith('[') || str.startsWith('{')) {
+        try {
+          final decoded = jsonDecode(str);
+          if (decoded is List && decoded.isNotEmpty)
+            return cleanUrl(decoded.first);
+          if (decoded is Map && decoded.containsKey('url'))
+            return cleanUrl(decoded['url']);
+          if (decoded is Map && decoded.containsKey('link'))
+            return cleanUrl(decoded['link']);
+        } catch (_) {}
+      }
+
+      return str;
+    }
+
+    // Process images
+    if (params['images'] != null) {
+      dynamic rawImages = params['images'];
+      List<String> parsedImages = [];
+
+      void addImage(dynamic item) {
+        String cleaned = cleanUrl(item);
+        if (cleaned.isNotEmpty) {
+          parsedImages.add(fixUrl(cleaned));
+        }
+      }
+
+      if (rawImages is List) {
+        for (var item in rawImages) addImage(item);
+      } else if (rawImages is String) {
+        // Handle case where the whole list is stringified
+        try {
+          final decoded = jsonDecode(rawImages);
+          if (decoded is List) {
+            for (var item in decoded) addImage(item);
+          } else {
+            addImage(rawImages);
+          }
+        } catch (_) {
+          addImage(rawImages);
+        }
+      }
+
+      params['images'] = parsedImages;
+    }
+
+    final model = _$ProductModelFromJson(params);
+
+    // Fix SKU images
+    List<SKUModel> fixedSkus = model.skus.map((sku) {
+      if (sku.image.isNotEmpty) {
+        String cleaned = cleanUrl(sku.image);
+        if (cleaned.isNotEmpty) {
+          return SKUModel(
+            id: sku.id,
+            value: sku.value,
+            price: sku.price,
+            stock: sku.stock,
+            image: fixUrl(cleaned),
+            productId: sku.productId,
+          );
+        }
+      }
+      return sku;
+    }).toList();
+
+    return ProductModel(
+      id: model.id,
+      name: model.name,
+      basePrice: model.basePrice,
+      virtualPrice: model.virtualPrice,
+      images: model.images,
+      brandId: model.brandId,
+      publishedAt: model.publishedAt,
+      skus: fixedSkus,
+      variants: model.variants,
+      description: model.description,
+      rating: model.rating,
+      sold: model.sold,
+      isMall: model.isMall,
+      isPreferred: model.isPreferred,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$ProductModelToJson(this);
 }

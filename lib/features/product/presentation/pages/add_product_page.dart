@@ -22,16 +22,40 @@ class AddProductPage extends StatefulWidget {
 }
 
 class _VariantInput {
-  _VariantInput({String? name, String? options})
+  _VariantInput({String? name, List<String>? options})
     : nameController = TextEditingController(text: name),
-      optionsController = TextEditingController(text: options);
+      options = options ?? [],
+      optionInputController = TextEditingController();
 
   final TextEditingController nameController;
-  final TextEditingController optionsController;
+  final TextEditingController optionInputController;
+  final List<String> options;
 
   void dispose() {
     nameController.dispose();
-    optionsController.dispose();
+    optionInputController.dispose();
+  }
+}
+
+class _SkuInputModel {
+  String value;
+  TextEditingController priceController;
+  TextEditingController stockController;
+  TextEditingController imageController;
+
+  _SkuInputModel({
+    required this.value,
+    String? price,
+    String? stock,
+    String? image,
+  }) : priceController = TextEditingController(text: price),
+       stockController = TextEditingController(text: stock),
+       imageController = TextEditingController(text: image);
+
+  void dispose() {
+    priceController.dispose();
+    stockController.dispose();
+    imageController.dispose();
   }
 }
 
@@ -46,14 +70,14 @@ class _AddProductPageState extends State<AddProductPage> {
   final _skuImageController = TextEditingController();
 
   final List<_VariantInput> _variantInputs = [_VariantInput()];
+  List<_SkuInputModel> _skuInputs = [];
 
   // Dropdown selections
   int? _selectedBrandId;
   int? _selectedCategoryId;
 
   // Image Upload
-  String? _uploadedImageUrl;
-  XFile? _pickedImageFile;
+  final List<String> _uploadedImageUrls = [];
   final ImagePicker _picker = ImagePicker();
 
   bool _isLoading = false;
@@ -86,7 +110,7 @@ class _AddProductPageState extends State<AddProductPage> {
     // _selectedCategoryId = ...
 
     if (product.images.isNotEmpty) {
-      _uploadedImageUrl = product.images.first;
+      _uploadedImageUrls.addAll(product.images);
     }
 
     if (product.variants != null && product.variants!.isNotEmpty) {
@@ -94,7 +118,7 @@ class _AddProductPageState extends State<AddProductPage> {
       for (var v in product.variants!) {
         if (v is Map && v['value'] != null && v['options'] is List) {
           final name = v['value'];
-          final options = (v['options'] as List).join(', ');
+          final options = List<String>.from(v['options']);
           _variantInputs.add(_VariantInput(name: name, options: options));
         }
       }
@@ -107,6 +131,11 @@ class _AddProductPageState extends State<AddProductPage> {
       _skuStockController.text = firstSku.stock.toString();
       _skuImageController.text = firstSku.image;
     }
+
+    // Initial SKU generation to populate formatted list
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateSkuList(initial: true);
+    });
   }
 
   Future<void> _fetchInitialData() async {
@@ -142,18 +171,15 @@ class _AddProductPageState extends State<AddProductPage> {
     for (final variant in _variantInputs) {
       variant.dispose();
     }
+    for (final sku in _skuInputs) {
+      sku.dispose();
+    }
     super.dispose();
   }
 
   List<List<String>> _buildOptionGroups() {
     return _variantInputs
-        .map(
-          (variant) => variant.optionsController.text
-              .split(',')
-              .map((option) => option.trim())
-              .where((option) => option.isNotEmpty)
-              .toList(),
-        )
+        .map((variant) => variant.options)
         .where((options) => options.isNotEmpty)
         .toList();
   }
@@ -168,7 +194,7 @@ class _AddProductPageState extends State<AddProductPage> {
       final nextResults = <String>[];
       for (final prefix in results) {
         for (final option in group) {
-          nextResults.add(prefix.isEmpty ? option : '$prefix - $option');
+          nextResults.add(prefix.isEmpty ? option : '$prefix, $option');
         }
       }
       results = nextResults;
@@ -176,31 +202,104 @@ class _AddProductPageState extends State<AddProductPage> {
     return results;
   }
 
+  // Renamed and moved logic to support updating state
+  void _updateSkuList({bool initial = false}) {
+    final optionGroups = _buildOptionGroups();
+    final skuValues = _buildSkuValues(optionGroups);
+
+    final List<_SkuInputModel> newSkus = [];
+
+    // Existing product maps
+    Map<String, Product> existingSkuMap = {};
+    if (initial && widget.product != null) {
+      // logic to map existing skus if needed,
+      // but strictly we map by value string.
+      for (var s in widget.product!.skus) {
+        // "Red, S" -> SKU
+        // s.value is the key
+        // We need to pass data to controllers
+      }
+    }
+
+    // Preservation map from current _skuInputs
+    final Map<String, _SkuInputModel> currentMap = {
+      for (var sku in _skuInputs) sku.value: sku,
+    };
+
+    for (var value in skuValues) {
+      if (currentMap.containsKey(value)) {
+        newSkus.add(currentMap[value]!); // Keep existing input
+        currentMap.remove(value); // Taken
+      } else {
+        // Create new
+        String? initPrice = _skuPriceController.text;
+        String? initStock = _skuStockController.text;
+        String? initImage = _skuImageController.text;
+
+        // If initial load and editing, try to find match in widget.product.skus
+        if (initial && widget.product != null) {
+          final found = widget.product!.skus
+              .where((element) => element.value == value)
+              .firstOrNull;
+          if (found != null) {
+            initPrice = found.price.toInt().toString();
+            initStock = found.stock.toString();
+            initImage = found.image;
+          }
+        }
+
+        newSkus.add(
+          _SkuInputModel(
+            value: value,
+            price: initPrice,
+            stock: initStock,
+            image: initImage,
+          ),
+        );
+      }
+    }
+
+    // Dispose removed ones
+    for (var sku in currentMap.values) {
+      sku.dispose();
+    }
+
+    setState(() {
+      _skuInputs = newSkus;
+    });
+  }
+
   Future<void> _pickAndUploadImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    // Pick multiple images? Or single one by one. User asked for "upload multiple images at once" imply multi-pick?
+    // ImagePicker supports pickMultiImage.
+    final List<XFile> images = await _picker.pickMultiImage();
+
+    if (images.isNotEmpty) {
       setState(() {
-        _pickedImageFile = image;
         _isUploadingImage = true;
       });
 
-      final result = await GetIt.I<CommonRepository>().uploadFile(
-        _pickedImageFile!,
-      );
+      // Upload each image
+      for (var image in images) {
+        final result = await GetIt.I<CommonRepository>().uploadFile(image);
+        result.fold(
+          (failure) {
+            // Show error but continue? Or stop?
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  "Upload Failed for ${image.name}: ${failure.message}",
+                ),
+              ),
+            );
+          },
+          (url) {
+            setState(() => _uploadedImageUrls.add(url));
+          },
+        );
+      }
 
       setState(() => _isUploadingImage = false);
-
-      result.fold(
-        (failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Upload Failed: ${failure.message}")),
-          );
-          setState(() => _pickedImageFile = null); // Reset on failure
-        },
-        (url) {
-          setState(() => _uploadedImageUrl = url);
-        },
-      );
     }
   }
 
@@ -218,10 +317,10 @@ class _AddProductPageState extends State<AddProductPage> {
         );
         return;
       }
-      if (_uploadedImageUrl == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Please upload an image")));
+      if (_uploadedImageUrls.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please upload at least one image")),
+        );
         return;
       }
 
@@ -234,16 +333,12 @@ class _AddProductPageState extends State<AddProductPage> {
       final skuStock = int.tryParse(_skuStockController.text) ?? 100;
       final skuImage = skuImageInput.isNotEmpty
           ? skuImageInput
-          : _uploadedImageUrl;
+          : _uploadedImageUrls.first;
 
       final variants = <Map<String, dynamic>>[];
       for (final variant in _variantInputs) {
         final name = variant.nameController.text.trim();
-        final options = variant.optionsController.text
-            .split(',')
-            .map((option) => option.trim())
-            .where((option) => option.isNotEmpty)
-            .toList();
+        final options = variant.options; // Use the list directly
 
         if (name.isEmpty && options.isEmpty) {
           continue;
@@ -262,8 +357,44 @@ class _AddProductPageState extends State<AddProductPage> {
         variants.add({"value": name, "options": options});
       }
 
-      final optionGroups = _buildOptionGroups();
-      final skuValues = _buildSkuValues(optionGroups);
+      if (basePrice <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Base Price must be greater than 0")),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Ensure SKU price is valid
+      int finalSkuPrice = skuPrice;
+      if (finalSkuPrice <= 0) {
+        finalSkuPrice = basePrice;
+      }
+
+      // Validate and build SKUs from input list
+      final List<Map<String, dynamic>> finalSkus = [];
+      for (var sku in _skuInputs) {
+        final price = int.tryParse(sku.priceController.text) ?? basePrice;
+        final stock = int.tryParse(sku.stockController.text) ?? 0;
+        final image = sku.imageController.text.isNotEmpty
+            ? sku.imageController.text
+            : (_uploadedImageUrls.isNotEmpty ? _uploadedImageUrls.first : '');
+
+        if (price <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Price for SKU ${sku.value} must be > 0")),
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        finalSkus.add({
+          "value": sku.value,
+          "price": price,
+          "stock": stock,
+          "image": image,
+        });
+      }
 
       // Create payload matching API
       final Map<String, dynamic> payload = {
@@ -271,7 +402,7 @@ class _AddProductPageState extends State<AddProductPage> {
         "basePrice": basePrice,
         "virtualPrice": virtualPrice,
         "brandId": _selectedBrandId,
-        "images": [_uploadedImageUrl],
+        "images": _uploadedImageUrls,
         "categories": [_selectedCategoryId],
         "publishedAt": DateTime.now().toUtc().toIso8601String(),
         // Add required variants array
@@ -283,17 +414,8 @@ class _AddProductPageState extends State<AddProductPage> {
                   "options": ["Default"],
                 },
               ],
-        // Generate SKUs from variant combinations
-        "skus": skuValues
-            .map(
-              (value) => {
-                "value": value,
-                "price": skuPrice,
-                "stock": skuStock,
-                "image": skuImage,
-              },
-            )
-            .toList(),
+        // Use generated SKUs
+        "skus": finalSkus,
       };
 
       final productRepo = GetIt.I<ProductRepository>();
@@ -343,42 +465,97 @@ class _AddProductPageState extends State<AddProductPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // --- Image Picker Section ---
-                    GestureDetector(
-                      onTap: _pickAndUploadImage,
-                      child: Container(
-                        height: 200.h,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.r),
-                          image: _uploadedImageUrl != null
-                              ? DecorationImage(
-                                  image: CachedNetworkImageProvider(
-                                    _uploadedImageUrl!,
-                                  ),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: _isUploadingImage
-                            ? const Center(child: CircularProgressIndicator())
-                            : (_uploadedImageUrl == null)
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                    // --- Image List & Picker ---
+                    SizedBox(
+                      height: 120.h,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          GestureDetector(
+                            onTap: _pickAndUploadImage,
+                            child: Container(
+                              width: 100.h,
+                              height: 100.h,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: _isUploadingImage
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.add_a_photo,
+                                          color: Colors.grey,
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          "Add Images",
+                                          style: TextStyle(
+                                            fontSize: 10.sp,
+                                            color: Colors.grey,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          ..._uploadedImageUrls.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final url = entry.value;
+                            return Padding(
+                              padding: EdgeInsets.only(left: 12.w),
+                              child: Stack(
+                                clipBehavior: Clip.none,
                                 children: [
-                                  const Icon(
-                                    Icons.add_a_photo,
-                                    size: 40,
-                                    color: Colors.grey,
+                                  Container(
+                                    width: 100.h,
+                                    height: 100.h,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      image: DecorationImage(
+                                        image: CachedNetworkImageProvider(url),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
-                                  SizedBox(height: 8.h),
-                                  const Text(
-                                    "Tap to upload image",
-                                    style: TextStyle(color: Colors.grey),
+                                  Positioned(
+                                    top: -5,
+                                    right: -5,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _uploadedImageUrls.removeAt(index);
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ],
-                              )
-                            : null,
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
                     SizedBox(height: 24.h),
@@ -394,37 +571,94 @@ class _AddProductPageState extends State<AddProductPage> {
                     ..._variantInputs.asMap().entries.map((entry) {
                       final index = entry.key;
                       final variant = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: Row(
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 12.h),
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: _buildTextField(
-                                "Variant Name",
-                                variant.nameController,
-                                isRequired: false,
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    "Variant Name (e.g. Color)",
+                                    variant.nameController,
+                                    isRequired: false,
+                                  ),
+                                ),
+                                if (_variantInputs.length > 1)
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _variantInputs
+                                            .removeAt(index)
+                                            .dispose();
+                                        _updateSkuList();
+                                      });
+                                    },
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                              ],
                             ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              flex: 2,
-                              child: _buildTextField(
-                                "Options (comma-separated)",
-                                variant.optionsController,
-                                isRequired: false,
-                              ),
+                            SizedBox(height: 12.h),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    "Add Option (e.g. Red)",
+                                    variant.optionInputController,
+                                    isRequired: false,
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    final text = variant
+                                        .optionInputController
+                                        .text
+                                        .trim();
+                                    if (text.isNotEmpty) {
+                                      setState(() {
+                                        if (!variant.options.contains(text)) {
+                                          variant.options.add(text);
+                                          _updateSkuList();
+                                        }
+                                        variant.optionInputController.clear();
+                                      });
+                                    }
+                                  },
+                                  child: const Text("Add"),
+                                ),
+                              ],
                             ),
-                            if (_variantInputs.length > 1) ...[
-                              SizedBox(width: 8.w),
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _variantInputs.removeAt(index).dispose();
-                                  });
-                                },
-                                icon: const Icon(Icons.delete_outline),
+                            SizedBox(height: 8.h),
+                            if (variant.options.isNotEmpty)
+                              Wrap(
+                                spacing: 8.w,
+                                runSpacing: 4.h,
+                                children: variant.options.map((option) {
+                                  return Chip(
+                                    label: Text(option),
+                                    deleteIcon: const Icon(
+                                      Icons.close,
+                                      size: 18,
+                                    ),
+                                    onDeleted: () {
+                                      setState(() {
+                                        variant.options.remove(option);
+                                        _updateSkuList();
+                                      });
+                                    },
+                                  );
+                                }).toList(),
                               ),
-                            ],
                           ],
                         ),
                       );
@@ -435,6 +669,7 @@ class _AddProductPageState extends State<AddProductPage> {
                         onPressed: () {
                           setState(() {
                             _variantInputs.add(_VariantInput());
+                            // No need to update SKU list here as new variant has no options yet
                           });
                         },
                         icon: const Icon(Icons.add),
@@ -446,20 +681,47 @@ class _AddProductPageState extends State<AddProductPage> {
                       children: [
                         Expanded(
                           child: _buildTextField(
-                            "Default SKU Price (Optional)",
+                            "Default SKU Price (Bulk Apply)",
                             _skuPriceController,
                             isNumber: true,
                             isRequired: false,
                           ),
                         ),
-                        SizedBox(width: 12.w),
+                        SizedBox(width: 8.w),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Apply to all
+                            for (var sku in _skuInputs) {
+                              sku.priceController.text =
+                                  _skuPriceController.text;
+                            }
+                            setState(() {});
+                          },
+                          child: const Text("Apply All"),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    Row(
+                      children: [
                         Expanded(
                           child: _buildTextField(
-                            "Default SKU Stock (Optional)",
+                            "Default SKU Stock (Bulk Apply)",
                             _skuStockController,
                             isNumber: true,
                             isRequired: false,
                           ),
+                        ),
+                        SizedBox(width: 8.w),
+                        ElevatedButton(
+                          onPressed: () {
+                            for (var sku in _skuInputs) {
+                              sku.stockController.text =
+                                  _skuStockController.text;
+                            }
+                            setState(() {});
+                          },
+                          child: const Text("Apply All"),
                         ),
                       ],
                     ),
@@ -468,6 +730,65 @@ class _AddProductPageState extends State<AddProductPage> {
                       "Default SKU Image URL (Optional)",
                       _skuImageController,
                       isRequired: false,
+                    ),
+
+                    SizedBox(height: 24.h),
+                    Text(
+                      "SKU Configuration",
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    SizedBox(height: 8.h),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _skuInputs.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final sku = _skuInputs[index];
+                          return Padding(
+                            padding: EdgeInsets.all(12.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  sku.value,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        "Price",
+                                        sku.priceController,
+                                        isNumber: true,
+                                        isRequired: true,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        "Stock",
+                                        sku.stockController,
+                                        isNumber: true,
+                                        isRequired: true,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                     SizedBox(height: 24.h),
                     _buildTextField(

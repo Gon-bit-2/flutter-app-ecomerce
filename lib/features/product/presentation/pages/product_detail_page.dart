@@ -18,6 +18,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   int _currentImageIndex = 0;
   // Map to store selected options for each variant type. Key: Variant Name (e.g. "Color"), Value: Selected Option (e.g. "Red")
   final Map<String, String> _selectedVariants = {};
+  int _quantity = 1;
 
   // Calculate price to show. Range if multiple SKUs, or single price.
   // For now, simple logic.
@@ -112,6 +113,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
                           _buildVariantSelector(),
                           const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
+                          _buildQuantitySelector(),
+                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
                           _buildSpecifications(),
                           const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
                           _buildDescription(),
@@ -151,24 +154,74 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             if (images.isEmpty || images[index].isEmpty) {
               return Container(
                 color: Colors.grey[200],
-                child: const Center(
-                  child: Icon(Icons.image, size: 50, color: Colors.grey),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.image, size: 50, color: Colors.grey),
+                      SizedBox(height: 8.h),
+                      Text(
+                        "Image Empty\nLength: ${images.length}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12.sp, color: Colors.red),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
-            return CachedNetworkImage(
-              imageUrl: images[index],
-              fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => Container(
-                color: Colors.grey[200],
-                child: const Icon(
-                  Icons.broken_image,
-                  size: 50,
-                  color: Colors.grey,
+            final url = images[index];
+            return Stack(
+              children: [
+                CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.broken_image,
+                            size: 50,
+                            color: Colors.red,
+                          ),
+                          SizedBox(height: 8.h),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w),
+                            child: Text(
+                              "Load Error: $error\nURL: $url",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                color: Colors.black,
+                              ),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  placeholder: (_, __) =>
+                      const Center(child: CircularProgressIndicator()),
                 ),
-              ),
-              placeholder: (_, __) =>
-                  const Center(child: CircularProgressIndicator()),
+                // Debug overlay to verify URL
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    color: Colors.black54,
+                    child: Text(
+                      url,
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -381,6 +434,71 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildQuantitySelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 12.h),
+        Text(
+          "Quantity",
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            _buildQuantityButton(
+              icon: Icons.remove,
+              onPressed: () {
+                if (_quantity > 1) {
+                  setState(() => _quantity--);
+                }
+              },
+              isEnabled: _quantity > 1,
+            ),
+            SizedBox(width: 20.w),
+            Text(
+              "$_quantity",
+              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(width: 20.w),
+            _buildQuantityButton(
+              icon: Icons.add,
+              onPressed: () {
+                setState(() => _quantity++);
+              },
+              isEnabled: true,
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+      ],
+    );
+  }
+
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required bool isEnabled,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(4.r),
+        color: isEnabled ? Colors.white : Colors.grey[100],
+      ),
+      child: IconButton(
+        icon: Icon(
+          icon,
+          size: 16.sp,
+          color: isEnabled ? Colors.black : Colors.grey,
+        ),
+        onPressed: isEnabled ? onPressed : null,
+        constraints: BoxConstraints.tightFor(width: 32.w, height: 32.w),
+        padding: EdgeInsets.zero,
+      ),
     );
   }
 

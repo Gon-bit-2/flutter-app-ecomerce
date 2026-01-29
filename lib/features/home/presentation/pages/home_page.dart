@@ -139,6 +139,8 @@ class _HomeViewState extends State<HomeView> {
             builder: (context, state) {
               if (state is AuthSuccess) {
                 return ProfilePage(user: state.user);
+              } else if (state is AuthSetup2FASuccess && state.user != null) {
+                return ProfilePage(user: state.user!);
               }
               return const SizedBox.shrink(); // Should handle auth check before switching
             },

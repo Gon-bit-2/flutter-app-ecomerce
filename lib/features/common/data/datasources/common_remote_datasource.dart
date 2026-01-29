@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/constants/app_constants.dart';
 
 abstract class CommonRemoteDataSource {
   Future<String> uploadFile(XFile file);
@@ -68,16 +69,30 @@ class CommonRemoteDataSourceImpl implements CommonRemoteDataSource {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data;
+      String? resultUrl;
       // Check API_LIST for response format? Not clearly defined structure but usually data or direct.
       // Assuming structure based on other endpoints: { data: { url: ... } }
       if (data is Map) {
         if (data['data'] != null) {
           if (data['data'] is Map && data['data']['url'] != null) {
-            return data['data']['url'];
+            resultUrl = data['data']['url'];
+          } else if (data['data'] is String) {
+            resultUrl = data['data']; // If data is the url
           }
-          if (data['data'] is String) return data['data']; // If data is the url
+        } else if (data['url'] != null) {
+          resultUrl = data['url'];
         }
-        if (data['url'] != null) return data['url'];
+      }
+
+      if (resultUrl != null) {
+        if (!resultUrl.startsWith('http')) {
+          if (resultUrl.startsWith('/')) {
+            return '${AppConstants.baseUrl}$resultUrl';
+          } else {
+            return '${AppConstants.baseUrl}/$resultUrl';
+          }
+        }
+        return resultUrl;
       }
       return data.toString();
     } else {

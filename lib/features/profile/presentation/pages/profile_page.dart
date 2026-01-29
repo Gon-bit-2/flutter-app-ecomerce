@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:app_fe_ecomerce/features/shop/presentation/pages/my_shop_page.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 
@@ -106,20 +107,34 @@ class ProfilePage extends StatelessWidget {
             onTap: () {},
           ),
           const Divider(height: 1),
-          _buildMenuItem(
-            Icons.security_outlined,
-            "Setup 2FA",
-            onTap: () {
-              context.read<AuthBloc>().add(AuthSetup2FAStarted());
+          SwitchListTile(
+            secondary: Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.security_outlined,
+                color: Colors.blue,
+                size: 20.sp,
+              ),
+            ),
+            title: Text(
+              "Two-Factor Authentication",
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            value: user.totpSecret != null,
+            onChanged: (value) {
+              if (value) {
+                // Turning ON
+                context.read<AuthBloc>().add(AuthSetup2FAStarted());
+              } else {
+                // Turning OFF
+                _showDisable2FADialog(context);
+              }
             },
-          ),
-          const Divider(height: 1),
-          _buildMenuItem(
-            Icons.shield_outlined,
-            "Disable 2FA",
-            onTap: () {
-              _showDisable2FADialog(context);
-            },
+            activeColor: const Color(0xFF1A94FF),
           ),
           const Divider(height: 1),
           // --- Seller Section Logic ---
@@ -128,10 +143,9 @@ class ProfilePage extends StatelessWidget {
               Icons.storefront_outlined,
               "My Shop",
               onTap: () {
-                // Navigate to Shop Management
-                // TODO: Implement Shop Management Page
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Navigate to My Shop")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyShopPage()),
                 );
               },
             ),

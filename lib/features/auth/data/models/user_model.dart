@@ -14,6 +14,7 @@ class UserModel extends UserEntity {
     super.phoneNumber,
     super.avatar,
     super.roleId,
+    super.totpSecret,
   });
 
   // Hàm factory để tạo UserModel từ JSON (Do máy tự viết)
