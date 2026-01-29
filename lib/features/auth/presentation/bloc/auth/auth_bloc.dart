@@ -8,6 +8,10 @@ import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/reset_passwor
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/send_otp_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/verify_otp_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/process_social_login_usecase.dart';
+import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/logout_usecase.dart';
+import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/setup_2fa_usecase.dart';
+import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/disable_2fa_usecase.dart';
+import 'package:app_fe_ecomerce/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
@@ -25,6 +29,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GoogleCallbackUseCase _googleCallbackUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
   final ProcessSocialLoginUseCase _processSocialLoginUseCase;
+  final LogoutUseCase _logoutUseCase;
+  final Setup2FAUseCase _setup2FAUseCase;
+  final Disable2FAUseCase _disable2FAUseCase;
+  final AuthLocalDataSource _localDataSource;
 
   // Constructor: Khởi tạo với trạng thái Initial
   AuthBloc(
@@ -36,12 +44,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._googleCallbackUseCase,
     this._resetPasswordUseCase,
     this._processSocialLoginUseCase,
+    this._logoutUseCase,
+    this._setup2FAUseCase,
+    this._disable2FAUseCase,
+    this._localDataSource,
   ) : super(AuthInitial()) {
     // 1. Xử lý Đăng Nhập
     on<AuthLoginStarted>((event, emit) async {
       emit(AuthLoading());
       final result = await _loginUseCase(
-        LoginParams(email: event.email, password: event.password),
+        LoginParams(
+          email: event.email,
+          password: event.password,
+          code: event.code,
+          totpCode: event.totpCode,
+        ),
       );
       result.fold(
         (failure) => emit(AuthFailure(failure.message)),
@@ -144,6 +161,80 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         (failure) => emit(AuthFailure(failure.message)),
         (_) => emit(AuthResetPasswordSuccessResult()),
       );
+    });
+
+    // 9. Logout
+    on<AuthLogoutRequested>((event, emit) async {
+      emit(AuthLoading());
+      final result = await _logoutUseCase(NoParams());
+      result.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (_) => emit(AuthLogoutSuccess()),
+      );
+    });
+
+    // 10. Setup 2FA
+    on<AuthSetup2FAStarted>((event, emit) async {
+      UserEntity? currentUser;
+      if (state is AuthSuccess) {
+        currentUser = (state as AuthSuccess).user;
+      }
+
+      emit(AuthLoading());
+      final result = await _setup2FAUseCase(NoParams());
+      result.fold((failure) {
+        emit(AuthFailure(failure.message));
+        if (currentUser != null) emit(AuthSuccess(currentUser));
+      }, (data) => emit(AuthSetup2FASuccess(data, user: currentUser)));
+    });
+
+    // 11. Disable 2FA
+    on<AuthDisable2FAStarted>((event, emit) async {
+      UserEntity? currentUser;
+      if (state is AuthSuccess) {
+        currentUser = (state as AuthSuccess).user;
+      }
+
+      emit(AuthLoading());
+      final result = await _disable2FAUseCase(
+        Disable2FAParams(totpCode: event.totpCode, code: event.code),
+      );
+      result.fold(
+        (failure) {
+          emit(AuthFailure(failure.message));
+          if (currentUser != null) {
+            emit(AuthSuccess(currentUser));
+          }
+        },
+        (_) {
+          emit(AuthDisable2FASuccess());
+          if (currentUser != null) {
+            emit(AuthSuccess(currentUser.copyWith(nullTotpSecret: true)));
+          } else {
+            add(AuthCheckStatus());
+          }
+        },
+      );
+    });
+
+    // 12. Check Authentication Status
+    on<AuthCheckStatus>((event, emit) async {
+      final token = await _localDataSource.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        // Token exists, try to get profile
+        final result = await _processSocialLoginUseCase(
+          ProcessSocialLoginParams(
+            accessToken: token,
+            refreshToken: await _localDataSource.getRefreshToken() ?? '',
+          ),
+        );
+        result.fold(
+          (failure) => emit(AuthUnauthenticated()),
+          (user) => emit(AuthSuccess(user)),
+        );
+      } else {
+        emit(AuthUnauthenticated());
+      }
     });
   }
 }
