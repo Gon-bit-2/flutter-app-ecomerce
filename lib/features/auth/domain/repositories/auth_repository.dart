@@ -66,4 +66,10 @@ abstract class AuthRepository {
 
   // Disable 2FA
   Future<Either<Failure, void>> disable2fa({String? totpCode, String? code});
+
+  // Xử lý Social Login từ Deep Link
+  Future<Either<Failure, UserEntity>> processSocialLogin({
+    required String accessToken,
+    required String refreshToken,
+  });
 }

@@ -238,4 +238,23 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, UserEntity>> processSocialLogin({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    try {
+      await localDataSource.saveTokens(accessToken, refreshToken);
+      final userModel = await remoteDataSource.getProfile();
+      return Right(userModel);
+    } on DioException catch (e) {
+      // Nếu load profile lỗi -> clear token
+      await localDataSource.clearTokens();
+      return Left(_handleError(e));
+    } catch (e) {
+      await localDataSource.clearTokens();
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

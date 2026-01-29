@@ -50,6 +50,19 @@ class AuthGoogleCallbackReceived extends AuthEvent {
   List<Object> get props => [state, code];
 }
 
+class AuthSocialLoginTokenReceived extends AuthEvent {
+  final String accessToken;
+  final String refreshToken;
+
+  const AuthSocialLoginTokenReceived({
+    required this.accessToken,
+    required this.refreshToken,
+  });
+
+  @override
+  List<Object> get props => [accessToken, refreshToken];
+}
+
 // Sự kiện: Người dùng bấm nút Đăng nhập
 class AuthLoginStarted extends AuthEvent {
   final String email;

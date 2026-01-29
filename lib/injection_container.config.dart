@@ -19,6 +19,7 @@ import 'core/di/register_module.dart' as _i854;
 import 'core/network/auth_interceptor.dart' as _i8;
 import 'core/network/dio_client.dart' as _i45;
 import 'core/network/network_info.dart' as _i75;
+import 'core/services/deep_link_service.dart' as _i872;
 import 'features/auth/data/datasources/auth_local_datasource.dart' as _i1043;
 import 'features/auth/data/datasources/auth_remote_datasource.dart' as _i588;
 import 'features/auth/data/repositories/auth_repository_impl.dart' as _i111;
@@ -27,6 +28,8 @@ import 'features/auth/domain/usecases/auth/google_auth_usecase.dart' as _i812;
 import 'features/auth/domain/usecases/auth/google_callback_usecase.dart'
     as _i947;
 import 'features/auth/domain/usecases/auth/login_usecase.dart' as _i804;
+import 'features/auth/domain/usecases/auth/process_social_login_usecase.dart'
+    as _i955;
 import 'features/auth/domain/usecases/auth/register_usecase.dart' as _i12;
 import 'features/auth/domain/usecases/auth/reset_password_usecase.dart'
     as _i944;
@@ -48,6 +51,7 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i895.Connectivity>(() => registerModule.connectivity);
+    gh.lazySingleton<_i872.DeepLinkService>(() => _i872.DeepLinkService());
     gh.lazySingleton<_i1043.AuthLocalDataSource>(
       () => _i1043.AuthLocalDataSourceImpl(),
     );
@@ -68,6 +72,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i588.AuthRemoteDataSource>(),
         gh<_i1043.AuthLocalDataSource>(),
       ),
+    );
+    gh.lazySingleton<_i955.ProcessSocialLoginUseCase>(
+      () => _i955.ProcessSocialLoginUseCase(gh<_i1015.AuthRepository>()),
     );
     gh.lazySingleton<_i944.ResetPasswordUseCase>(
       () => _i944.ResetPasswordUseCase(gh<_i1015.AuthRepository>()),
@@ -99,6 +106,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i812.GoogleAuthUseCase>(),
         gh<_i947.GoogleCallbackUseCase>(),
         gh<_i944.ResetPasswordUseCase>(),
+        gh<_i955.ProcessSocialLoginUseCase>(),
       ),
     );
     return this;
