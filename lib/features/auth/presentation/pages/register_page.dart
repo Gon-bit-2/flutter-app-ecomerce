@@ -421,8 +421,9 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               validator: (v) {
-                if (v != _passwordController.text)
+                if (v != _passwordController.text) {
                   return "Passwords do not match";
+                }
                 return null;
               },
             ),

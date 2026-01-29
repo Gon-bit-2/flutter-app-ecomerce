@@ -7,6 +7,7 @@ import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/register_usec
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/reset_password_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/send_otp_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/verify_otp_usecase.dart';
+import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/process_social_login_usecase.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
@@ -19,10 +20,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
   final SendOtpUseCase _sendOtpUseCase;
-  final VerifyOtpUseCase _verifyOtpUseCase; // New
+  final VerifyOtpUseCase _verifyOtpUseCase;
   final GoogleAuthUseCase _googleAuthUseCase;
   final GoogleCallbackUseCase _googleCallbackUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
+  final ProcessSocialLoginUseCase _processSocialLoginUseCase;
 
   // Constructor: Khởi tạo với trạng thái Initial
   AuthBloc(
@@ -33,6 +35,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._googleAuthUseCase,
     this._googleCallbackUseCase,
     this._resetPasswordUseCase,
+    this._processSocialLoginUseCase,
   ) : super(AuthInitial()) {
     // 1. Xử lý Đăng Nhập
     on<AuthLoginStarted>((event, emit) async {
@@ -92,16 +95,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // 5. Lấy Link Google
     on<AuthGoogleUrlRequested>((event, emit) async {
       emit(AuthLoading());
-      // GoogleAuthUseCase dùng NoParams (nếu bạn đã sửa usecase nhận NoParams)
-      // Nếu chưa sửa file usecase thì phải xem lại, nhưng theo logic trước đó đã sửa thành NoParams.
-      // Cần import NoParams từ core/usecase/usecase.dart nếu chưa có.
-      // Dựa vào các import hiện tại, file usecase.dart của project có NoParams.
-      // Tuy nhiên AuthBloc chưa import UseCase class chứa NoParams.
-      // Ta cứ gọi, nếu lỗi import sẽ fix sau. Nhưng tốt nhất là check import.
-      // File `auth_bloc.dart` imports `login_usecase.dart` -> `usecase.dart`.
-      // Nhưng LoginUseCase, RegisterUseCase export UseCase class? Không.
-      // Ta cần import `core/usecase/usecase.dart` để dùng NoParams.
-
       final result = await _googleAuthUseCase(NoParams());
       result.fold(
         (failure) => emit(AuthFailure(failure.message)),
@@ -109,8 +102,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
-    // 5. Xử lý Google Callback
-    // 5. Xử lý Google Callback
+    // 6. Xử lý Google Callback (Legacy / Manual)
     on<AuthGoogleCallbackReceived>((event, emit) async {
       emit(AuthLoading());
       final result = await _googleCallbackUseCase(
@@ -122,7 +114,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
-    // 6. Reset Password
+    // 7. Xử lý Social Login Token (Deep Link)
+    on<AuthSocialLoginTokenReceived>((event, emit) async {
+      emit(AuthLoading());
+      final result = await _processSocialLoginUseCase(
+        ProcessSocialLoginParams(
+          accessToken: event.accessToken,
+          refreshToken: event.refreshToken,
+        ),
+      );
+      result.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (user) => emit(AuthSuccess(user)),
+      );
+    });
+
+    // 8. Reset Password
     on<AuthResetPasswordStarted>((event, emit) async {
       emit(AuthLoading());
       final result = await _resetPasswordUseCase(

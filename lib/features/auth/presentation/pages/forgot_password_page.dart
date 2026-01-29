@@ -330,8 +330,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ),
               ),
               validator: (v) {
-                if (v != _newPasswordController.text)
+                if (v != _newPasswordController.text) {
                   return "Passwords do not match";
+                }
                 return null;
               },
             ),
