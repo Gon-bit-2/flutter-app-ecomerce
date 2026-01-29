@@ -134,7 +134,7 @@ class ProfilePage extends StatelessWidget {
                 _showDisable2FADialog(context);
               }
             },
-            activeColor: const Color(0xFF1A94FF),
+            activeThumbColor: const Color(0xFF1A94FF),
           ),
           const Divider(height: 1),
           // --- Seller Section Logic ---

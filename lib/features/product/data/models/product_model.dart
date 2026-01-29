@@ -53,12 +53,15 @@ class ProductModel extends Product {
       if (str.startsWith('[') || str.startsWith('{')) {
         try {
           final decoded = jsonDecode(str);
-          if (decoded is List && decoded.isNotEmpty)
+          if (decoded is List && decoded.isNotEmpty) {
             return cleanUrl(decoded.first);
-          if (decoded is Map && decoded.containsKey('url'))
+          }
+          if (decoded is Map && decoded.containsKey('url')) {
             return cleanUrl(decoded['url']);
-          if (decoded is Map && decoded.containsKey('link'))
+          }
+          if (decoded is Map && decoded.containsKey('link')) {
             return cleanUrl(decoded['link']);
+          }
         } catch (_) {}
       }
 
@@ -78,13 +81,17 @@ class ProductModel extends Product {
       }
 
       if (rawImages is List) {
-        for (var item in rawImages) addImage(item);
+        for (var item in rawImages) {
+          addImage(item);
+        }
       } else if (rawImages is String) {
         // Handle case where the whole list is stringified
         try {
           final decoded = jsonDecode(rawImages);
           if (decoded is List) {
-            for (var item in decoded) addImage(item);
+            for (var item in decoded) {
+              addImage(item);
+            }
           } else {
             addImage(rawImages);
           }
