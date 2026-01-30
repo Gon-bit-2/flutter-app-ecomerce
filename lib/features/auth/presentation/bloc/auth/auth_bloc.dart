@@ -165,51 +165,91 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     // 9. Logout
     on<AuthLogoutRequested>((event, emit) async {
-      emit(AuthLoading());
+      UserEntity? currentUser;
+      if (state is AuthSuccess) {
+        currentUser = (state as AuthSuccess).user;
+      }
+      // Check other states like 2FA success just in case usage flow allows logout from there
+      else if (state is AuthSetup2FASuccess) {
+        currentUser = (state as AuthSetup2FASuccess).user;
+      } else if (state is AuthDisable2FASuccess) {
+        currentUser = (state as AuthDisable2FASuccess).user;
+      }
+
+      emit(AuthLoading(user: currentUser));
       final result = await _logoutUseCase(NoParams());
       result.fold(
-        (failure) => emit(AuthFailure(failure.message)),
+        (failure) => emit(AuthFailure(failure.message, user: currentUser)),
         (_) => emit(AuthLogoutSuccess()),
       );
     });
 
     // 10. Setup 2FA
     on<AuthSetup2FAStarted>((event, emit) async {
-      UserEntity? currentUser;
-      if (state is AuthSuccess) {
-        currentUser = (state as AuthSuccess).user;
+      UserEntity? currentUser = event.user;
+
+      if (currentUser == null) {
+        if (state is AuthSuccess) {
+          currentUser = (state as AuthSuccess).user;
+        } else if (state is AuthSetup2FASuccess) {
+          currentUser = (state as AuthSetup2FASuccess).user;
+        } else if (state is AuthDisable2FASuccess) {
+          currentUser = (state as AuthDisable2FASuccess).user;
+        } else if (state is AuthLoading) {
+          currentUser = (state as AuthLoading).user;
+        }
       }
 
-      emit(AuthLoading());
+      emit(AuthLoading(user: currentUser));
       final result = await _setup2FAUseCase(NoParams());
-      result.fold((failure) {
-        emit(AuthFailure(failure.message));
-        if (currentUser != null) emit(AuthSuccess(currentUser));
-      }, (data) => emit(AuthSetup2FASuccess(data, user: currentUser)));
+      result.fold(
+        (failure) {
+          emit(AuthFailure(failure.message, user: currentUser));
+          if (currentUser != null) emit(AuthSuccess(currentUser));
+        },
+        (data) {
+          emit(AuthSetup2FASuccess(data, user: currentUser));
+        },
+      );
     });
 
     // 11. Disable 2FA
     on<AuthDisable2FAStarted>((event, emit) async {
-      UserEntity? currentUser;
-      if (state is AuthSuccess) {
-        currentUser = (state as AuthSuccess).user;
+      UserEntity? currentUser = event.user;
+
+      if (currentUser == null) {
+        if (state is AuthSuccess) {
+          currentUser = (state as AuthSuccess).user;
+        } else if (state is AuthSetup2FASuccess) {
+          currentUser = (state as AuthSetup2FASuccess).user;
+        } else if (state is AuthDisable2FASuccess) {
+          currentUser = (state as AuthDisable2FASuccess).user;
+        } else if (state is AuthLoading) {
+          currentUser = (state as AuthLoading).user;
+        }
       }
 
-      emit(AuthLoading());
+      emit(AuthLoading(user: currentUser));
       final result = await _disable2FAUseCase(
         Disable2FAParams(totpCode: event.totpCode, code: event.code),
       );
       result.fold(
         (failure) {
-          emit(AuthFailure(failure.message));
+          emit(AuthFailure(failure.message, user: currentUser));
           if (currentUser != null) {
             emit(AuthSuccess(currentUser));
           }
         },
         (_) {
-          emit(AuthDisable2FASuccess());
-          if (currentUser != null) {
-            emit(AuthSuccess(currentUser.copyWith(nullTotpSecret: true)));
+          final updatedUser = currentUser?.copyWith(
+            nullTotpSecret: true,
+            isTwoFactorEnabled: false,
+          );
+          emit(AuthDisable2FASuccess(user: updatedUser));
+          if (updatedUser != null) {
+            emit(
+              AuthSuccess(updatedUser),
+            ); // Immediate transition back to Success
           } else {
             add(AuthCheckStatus());
           }

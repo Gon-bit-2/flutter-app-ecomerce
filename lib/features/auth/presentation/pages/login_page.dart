@@ -80,11 +80,11 @@ class _LoginViewState extends State<LoginView> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () {
-            // Handle back if needed
+            Navigator.pop(context);
           },
         ),
         title: Text(
-          "Log In",
+          "Đăng nhập",
           style: AppTextStyles.h3.copyWith(color: AppColors.primaryBlue),
         ),
         centerTitle: true,
@@ -109,7 +109,7 @@ class _LoginViewState extends State<LoginView> {
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text("Login Success!"),
+                  content: Text("Đăng nhập thành công!"),
                   backgroundColor: AppColors.success,
                 ),
               );
@@ -125,7 +125,7 @@ class _LoginViewState extends State<LoginView> {
                 }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Could not launch Google Login: $e")),
+                  SnackBar(content: Text("Không thể mở đăng nhập Google: $e")),
                 );
               }
             }
@@ -153,10 +153,10 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                     SizedBox(height: 24.h),
-                    Text("Welcome", style: AppTextStyles.h2),
+                    Text("Chào mừng", style: AppTextStyles.h2),
                     SizedBox(height: 8.h),
                     Text(
-                      "Please enter your details to continue",
+                      "Vui lòng nhập thông tin để tiếp tục",
                       style: AppTextStyles.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -167,14 +167,14 @@ class _LoginViewState extends State<LoginView> {
                       controller: _emailController,
                       hintText: "Email",
                       prefixIcon: Icons.person_outline,
-                      validator: (val) => val!.isEmpty ? "Required" : null,
+                      validator: (val) => val!.isEmpty ? "Bắt buộc" : null,
                     ),
                     SizedBox(height: 16.h),
 
                     // Password Input
                     CustomTextField(
                       controller: _passwordController,
-                      hintText: "Password",
+                      hintText: "Mật khẩu",
                       prefixIcon: Icons.lock_outline,
                       obscureText: !_isPasswordVisible,
                       suffixIcon: IconButton(
@@ -189,13 +189,13 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ),
                       validator: (val) =>
-                          val!.length < 6 ? "Min 6 chars" : null,
+                          val!.length < 6 ? "Tối thiểu 6 ký tự" : null,
                     ),
                     SizedBox(height: 24.h),
 
                     // Login Button
                     CustomButton(
-                      text: "Log In",
+                      text: "Đăng nhập",
                       isLoading: state is AuthLoading,
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
@@ -224,7 +224,7 @@ class _LoginViewState extends State<LoginView> {
                             );
                           },
                           child: Text(
-                            "Forgot Password?",
+                            "Quên mật khẩu?",
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.textPrimary,
                             ),
@@ -240,7 +240,7 @@ class _LoginViewState extends State<LoginView> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Text(
-                            "OR",
+                            "HOẶC",
                             style: AppTextStyles.bodyMedium.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -271,7 +271,10 @@ class _LoginViewState extends State<LoginView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("New account? ", style: AppTextStyles.bodyMedium),
+                        Text(
+                          "Chưa có tài khoản? ",
+                          style: AppTextStyles.bodyMedium,
+                        ),
                         GestureDetector(
                           onTap: () => Navigator.push(
                             context,
@@ -280,7 +283,7 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           ),
                           child: Text(
-                            "Sign Up",
+                            "Đăng ký",
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,

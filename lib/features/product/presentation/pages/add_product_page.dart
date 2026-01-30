@@ -1,16 +1,18 @@
+import 'package:app_fe_ecomerce/features/brand/domain/repositories/brand_repository.dart';
+import 'package:app_fe_ecomerce/features/category/domain/repositories/category_repository.dart';
+import 'package:app_fe_ecomerce/features/common/domain/repositories/common_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../brand/domain/entities/brand.dart';
-import '../../../brand/domain/repositories/brand_repository.dart';
-import '../../../category/domain/entities/category.dart';
-import '../../../category/domain/repositories/category_repository.dart';
-import '../../../common/domain/repositories/common_repository.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
+import '../bloc/add_product/add_product_bloc.dart';
+import '../bloc/add_product/add_product_event.dart';
+import '../bloc/add_product/add_product_state.dart';
 
 class AddProductPage extends StatefulWidget {
   final Product? product;
@@ -21,869 +23,401 @@ class AddProductPage extends StatefulWidget {
   State<AddProductPage> createState() => _AddProductPageState();
 }
 
-class _VariantInput {
-  _VariantInput({String? name, List<String>? options})
-    : nameController = TextEditingController(text: name),
-      options = options ?? [],
-      optionInputController = TextEditingController();
-
-  final TextEditingController nameController;
-  final TextEditingController optionInputController;
-  final List<String> options;
-
-  void dispose() {
-    nameController.dispose();
-    optionInputController.dispose();
-  }
-}
-
-class _SkuInputModel {
-  String value;
-  TextEditingController priceController;
-  TextEditingController stockController;
-  TextEditingController imageController;
-
-  _SkuInputModel({
-    required this.value,
-    String? price,
-    String? stock,
-    String? image,
-  }) : priceController = TextEditingController(text: price),
-       stockController = TextEditingController(text: stock),
-       imageController = TextEditingController(text: image);
-
-  void dispose() {
-    priceController.dispose();
-    stockController.dispose();
-    imageController.dispose();
-  }
-}
-
 class _AddProductPageState extends State<AddProductPage> {
+  late AddProductBloc _bloc;
+
+  // Main Form Controllers
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _basePriceController = TextEditingController();
   final _virtualPriceController = TextEditingController();
-  final _skuPriceController = TextEditingController();
-  final _skuStockController = TextEditingController();
-  final _skuImageController = TextEditingController();
 
-  final List<_VariantInput> _variantInputs = [_VariantInput()];
-  List<_SkuInputModel> _skuInputs = [];
-
-  // Dropdown selections
+  // Selected Values not in controllers
   int? _selectedBrandId;
   int? _selectedCategoryId;
 
-  // Image Upload
-  final List<String> _uploadedImageUrls = [];
+  // Bulk Apply Controllers
+  final _skuDefaultPriceController = TextEditingController();
+  final _skuDefaultStockController = TextEditingController();
+  final _skuDefaultImageController = TextEditingController();
+
   final ImagePicker _picker = ImagePicker();
-
-  bool _isLoading = false;
-  bool _isUploadingImage = false;
-  bool _isFetchingData = true;
-
-  // Data lists
-  List<Brand> _brands = [];
-  List<Category> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchInitialData();
-    if (widget.product != null) {
-      _initFormData();
-    }
-  }
-
-  void _initFormData() {
-    final product = widget.product!;
-    _nameController.text = product.name;
-    _descController.text = product.description ?? '';
-    _basePriceController.text = product.basePrice.toInt().toString();
-    _virtualPriceController.text =
-        product.virtualPrice?.toInt().toString() ?? '';
-    _selectedBrandId = product.brandId;
-    // Category mapping needs adjustments if product returns list of categories or IDs
-    // For now assuming we might not have it or implement category logic if needed.
-    // _selectedCategoryId = ...
-
-    if (product.images.isNotEmpty) {
-      _uploadedImageUrls.addAll(product.images);
-    }
-
-    if (product.variants != null && product.variants!.isNotEmpty) {
-      _variantInputs.clear();
-      for (var v in product.variants!) {
-        if (v is Map && v['value'] != null && v['options'] is List) {
-          final name = v['value'];
-          final options = List<String>.from(v['options']);
-          _variantInputs.add(_VariantInput(name: name, options: options));
-        }
-      }
-    }
-
-    // Initialize SKU defaults from first SKU if exists
-    if (product.skus.isNotEmpty) {
-      final firstSku = product.skus.first;
-      _skuPriceController.text = firstSku.price.toInt().toString();
-      _skuStockController.text = firstSku.stock.toString();
-      _skuImageController.text = firstSku.image;
-    }
-
-    // Initial SKU generation to populate formatted list
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateSkuList(initial: true);
-    });
-  }
-
-  Future<void> _fetchInitialData() async {
-    setState(() => _isFetchingData = true);
-
-    // Fetch Brands
-    final brandResult = await GetIt.I<BrandRepository>().getBrands();
-    // Fetch Categories
-    final categoryResult = await GetIt.I<CategoryRepository>().getCategories();
-
-    setState(() {
-      _isFetchingData = false;
-      brandResult.fold(
-        (l) => debugPrint("Error fetching brands: ${l.message}"),
-        (r) => _brands = r,
-      );
-      categoryResult.fold(
-        (l) => debugPrint("Error fetching categories: ${l.message}"),
-        (r) => _categories = r,
-      );
-    });
+    _bloc = AddProductBloc(
+      brandRepository: GetIt.I<BrandRepository>(),
+      categoryRepository: GetIt.I<CategoryRepository>(),
+      commonRepository: GetIt.I<CommonRepository>(),
+      productRepository: GetIt.I<ProductRepository>(),
+    )..add(AddProductStarted(product: widget.product));
   }
 
   @override
   void dispose() {
+    _bloc.close();
     _nameController.dispose();
     _descController.dispose();
     _basePriceController.dispose();
     _virtualPriceController.dispose();
-    _skuPriceController.dispose();
-    _skuStockController.dispose();
-    _skuImageController.dispose();
-    for (final variant in _variantInputs) {
-      variant.dispose();
-    }
-    for (final sku in _skuInputs) {
-      sku.dispose();
-    }
+    _skuDefaultPriceController.dispose();
+    _skuDefaultStockController.dispose();
+    _skuDefaultImageController.dispose();
     super.dispose();
   }
 
-  List<List<String>> _buildOptionGroups() {
-    return _variantInputs
-        .map((variant) => variant.options)
-        .where((options) => options.isNotEmpty)
-        .toList();
-  }
-
-  List<String> _buildSkuValues(List<List<String>> optionGroups) {
-    if (optionGroups.isEmpty) {
-      return ['Default'];
+  // Sync initial data from Bloc to Controllers
+  void _onStateChanged(BuildContext context, AddProductState state) {
+    if (state.status == AddProductStatus.failure &&
+        state.errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
     }
 
-    List<String> results = [''];
-    for (final group in optionGroups) {
-      final nextResults = <String>[];
-      for (final prefix in results) {
-        for (final option in group) {
-          nextResults.add(prefix.isEmpty ? option : '$prefix, $option');
-        }
-      }
-      results = nextResults;
-    }
-    return results;
-  }
-
-  // Renamed and moved logic to support updating state
-  void _updateSkuList({bool initial = false}) {
-    final optionGroups = _buildOptionGroups();
-    final skuValues = _buildSkuValues(optionGroups);
-
-    final List<_SkuInputModel> newSkus = [];
-
-    // Existing product maps
-    Map<String, Product> existingSkuMap = {};
-    if (initial && widget.product != null) {
-      // logic to map existing skus if needed,
-      // but strictly we map by value string.
-      for (var s in widget.product!.skus) {
-        // "Red, S" -> SKU
-        // s.value is the key
-        // We need to pass data to controllers
-      }
-    }
-
-    // Preservation map from current _skuInputs
-    final Map<String, _SkuInputModel> currentMap = {
-      for (var sku in _skuInputs) sku.value: sku,
-    };
-
-    for (var value in skuValues) {
-      if (currentMap.containsKey(value)) {
-        newSkus.add(currentMap[value]!); // Keep existing input
-        currentMap.remove(value); // Taken
-      } else {
-        // Create new
-        String? initPrice = _skuPriceController.text;
-        String? initStock = _skuStockController.text;
-        String? initImage = _skuImageController.text;
-
-        // If initial load and editing, try to find match in widget.product.skus
-        if (initial && widget.product != null) {
-          final found = widget.product!.skus
-              .where((element) => element.value == value)
-              .firstOrNull;
-          if (found != null) {
-            initPrice = found.price.toInt().toString();
-            initStock = found.stock.toString();
-            initImage = found.image;
-          }
-        }
-
-        newSkus.add(
-          _SkuInputModel(
-            value: value,
-            price: initPrice,
-            stock: initStock,
-            image: initImage,
+    if (state.status == AddProductStatus.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.product == null ? "Tạo thành công" : "Cập nhật thành công",
           ),
-        );
-      }
-    }
-
-    // Dispose removed ones
-    for (var sku in currentMap.values) {
-      sku.dispose();
-    }
-
-    setState(() {
-      _skuInputs = newSkus;
-    });
-  }
-
-  Future<void> _pickAndUploadImage() async {
-    // Pick multiple images? Or single one by one. User asked for "upload multiple images at once" imply multi-pick?
-    // ImagePicker supports pickMultiImage.
-    final List<XFile> images = await _picker.pickMultiImage();
-
-    if (images.isNotEmpty) {
-      setState(() {
-        _isUploadingImage = true;
-      });
-
-      // Upload each image
-      for (var image in images) {
-        final result = await GetIt.I<CommonRepository>().uploadFile(image);
-        result.fold(
-          (failure) {
-            // Show error but continue? Or stop?
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  "Upload Failed for ${image.name}: ${failure.message}",
-                ),
-              ),
-            );
-          },
-          (url) {
-            setState(() => _uploadedImageUrls.add(url));
-          },
-        );
-      }
-
-      setState(() => _isUploadingImage = false);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedBrandId == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Please select a brand")));
-        return;
-      }
-      if (_selectedCategoryId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please select a category")),
-        );
-        return;
-      }
-      if (_uploadedImageUrls.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please upload at least one image")),
-        );
-        return;
-      }
-
-      setState(() => _isLoading = true);
-
-      final basePrice = int.tryParse(_basePriceController.text) ?? 0;
-      final virtualPrice = int.tryParse(_virtualPriceController.text) ?? 0;
-      final skuImageInput = _skuImageController.text.trim();
-      final skuPrice = int.tryParse(_skuPriceController.text) ?? basePrice;
-      final skuStock = int.tryParse(_skuStockController.text) ?? 100;
-      final skuImage = skuImageInput.isNotEmpty
-          ? skuImageInput
-          : _uploadedImageUrls.first;
-
-      final variants = <Map<String, dynamic>>[];
-      for (final variant in _variantInputs) {
-        final name = variant.nameController.text.trim();
-        final options = variant.options; // Use the list directly
-
-        if (name.isEmpty && options.isEmpty) {
-          continue;
-        }
-
-        if (name.isEmpty || options.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Variant name và options phải nhập đầy đủ"),
-            ),
-          );
-          setState(() => _isLoading = false);
-          return;
-        }
-
-        variants.add({"value": name, "options": options});
-      }
-
-      if (basePrice <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Base Price must be greater than 0")),
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      // Ensure SKU price is valid
-      int finalSkuPrice = skuPrice;
-      if (finalSkuPrice <= 0) {
-        finalSkuPrice = basePrice;
-      }
-
-      // Validate and build SKUs from input list
-      final List<Map<String, dynamic>> finalSkus = [];
-      for (var sku in _skuInputs) {
-        final price = int.tryParse(sku.priceController.text) ?? basePrice;
-        final stock = int.tryParse(sku.stockController.text) ?? 0;
-        final image = sku.imageController.text.isNotEmpty
-            ? sku.imageController.text
-            : (_uploadedImageUrls.isNotEmpty ? _uploadedImageUrls.first : '');
-
-        if (price <= 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Price for SKU ${sku.value} must be > 0")),
-          );
-          setState(() => _isLoading = false);
-          return;
-        }
-
-        finalSkus.add({
-          "value": sku.value,
-          "price": price,
-          "stock": stock,
-          "image": image,
-        });
-      }
-
-      // Create payload matching API
-      final Map<String, dynamic> payload = {
-        "name": _nameController.text,
-        "basePrice": basePrice,
-        "virtualPrice": virtualPrice,
-        "brandId": _selectedBrandId,
-        "images": _uploadedImageUrls,
-        "categories": [_selectedCategoryId],
-        "publishedAt": DateTime.now().toUtc().toIso8601String(),
-        // Add required variants array
-        "variants": variants.isNotEmpty
-            ? variants
-            : [
-                {
-                  "value": "Type",
-                  "options": ["Default"],
-                },
-              ],
-        // Use generated SKUs
-        "skus": finalSkus,
-      };
-
-      final productRepo = GetIt.I<ProductRepository>();
-      final result = widget.product == null
-          ? await productRepo.createProduct(payload)
-          : await productRepo.updateProduct(widget.product!.id, payload);
-
-      setState(() => _isLoading = false);
-
-      result.fold(
-        (failure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(failure.message)));
-        },
-        (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                widget.product == null
-                    ? "Product Created Successfully!"
-                    : "Product Updated Successfully!",
-              ),
-            ),
-          );
-          Navigator.pop(context, true); // Return true to signal refresh
-        },
+        ),
       );
+      Navigator.pop(context, true);
+    }
+
+    if (state.isDataLoaded) {
+      // Only set text if empty (initial load) to avoid overwriting user edits if we used this listener deeply
+      // But here we rely on isDataLoaded being irrelevant after init?
+      // Actually isDataLoaded is true after first response.
+      // We should perform one-time population.
+      // But standard way: populate once in init if data available? No, data comes async.
+      // So checking condition:
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.product == null ? "Add New Product" : "Edit Product",
-        ),
-      ),
-      body: _isFetchingData
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(16.w),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // --- Image Picker Section ---
-                    // --- Image List & Picker ---
-                    SizedBox(
-                      height: 120.h,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
+    return BlocProvider.value(
+      value: _bloc,
+      child: BlocConsumer<AddProductBloc, AddProductState>(
+        listener: (context, state) {
+          _onStateChanged(context, state);
+          // Data initialization hook
+          if (state.isDataLoaded &&
+              _nameController.text.isEmpty &&
+              widget.product != null) {
+            // This simple check prevents re-writing if user cleared the name, but good enough for now
+            if (state.brands.isNotEmpty || state.categories.isNotEmpty) {
+              // Just ensures we have some data loaded
+              _nameController.text = widget.product!.name;
+              _descController.text = widget.product!.description ?? '';
+              _basePriceController.text = widget.product!.basePrice
+                  .toInt()
+                  .toString();
+              if (widget.product!.virtualPrice != null) {
+                _virtualPriceController.text = widget.product!.virtualPrice!
+                    .toInt()
+                    .toString();
+              }
+              _selectedBrandId = widget.product!.brandId;
+              // Handle Category (Single hardcoded for now in UI logic, assuming complex mapping later)
+              // But widget.product doesn't strictly have single category ID field in Entity unless we check categories list
+              // Assuming first category for now if available
+              // _selectedCategoryId = ...
+            }
+          }
+        },
+        builder: (context, state) {
+          if (state.status == AddProductStatus.initial && !state.isDataLoaded) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.product == null ? "Thêm sản phẩm" : "Sửa sản phẩm",
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: state.status == AddProductStatus.loading
+                      ? null
+                      : _submit,
+                ),
+              ],
+            ),
+            body:
+                state.status == AddProductStatus.loading && !state.isDataLoaded
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    padding: EdgeInsets.all(16.w),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: _pickAndUploadImage,
-                            child: Container(
-                              width: 100.h,
-                              height: 100.h,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: _isUploadingImage
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.add_a_photo,
-                                          color: Colors.grey,
-                                        ),
-                                        SizedBox(height: 4.h),
-                                        Text(
-                                          "Add Images",
-                                          style: TextStyle(
-                                            fontSize: 10.sp,
-                                            color: Colors.grey,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                            ),
+                          _buildImageSection(state),
+                          SizedBox(height: 24.h),
+                          _buildTextField("Tên sản phẩm", _nameController),
+                          SizedBox(height: 12.h),
+                          _buildBrandCategorySelectors(state),
+                          SizedBox(height: 12.h),
+                          _buildTextField(
+                            "Mô tả",
+                            _descController,
+                            maxLines: 3,
+                            isRequired: false,
                           ),
-                          ..._uploadedImageUrls.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final url = entry.value;
-                            return Padding(
-                              padding: EdgeInsets.only(left: 12.w),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Container(
-                                    width: 100.h,
-                                    height: 100.h,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.grey[300]!,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      image: DecorationImage(
-                                        image: CachedNetworkImageProvider(url),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: -5,
-                                    right: -5,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _uploadedImageUrls.removeAt(index);
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.close,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          SizedBox(height: 12.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  "Giá cơ bản",
+                                  _basePriceController,
+                                  isNumber: true,
+                                ),
                               ),
-                            );
-                          }),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: _buildTextField(
+                                  "Giá ảo (Gạch ngang)",
+                                  _virtualPriceController,
+                                  isNumber: true,
+                                  isRequired: false,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 24.h),
+                          _buildVariantsSection(state),
+                          SizedBox(height: 24.h),
+                          _buildSkusSection(state),
                         ],
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                  ),
+          );
+        },
+      ),
+    );
+  }
 
-                    _buildTextField("Product Name", _nameController),
-                    SizedBox(height: 12.h),
-
-                    Text(
-                      "Variants",
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    SizedBox(height: 8.h),
-                    ..._variantInputs.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final variant = entry.value;
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 12.h),
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildTextField(
-                                    "Variant Name (e.g. Color)",
-                                    variant.nameController,
-                                    isRequired: false,
-                                  ),
-                                ),
-                                if (_variantInputs.length > 1)
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _variantInputs
-                                            .removeAt(index)
-                                            .dispose();
-                                        _updateSkuList();
-                                      });
-                                    },
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            SizedBox(height: 12.h),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildTextField(
-                                    "Add Option (e.g. Red)",
-                                    variant.optionInputController,
-                                    isRequired: false,
-                                  ),
-                                ),
-                                SizedBox(width: 8.w),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    final text = variant
-                                        .optionInputController
-                                        .text
-                                        .trim();
-                                    if (text.isNotEmpty) {
-                                      setState(() {
-                                        if (!variant.options.contains(text)) {
-                                          variant.options.add(text);
-                                          _updateSkuList();
-                                        }
-                                        variant.optionInputController.clear();
-                                      });
-                                    }
-                                  },
-                                  child: const Text("Add"),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8.h),
-                            if (variant.options.isNotEmpty)
-                              Wrap(
-                                spacing: 8.w,
-                                runSpacing: 4.h,
-                                children: variant.options.map((option) {
-                                  return Chip(
-                                    label: Text(option),
-                                    deleteIcon: const Icon(
-                                      Icons.close,
-                                      size: 18,
-                                    ),
-                                    onDeleted: () {
-                                      setState(() {
-                                        variant.options.remove(option);
-                                        _updateSkuList();
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                          ],
-                        ),
-                      );
-                    }),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _variantInputs.add(_VariantInput());
-                            // No need to update SKU list here as new variant has no options yet
-                          });
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text("Add Variant"),
+  Widget _buildImageSection(AddProductState state) {
+    return SizedBox(
+      height: 120.h,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          GestureDetector(
+            onTap: () async {
+              final images = await _picker.pickMultiImage();
+              if (images.isNotEmpty && mounted) {
+                _bloc.add(AddProductImagePicked(images));
+              }
+            },
+            child: Container(
+              width: 100.h,
+              height: 100.h,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: state.isUploadingImage
+                  ? const Center(child: CircularProgressIndicator())
+                  : const Icon(Icons.add_a_photo, color: Colors.grey),
+            ),
+          ),
+          ...state.uploadedImageUrls.asMap().entries.map((e) {
+            return Padding(
+              padding: EdgeInsets.only(left: 12.w),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 100.h,
+                    height: 100.h,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8.r),
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(e.value),
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    SizedBox(height: 12.h),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            "Default SKU Price (Bulk Apply)",
-                            _skuPriceController,
-                            isNumber: true,
-                            isRequired: false,
-                          ),
+                  ),
+                  Positioned(
+                    top: -5,
+                    right: -5,
+                    child: GestureDetector(
+                      onTap: () => _bloc.add(AddProductImageRemoved(e.key)),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
                         ),
-                        SizedBox(width: 8.w),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Apply to all
-                            for (var sku in _skuInputs) {
-                              sku.priceController.text =
-                                  _skuPriceController.text;
-                            }
-                            setState(() {});
-                          },
-                          child: const Text("Apply All"),
+                        child: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.white,
                         ),
-                      ],
+                      ),
                     ),
-                    SizedBox(height: 12.h),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            "Default SKU Stock (Bulk Apply)",
-                            _skuStockController,
-                            isNumber: true,
-                            isRequired: false,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        ElevatedButton(
-                          onPressed: () {
-                            for (var sku in _skuInputs) {
-                              sku.stockController.text =
-                                  _skuStockController.text;
-                            }
-                            setState(() {});
-                          },
-                          child: const Text("Apply All"),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    _buildTextField(
-                      "Default SKU Image URL (Optional)",
-                      _skuImageController,
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrandCategorySelectors(AddProductState state) {
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<int>(
+            initialValue: _selectedBrandId,
+            decoration: const InputDecoration(
+              labelText: "Thương hiệu",
+              border: OutlineInputBorder(),
+            ),
+            items: state.brands
+                .map(
+                  (b) => DropdownMenuItem(
+                    value: b.id,
+                    child: Text(b.name, overflow: TextOverflow.ellipsis),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) => setState(() => _selectedBrandId = v),
+            validator: (v) => v == null ? 'Chọn thương hiệu' : null,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: DropdownButtonFormField<int>(
+            initialValue: _selectedCategoryId,
+            decoration: const InputDecoration(
+              labelText: "Danh mục",
+              border: OutlineInputBorder(),
+            ),
+            items: state.categories
+                .map(
+                  (c) => DropdownMenuItem(
+                    value: c.id,
+                    child: Text(c.name, overflow: TextOverflow.ellipsis),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) => setState(() => _selectedCategoryId = v),
+            validator: (v) => v == null ? 'Chọn danh mục' : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVariantsSection(AddProductState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Biến thể",
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 8.h),
+        ...state.variants.asMap().entries.map((entry) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: _VariantItemWidget(
+              index: entry.key,
+              variant: entry.value,
+              onRemove: () => _bloc.add(AddProductVariantRemoved(entry.key)),
+            ),
+          );
+        }),
+        OutlinedButton.icon(
+          onPressed: () => _bloc.add(AddProductVariantAdded()),
+          icon: const Icon(Icons.add),
+          label: const Text("Thêm biến thể"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkusSection(AddProductState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Cấu hình SKU",
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 8.h),
+        // Bulk Apply
+        Container(
+          padding: EdgeInsets.all(12.w),
+          color: Colors.grey[50],
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      "Giá chung",
+                      _skuDefaultPriceController,
+                      isNumber: true,
                       isRequired: false,
                     ),
-
-                    SizedBox(height: 24.h),
-                    Text(
-                      "SKU Configuration",
-                      style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: _buildTextField(
+                      "Kho chung",
+                      _skuDefaultStockController,
+                      isNumber: true,
+                      isRequired: false,
                     ),
-                    SizedBox(height: 8.h),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]!),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _skuInputs.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final sku = _skuInputs[index];
-                          return Padding(
-                            padding: EdgeInsets.all(12.w),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  sku.value,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14.sp,
-                                  ),
-                                ),
-                                SizedBox(height: 8.h),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildTextField(
-                                        "Price",
-                                        sku.priceController,
-                                        isNumber: true,
-                                        isRequired: true,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12.w),
-                                    Expanded(
-                                      child: _buildTextField(
-                                        "Stock",
-                                        sku.stockController,
-                                        isNumber: true,
-                                        isRequired: true,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    _buildTextField(
-                      "Description",
-                      _descController,
-                      maxLines: 3,
-                    ),
-                    SizedBox(height: 12.h),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            "Base Price",
-                            _basePriceController,
-                            isNumber: true,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: _buildTextField(
-                            "Original Price",
-                            _virtualPriceController,
-                            isNumber: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-
-                    // --- Brand Dropdown ---
-                    DropdownButtonFormField<int>(
-                      initialValue: _selectedBrandId,
-                      decoration: const InputDecoration(
-                        labelText: "Brand",
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _brands
-                          .map(
-                            (brand) => DropdownMenuItem(
-                              value: brand.id,
-                              child: Text(brand.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedBrandId = val),
-                      validator: (val) => val == null ? "Required" : null,
-                    ),
-
-                    SizedBox(height: 12.h),
-
-                    // --- Category Dropdown ---
-                    DropdownButtonFormField<int>(
-                      initialValue: _selectedCategoryId,
-                      decoration: const InputDecoration(
-                        labelText: "Category",
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _categories
-                          .map(
-                            (cat) => DropdownMenuItem(
-                              value: cat.id,
-                              child: Text(cat.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedCategoryId = val),
-                      validator: (val) => val == null ? "Required" : null,
-                    ),
-
-                    SizedBox(height: 24.h),
-                    ElevatedButton(
-                      onPressed: (_isLoading || _isUploadingImage)
-                          ? null
-                          : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16.h),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text("Create Product"),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
+              SizedBox(height: 8.h),
+              ElevatedButton(
+                onPressed: () {
+                  final price = double.tryParse(
+                    _skuDefaultPriceController.text,
+                  );
+                  final stock = int.tryParse(_skuDefaultStockController.text);
+                  if (price != null || stock != null) {
+                    _bloc.add(
+                      AddProductApplyDefaultSku(price: price, stock: stock),
+                    );
+                  }
+                },
+                child: const Text("Áp dụng tất cả"),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 12.h),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: state.skus.length,
+          separatorBuilder: (_, __) => const Divider(),
+          itemBuilder: (context, index) {
+            return _SkuItemWidget(index: index, sku: state.skus[index]);
+          },
+        ),
+      ],
     );
   }
 
@@ -891,8 +425,8 @@ class _AddProductPageState extends State<AddProductPage> {
     String label,
     TextEditingController controller, {
     bool isNumber = false,
-    int maxLines = 1,
     bool isRequired = true,
+    int maxLines = 1,
   }) {
     return TextFormField(
       controller: controller,
@@ -900,14 +434,263 @@ class _AddProductPageState extends State<AddProductPage> {
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4.r)),
+        border: const OutlineInputBorder(),
       ),
-      validator: (value) {
-        if (isRequired && (value == null || value.isEmpty)) {
-          return "$label is required";
-        }
-        return null;
-      },
+      validator: isRequired
+          ? (v) => (v == null || v.isEmpty) ? "Vui lòng nhập $label" : null
+          : null,
+    );
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      // Validations for Brand/Category/Images are handled in Bloc or simple Check
+      // Dispatch event
+      _bloc.add(
+        AddProductSubmitted(
+          name: _nameController.text,
+          description: _descController.text,
+          basePrice: double.tryParse(_basePriceController.text) ?? 0,
+          virtualPrice: double.tryParse(_virtualPriceController.text) ?? 0,
+          brandId: _selectedBrandId,
+          categoryId: _selectedCategoryId,
+        ),
+      );
+    }
+  }
+}
+
+class _VariantItemWidget extends StatefulWidget {
+  final int index;
+  final VariantInput variant;
+  final VoidCallback onRemove;
+
+  const _VariantItemWidget({
+    super.key, // Use Key derived from ID outside if possible, but here relying on index rebuilds is safer if list is small? No.
+    // Better provide key from parent
+    required this.index,
+    required this.variant,
+    required this.onRemove,
+  });
+
+  @override
+  State<_VariantItemWidget> createState() => _VariantItemWidgetState();
+}
+
+class _VariantItemWidgetState extends State<_VariantItemWidget> {
+  late TextEditingController _nameController;
+  final TextEditingController _optionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.variant.name);
+  }
+
+  @override
+  void didUpdateWidget(covariant _VariantItemWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.variant.name != oldWidget.variant.name &&
+        widget.variant.name != _nameController.text) {
+      _nameController.text = widget.variant.name;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _optionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Focus(
+                  onFocusChange: (focus) {
+                    if (!focus) {
+                      context.read<AddProductBloc>().add(
+                        AddProductVariantNameChanged(
+                          widget.index,
+                          _nameController.text,
+                        ),
+                      );
+                    }
+                  },
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: "Tên biến thể (VD: Màu sắc)",
+                    ),
+                    onChanged: (v) {
+                      // Optional: Update on every char or just on focus loss.
+                      // For smoother UX, focus loss or debounce is better.
+                      // Here relying on onFocusChange above.
+                    },
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: widget.onRemove,
+                icon: const Icon(Icons.delete, color: Colors.red),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _optionController,
+                  decoration: const InputDecoration(
+                    labelText: "Thêm tùy chọn (VD: Đỏ)",
+                  ),
+                  onSubmitted: (v) => _addOption(),
+                ),
+              ),
+              TextButton(onPressed: _addOption, child: const Text("Thêm")),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            children: widget.variant.options
+                .map(
+                  (opt) => Chip(
+                    label: Text(opt),
+                    onDeleted: () => context.read<AddProductBloc>().add(
+                      AddProductVariantOptionRemoved(widget.index, opt),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addOption() {
+    if (_optionController.text.isNotEmpty) {
+      context.read<AddProductBloc>().add(
+        AddProductVariantOptionAdded(widget.index, _optionController.text),
+      );
+      _optionController.clear();
+    }
+  }
+}
+
+class _SkuItemWidget extends StatefulWidget {
+  final int index;
+  final SkuInput sku;
+
+  const _SkuItemWidget({required this.index, required this.sku, super.key});
+
+  @override
+  State<_SkuItemWidget> createState() => _SkuItemWidgetState();
+}
+
+class _SkuItemWidgetState extends State<_SkuItemWidget> {
+  late TextEditingController _priceController;
+  late TextEditingController _stockController;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceController = TextEditingController(
+      text: widget.sku.price > 0 ? widget.sku.price.toInt().toString() : '',
+    );
+    _stockController = TextEditingController(
+      text: widget.sku.stock > 0 ? widget.sku.stock.toString() : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _SkuItemWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update if value changed externally
+    if (widget.sku.price != oldWidget.sku.price &&
+        _priceController.text != widget.sku.price.toInt().toString()) {
+      _priceController.text = widget.sku.price > 0
+          ? widget.sku.price.toInt().toString()
+          : '';
+    }
+    if (widget.sku.stock != oldWidget.sku.stock &&
+        _stockController.text != widget.sku.stock.toString()) {
+      _stockController.text = widget.sku.stock > 0
+          ? widget.sku.stock.toString()
+          : '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _priceController.dispose();
+    _stockController.dispose();
+    super.dispose();
+  }
+
+  void _updateSku() {
+    final price = double.tryParse(_priceController.text);
+    final stock = int.tryParse(_stockController.text);
+    context.read<AddProductBloc>().add(
+      AddProductSkuUpdated(index: widget.index, price: price, stock: stock),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.sku.value,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Focus(
+                  onFocusChange: (f) {
+                    if (!f) _updateSku();
+                  },
+                  child: TextFormField(
+                    controller: _priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "Giá"),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Focus(
+                  onFocusChange: (f) {
+                    if (!f) _updateSku();
+                  },
+                  child: TextFormField(
+                    controller: _stockController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: "Kho"),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -237,7 +237,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       AppConstants.setup2faEndpoint,
       data: {},
     );
-    return response.data as Map<String, dynamic>;
+    return Map<String, dynamic>.from(response.data);
   }
 
   @override

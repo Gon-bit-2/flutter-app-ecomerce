@@ -15,14 +15,15 @@ class ProfilePage extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthLogoutSuccess) {
-          Navigator.of(
+          ScaffoldMessenger.of(
             context,
-          ).pushNamedAndRemoveUntil('/login', (route) => false);
+          ).showSnackBar(const SnackBar(content: Text('Đăng xuất thành công')));
+          // Navigator logic removed to keep user on HomePage (Guest mode) or let HomePage handle it.
         } else if (state is AuthSetup2FASuccess) {
           _show2FASetupDialog(context, state.data);
         } else if (state is AuthDisable2FASuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('2FA has been disabled successfully')),
+            const SnackBar(content: Text('Đã tắt xác thực 2 lớp thành công')),
           );
         } else if (state is AuthFailure) {
           ScaffoldMessenger.of(
@@ -103,7 +104,7 @@ class ProfilePage extends StatelessWidget {
         children: [
           _buildMenuItem(
             Icons.person_outline,
-            "Account Settings",
+            "Thiết lập tài khoản",
             onTap: () {},
           ),
           const Divider(height: 1),
@@ -120,15 +121,12 @@ class ProfilePage extends StatelessWidget {
                 size: 20.sp,
               ),
             ),
-            title: Text(
-              "Two-Factor Authentication",
-              style: TextStyle(fontSize: 14.sp),
-            ),
-            value: user.totpSecret != null,
+            title: Text("Xác thực 2 lớp", style: TextStyle(fontSize: 14.sp)),
+            value: user.isTwoFactorEnabled,
             onChanged: (value) {
               if (value) {
                 // Turning ON
-                context.read<AuthBloc>().add(AuthSetup2FAStarted());
+                context.read<AuthBloc>().add(AuthSetup2FAStarted(user: user));
               } else {
                 // Turning OFF
                 _showDisable2FADialog(context);
@@ -141,7 +139,7 @@ class ProfilePage extends StatelessWidget {
           if (user.roleId == 3) ...[
             _buildMenuItem(
               Icons.storefront_outlined,
-              "My Shop",
+              "Shop của tôi",
               onTap: () {
                 Navigator.push(
                   context,
@@ -153,13 +151,13 @@ class ProfilePage extends StatelessWidget {
           ] else ...[
             _buildMenuItem(
               Icons.store_outlined,
-              "Start Selling",
+              "Bắt đầu bán hàng",
               onTap: () {
                 // Navigate to Shop Registration
                 // TODO: Implement Shop Registration Page
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text("Navigate to Shop Registration"),
+                    content: Text("Chuyển đến trang đăng ký shop"),
                   ),
                 );
               },
@@ -168,11 +166,15 @@ class ProfilePage extends StatelessWidget {
             const Divider(height: 1),
           ],
           // ----------------------------
-          _buildMenuItem(Icons.help_outline, "Help Centre", onTap: () {}),
+          _buildMenuItem(
+            Icons.help_outline,
+            "Trung tâm trợ giúp",
+            onTap: () {},
+          ),
           const Divider(height: 1),
           _buildMenuItem(
             Icons.logout,
-            "Logout",
+            "Đăng xuất",
             onTap: () {
               _showLogoutDialog(context);
             },
@@ -211,19 +213,19 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<AuthBloc>().add(AuthLogoutRequested());
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -237,29 +239,27 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Disable 2FA'),
+        title: const Text('Tắt xác thực 2 lớp'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Enter TOTP code from your authenticator app OR OTP from email:',
-            ),
+            const Text('Nhập mã TOTP từ ứng dụng hoặc OTP từ email:'),
             SizedBox(height: 16.h),
             TextField(
               controller: totpController,
               decoration: const InputDecoration(
-                labelText: 'TOTP Code (from app)',
+                labelText: 'Mã TOTP (từ ứng dụng)',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 12.h),
-            const Text('OR'),
+            const Text('HOẶC'),
             SizedBox(height: 12.h),
             TextField(
               controller: otpController,
               decoration: const InputDecoration(
-                labelText: 'OTP (from email)',
+                labelText: 'OTP (từ email)',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
@@ -269,7 +269,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text('Hủy'),
           ),
           TextButton(
             onPressed: () {
@@ -279,7 +279,7 @@ class ProfilePage extends StatelessWidget {
               if (totpCode.isEmpty && code.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Please provide either TOTP code or OTP'),
+                    content: Text('Vui lòng cung cấp mã TOTP hoặc mã OTP'),
                   ),
                 );
                 return;
@@ -288,12 +288,15 @@ class ProfilePage extends StatelessWidget {
               Navigator.pop(dialogContext);
               context.read<AuthBloc>().add(
                 AuthDisable2FAStarted(
-                  totpCode: totpCode.isNotEmpty ? totpCode : null,
                   code: code.isNotEmpty ? code : null,
+                  user:
+                      user, // Accessing accessing 'user' field of ProfilePage? No, ProfilePage is StatelessWidget or Stateful? 'user' variable is from class ProfilePage.
+                  // Wait, helper methods like _showDisable2FADialog are inside the class instance?
+                  // Yes. `UserEntity user` is a field of ProfilePage.
                 ),
               );
             },
-            child: const Text('Disable'),
+            child: const Text('Tắt'),
           ),
         ],
       ),
@@ -304,24 +307,24 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Setup 2FA'),
+        title: const Text('Thiết lập 2FA'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Scan this QR code with your authenticator app:',
+                'Quét mã QR bằng ứng dụng xác thực:',
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 16.h),
               // Display QR code or secret based on API response
-              if (data['qrCode'] != null) Text('QR Code: ${data['qrCode']}'),
+              if (data['qrCode'] != null) Text('Mã QR: ${data['qrCode']}'),
               if (data['secret'] != null)
                 SelectableText('Secret: ${data['secret']}'),
               if (data['url'] != null) SelectableText('URL: ${data['url']}'),
               SizedBox(height: 16.h),
               const Text(
-                'After scanning, use your authenticator app to generate codes for login.',
+                'Sau khi quét, sử dụng ứng dụng để lấy mã đăng nhập.',
                 style: TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
               ),
@@ -331,7 +334,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
+            child: const Text('Đóng'),
           ),
         ],
       ),

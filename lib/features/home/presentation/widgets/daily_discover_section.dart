@@ -38,7 +38,7 @@ class DailyDiscoverHeader extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 15.h),
         child: Center(
           child: Text(
-            'DAILY DISCOVER',
+            'GỢI Ý HÔM NAY',
             style: TextStyle(
               color: Colors.red,
               fontWeight: FontWeight.bold,

@@ -1,6 +1,5 @@
 // lib/main.dart
 
-import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Để UI co giãn
@@ -38,7 +37,7 @@ class MyApp extends StatelessWidget {
             ),
           ],
           child: MaterialApp(
-            title: 'E-Commerce App',
+            title: 'Ứng dụng TMĐT',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
@@ -51,19 +50,7 @@ class MyApp extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
             ),
-            home: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                if (state is AuthSuccess) {
-                  return const HomePage();
-                } else if (state is AuthUnauthenticated) {
-                  return const LoginPage();
-                }
-                // Loading or initial state
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              },
-            ),
+            home: const HomePage(),
           ),
         );
       },

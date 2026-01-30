@@ -34,7 +34,7 @@ class HomeAppBar extends StatelessWidget {
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        'Search for Wireless Earbuds', // Placeholder
+                        'Tìm kiếm Tai nghe không dây', // Placeholder
                         style: TextStyle(color: Colors.grey, fontSize: 14.sp),
                         overflow: TextOverflow.ellipsis,
                       ),

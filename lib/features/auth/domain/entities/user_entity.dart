@@ -8,6 +8,7 @@ class UserEntity extends Equatable {
   final String? avatar;
   final int? roleId;
   final String? totpSecret;
+  final bool isTwoFactorEnabled;
 
   const UserEntity({
     required this.id,
@@ -17,6 +18,7 @@ class UserEntity extends Equatable {
     this.avatar,
     this.roleId,
     this.totpSecret,
+    this.isTwoFactorEnabled = false,
   });
 
   // Equatable giúp so sánh 2 object.
@@ -30,6 +32,7 @@ class UserEntity extends Equatable {
     avatar,
     roleId,
     totpSecret,
+    isTwoFactorEnabled,
   ];
 
   UserEntity copyWith({
@@ -41,6 +44,7 @@ class UserEntity extends Equatable {
     int? roleId,
     String? totpSecret,
     bool nullTotpSecret = false,
+    bool? isTwoFactorEnabled,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -50,6 +54,7 @@ class UserEntity extends Equatable {
       avatar: avatar ?? this.avatar,
       roleId: roleId ?? this.roleId,
       totpSecret: nullTotpSecret ? null : (totpSecret ?? this.totpSecret),
+      isTwoFactorEnabled: isTwoFactorEnabled ?? this.isTwoFactorEnabled,
     );
   }
 }

@@ -90,17 +90,28 @@ class AuthLoginStarted extends AuthEvent {
 class AuthLogoutRequested extends AuthEvent {}
 
 // Sự kiện: Setup 2FA
-class AuthSetup2FAStarted extends AuthEvent {}
+class AuthSetup2FAStarted extends AuthEvent {
+  final UserEntity? user;
+  const AuthSetup2FAStarted({this.user});
+
+  @override
+  List<Object> get props => [if (user != null) user!];
+}
 
 // Sự kiện: Disable 2FA
 class AuthDisable2FAStarted extends AuthEvent {
   final String? totpCode;
   final String? code;
+  final UserEntity? user;
 
-  const AuthDisable2FAStarted({this.totpCode, this.code});
+  const AuthDisable2FAStarted({this.totpCode, this.code, this.user});
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [
+    if (totpCode != null) totpCode!,
+    if (code != null) code!,
+    if (user != null) user!,
+  ];
 }
 
 // Sự kiện: Check authentication status khi app khởi động

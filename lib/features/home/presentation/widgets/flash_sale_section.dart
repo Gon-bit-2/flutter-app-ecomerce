@@ -46,7 +46,7 @@ class FlashSaleSection extends StatelessWidget {
                   child: Row(
                     children: [
                       Text(
-                        'See All',
+                        'Xem tất cả',
                         style: TextStyle(color: Colors.grey, fontSize: 12.sp),
                       ),
                       Icon(
@@ -144,7 +144,7 @@ class FlashSaleSection extends StatelessWidget {
                             ),
                             Center(
                               child: Text(
-                                '${product.sold ?? 0} SOLD',
+                                '${product.sold ?? 0} ĐÃ BÁN',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 10.sp,

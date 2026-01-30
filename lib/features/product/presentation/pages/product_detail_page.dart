@@ -161,7 +161,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       const Icon(Icons.image, size: 50, color: Colors.grey),
                       SizedBox(height: 8.h),
                       Text(
-                        "Image Empty\nLength: ${images.length}",
+                        "Không có ảnh\nLength: ${images.length}",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12.sp, color: Colors.red),
                       ),
@@ -170,7 +170,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
               );
             }
-            final url = images[index];
+            final rawUrl = images[index];
+            final url = rawUrl.startsWith('url: ')
+                ? rawUrl.replaceFirst('url: ', '').trim()
+                : rawUrl;
             return Stack(
               children: [
                 CachedNetworkImage(
@@ -191,7 +194,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.w),
                             child: Text(
-                              "Load Error: $error\nURL: $url",
+                              "Lỗi tải ảnh: $error\nURL: $url",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 10.sp,
@@ -308,12 +311,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Container(height: 12.h, width: 1, color: Colors.grey),
         SizedBox(width: 8.w),
         Text(
-          "${widget.product.sold ?? 100} Sold",
+          "${widget.product.sold ?? 100} Đã bán",
           style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
         ),
         const Spacer(),
         Text(
-          "See all reviews >",
+          "Xem tất cả đánh giá >",
           style: TextStyle(
             color: Theme.of(context).primaryColor,
             fontSize: 14.sp,
@@ -338,11 +341,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Free Shipping",
+                "Miễn phí vận chuyển",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
               ),
               Text(
-                "Delivery to New York",
+                "Giao hàng tới New York",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
               ),
             ],
@@ -376,7 +379,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Select $name",
+                    "Chọn $name",
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
@@ -443,7 +446,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       children: [
         SizedBox(height: 12.h),
         Text(
-          "Quantity",
+          "Số lượng",
           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 12.h),
@@ -509,13 +512,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       children: [
         SizedBox(height: 12.h),
         Text(
-          "Product Specifications",
+          "Thông số kỹ thuật",
           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 12.h),
-        _buildSpecRow("Connectivity", "Bluetooth / Wireless"),
-        _buildSpecRow("Warranty", "12 Months"),
-        _buildSpecRow("Battery Life", "70 Days"),
+        _buildSpecRow("Kết nối", "Bluetooth / Không dây"),
+        _buildSpecRow("Bảo hành", "12 Tháng"),
+        _buildSpecRow("Thời lượng pin", "70 Ngày"),
         SizedBox(height: 12.h),
       ],
     );
@@ -547,12 +550,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       children: [
         SizedBox(height: 12.h),
         Text(
-          "Product Description",
+          "Mô tả sản phẩm",
           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 8.h),
         Text(
-          widget.product.description ?? "No description available.",
+          widget.product.description ?? "Chưa có mô tả.",
           style: TextStyle(
             fontSize: 14.sp,
             color: Colors.grey[800],
@@ -563,7 +566,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ),
         SizedBox(height: 4.h),
         Center(
-          child: TextButton(onPressed: () {}, child: const Text("Show More")),
+          child: TextButton(onPressed: () {}, child: const Text("Xem thêm")),
         ),
       ],
     );
@@ -577,11 +580,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Product Ratings",
+              "Đánh giá sản phẩm",
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             Text(
-              "See All",
+              "Xem tất cả",
               style: TextStyle(
                 color: Theme.of(context).primaryColor,
                 fontSize: 14.sp,
@@ -606,13 +609,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
               ),
               Text(
-                "Variation: Graphite",
+                "Phân loại: Graphite",
                 style: TextStyle(fontSize: 12.sp, color: Colors.grey),
               ),
               SizedBox(height: 4.h),
-              const Text(
-                "The mouse is absolutely amazing! Quiet clicks are a game changer.",
-              ),
+              const Text("Chuột dùng rất thích! Click êm, không gây ồn."),
             ],
           ),
         ),
@@ -625,7 +626,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "You may also like",
+          "Có thể bạn cũng thích",
           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 12.h),
@@ -653,7 +654,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                     Padding(
                       padding: EdgeInsets.all(8.w),
-                      child: const Text("Product Name", maxLines: 2),
+                      child: const Text("Tên sản phẩm", maxLines: 2),
                     ),
                   ],
                 ),
@@ -686,7 +687,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               children: [
                 Icon(Icons.chat_bubble_outline, color: Colors.grey[700]),
                 Text(
-                  "Chat",
+                  "Nhắn tin",
                   style: TextStyle(fontSize: 10.sp, color: Colors.grey[700]),
                 ),
               ],
@@ -697,7 +698,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               children: [
                 Icon(Icons.add_shopping_cart, color: Colors.grey[700]),
                 Text(
-                  "Add to Cart",
+                  "Thêm vào giỏ",
                   style: TextStyle(fontSize: 10.sp, color: Colors.grey[700]),
                 ),
               ],
@@ -714,7 +715,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                 ),
-                child: const Text("Buy Now"),
+                child: const Text("Mua ngay"),
               ),
             ),
           ],

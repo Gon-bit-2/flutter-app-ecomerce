@@ -8,7 +8,7 @@ class MyShopPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("My Shop"), centerTitle: true),
+      appBar: AppBar(title: const Text("Shop của tôi"), centerTitle: true),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -50,11 +50,11 @@ class MyShopPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "My Awesome Shop",
+                "Shop của tôi",
                 style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
               Text(
-                "Active",
+                "Đang hoạt động",
                 style: TextStyle(fontSize: 14.sp, color: Colors.green),
               ),
             ],
@@ -68,7 +68,7 @@ class MyShopPage extends StatelessWidget {
     final menuItems = [
       {
         "icon": Icons.add_box_outlined,
-        "title": "Add Product",
+        "title": "Thêm sản phẩm",
         "onTap": () {
           Navigator.push(
             context,
@@ -78,31 +78,31 @@ class MyShopPage extends StatelessWidget {
       },
       {
         "icon": Icons.inventory_2_outlined,
-        "title": "My Products",
+        "title": "Sản phẩm của tôi",
         "onTap": () {
           // TODO: Implement My Products List
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text("My Products List")));
+          ).showSnackBar(const SnackBar(content: Text("Danh sách sản phẩm")));
         },
       },
       {
         "icon": Icons.list_alt,
-        "title": "Orders",
+        "title": "Đơn hàng",
         "onTap": () {
           // TODO: Implement Orders
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text("Orders - Coming Soon")));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Đơn hàng - Sắp ra mắt")),
+          );
         },
       },
       {
         "icon": Icons.settings_outlined,
-        "title": "Shop Settings",
+        "title": "Thiết lập Shop",
         "onTap": () {
           // TODO: Implement Shop Settings
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Shop Settings - Coming Soon")),
+            const SnackBar(content: Text("Thiết lập Shop - Sắp ra mắt")),
           );
         },
       },
