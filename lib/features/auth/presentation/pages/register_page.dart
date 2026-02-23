@@ -118,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (state is AuthOtpSentSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Verification code sent!"),
+                      content: Text("Mã xác nhận đã được gửi!"),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -127,7 +127,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (state is AuthSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Registration Successful! Please Login."),
+                      content: Text("Đăng ký thành công! Vui lòng đăng nhập."),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -138,7 +138,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (state is AuthVerifyOtpSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("OTP Verified!"),
+                      content: Text("Xác thực OTP thành công!"),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -180,16 +180,16 @@ class _RegisterPageState extends State<RegisterPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Register", style: AppTextStyles.h1),
+          Text("Đăng ký", style: AppTextStyles.h1),
           SizedBox(height: 8.h),
           Text(
-            "Step 1 of 3: Enter your email to get started",
+            "Bước 1 / 3: Nhập email để bắt đầu",
             style: AppTextStyles.bodyMedium,
           ),
           SizedBox(height: 40.h),
 
           Text(
-            "Email Address",
+            "Địa chỉ Email",
             style: AppTextStyles.bodyLarge.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -203,15 +203,15 @@ class _RegisterPageState extends State<RegisterPage> {
               color: AppColors.textSecondary,
             ),
             validator: (v) {
-              if (v == null || v.isEmpty) return "Required";
-              if (!v.contains('@')) return "Invalid email";
+              if (v == null || v.isEmpty) return "Bắt buộc";
+              if (!v.contains('@')) return "Email không hợp lệ";
               return null;
             },
           ),
 
           SizedBox(height: 40.h),
           CustomButton(
-            text: "Next",
+            text: "Tiếp theo",
             isLoading: state is AuthLoading,
             onPressed: () {
               if (_step1Key.currentState!.validate()) {
@@ -231,10 +231,7 @@ class _RegisterPageState extends State<RegisterPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Already have an account? ",
-                style: AppTextStyles.bodyMedium,
-              ),
+              Text("Đã có tài khoản? ", style: AppTextStyles.bodyMedium),
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).pushReplacement(
@@ -242,7 +239,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   );
                 },
                 child: Text(
-                  "Login",
+                  "Đăng nhập",
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
@@ -288,13 +285,13 @@ class _RegisterPageState extends State<RegisterPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Title
-          Center(child: Text("Verification", style: AppTextStyles.h3)),
+          Center(child: Text("Xác thực", style: AppTextStyles.h3)),
           SizedBox(height: 40.h),
 
-          Center(child: Text("Enter OTP Code", style: AppTextStyles.h1)),
+          Center(child: Text("Nhập mã OTP", style: AppTextStyles.h1)),
           SizedBox(height: 16.h),
           Text(
-            "Enter the 6-digit code sent to your email:\n${_emailController.text}",
+            "Nhập mã 6 số đã gửi tới email:\n${_emailController.text}",
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMedium,
           ),
@@ -308,7 +305,7 @@ class _RegisterPageState extends State<RegisterPage> {
               defaultPinTheme: defaultPinTheme,
               focusedPinTheme: focusedPinTheme,
               submittedPinTheme: submittedPinTheme,
-              validator: (v) => (v?.length ?? 0) < 6 ? "Enter 6 digits" : null,
+              validator: (v) => (v?.length ?? 0) < 6 ? "Nhập đủ 6 số" : null,
               pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
               showCursor: true,
             ),
@@ -317,7 +314,7 @@ class _RegisterPageState extends State<RegisterPage> {
           SizedBox(height: 40.h),
 
           CustomButton(
-            text: "Verify",
+            text: "Xác nhận",
             isLoading: state is AuthLoading,
             onPressed: () {
               if (_step2Key.currentState!.validate()) {
@@ -342,7 +339,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       );
                     },
               child: Text(
-                "Didn't receive code? Resend",
+                "Không nhận được mã? Gửi lại",
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.primaryBlue,
                 ),
@@ -362,34 +359,34 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text("Complete Profile", style: AppTextStyles.h1),
+            Text("Hoàn tất hồ sơ", style: AppTextStyles.h1),
             SizedBox(height: 8.h),
             Text(
-              "Step 3 of 3: Fill in your details",
+              "Bước 3 / 3: Điền thông tin cá nhân",
               style: AppTextStyles.bodyMedium,
             ),
             SizedBox(height: 30.h),
 
             CustomTextField(
               controller: _nameController,
-              hintText: "Full Name",
+              hintText: "Họ và tên",
               prefixIcon: Icons.person_outline,
-              validator: (v) => v!.isEmpty ? "Required" : null,
+              validator: (v) => v!.isEmpty ? "Bắt buộc" : null,
             ),
             SizedBox(height: 16.h),
 
             CustomTextField(
               controller: _phoneController,
-              hintText: "Phone Number",
+              hintText: "Số điện thoại",
               prefixIcon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
-              validator: (v) => v!.isEmpty ? "Required" : null,
+              validator: (v) => v!.isEmpty ? "Bắt buộc" : null,
             ),
             SizedBox(height: 16.h),
 
             CustomTextField(
               controller: _passwordController,
-              hintText: "Password",
+              hintText: "Mật khẩu",
               prefixIcon: Icons.lock_outline,
               obscureText: !_isPasswordVisible,
               suffixIcon: IconButton(
@@ -400,13 +397,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 onPressed: () =>
                     setState(() => _isPasswordVisible = !_isPasswordVisible),
               ),
-              validator: (v) => v!.length < 6 ? "Min 6 chars" : null,
+              validator: (v) => v!.length < 6 ? "Tối thiểu 6 ký tự" : null,
             ),
             SizedBox(height: 16.h),
 
             CustomTextField(
               controller: _confirmPassController,
-              hintText: "Confirm Password",
+              hintText: "Xác nhận mật khẩu",
               prefixIcon: Icons.lock_outline,
               obscureText: !_isConfirmPasswordVisible,
               suffixIcon: IconButton(
@@ -422,7 +419,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               validator: (v) {
                 if (v != _passwordController.text) {
-                  return "Passwords do not match";
+                  return "Mật khẩu không khớp";
                 }
                 return null;
               },
@@ -431,7 +428,7 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(height: 40.h),
 
             CustomButton(
-              text: "Sign Up",
+              text: "Đăng ký",
               backgroundColor: AppColors.success,
               isLoading: state is AuthLoading,
               onPressed: () {

@@ -129,20 +129,50 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           // Index 1: Mall
-          const Center(child: Text("Mall Tab - Coming Soon")),
+          const Center(child: Text("Tab Mall - Sắp ra mắt")),
           // Index 2: Live
-          const Center(child: Text("Live Tab - Coming Soon")),
+          const Center(child: Text("Tab Live - Sắp ra mắt")),
           // Index 3: Notify
-          const Center(child: Text("Notify Tab - Coming Soon")),
+          const Center(child: Text("Tab Thông báo - Sắp ra mắt")),
           // Index 4: Me / Profile
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
-              if (state is AuthSuccess) {
-                return ProfilePage(user: state.user);
-              } else if (state is AuthSetup2FASuccess && state.user != null) {
-                return ProfilePage(user: state.user!);
+              // Determine if we have a user to display
+              final user = (state is AuthSuccess)
+                  ? state.user
+                  : (state is AuthSetup2FASuccess)
+                  ? state.user
+                  : (state is AuthDisable2FASuccess)
+                  ? state.user
+                  : (state is AuthLoading)
+                  ? state.user
+                  : (state is AuthFailure)
+                  ? state.user
+                  : null;
+
+              if (user != null) {
+                final content = ProfilePage(user: user);
+                if (state is AuthLoading) {
+                  return Stack(
+                    children: [
+                      content,
+                      Container(
+                        color: Colors.black.withOpacity(0.1),
+                        alignment: Alignment.center,
+                        child: const CircularProgressIndicator(),
+                      ),
+                    ],
+                  );
+                }
+                return content;
               }
-              return const SizedBox.shrink(); // Should handle auth check before switching
+
+              // Fallback for loading without user
+              if (state is AuthLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return _buildGuestProfile(context);
             },
           ),
         ],
@@ -150,7 +180,7 @@ class _HomeViewState extends State<HomeView> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_bag_outlined),
             label: 'Mall',
@@ -158,37 +188,63 @@ class _HomeViewState extends State<HomeView> {
           BottomNavigationBarItem(icon: Icon(Icons.live_tv), label: 'Live'),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications_none),
-            label: 'Notify',
+            label: 'Thông báo',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
-            label: 'Me',
+            label: 'Tôi',
           ),
         ],
         selectedItemColor: const Color(0xFF1A94FF),
         unselectedItemColor: Colors.grey,
         currentIndex: _currentIndex,
         onTap: (index) {
-          if (index == 4) {
-            final authState = context.read<AuthBloc>().state;
-            if (authState is AuthSuccess) {
-              setState(() => _currentIndex = index);
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-              ).then((_) {
-                // Check auth again after returning from login
-                final newState = context.read<AuthBloc>().state;
-                if (newState is AuthSuccess) {
-                  setState(() => _currentIndex = 4);
-                }
-              });
-            }
-          } else {
-            setState(() => _currentIndex = index);
-          }
+          setState(() => _currentIndex = index);
         },
+      ),
+    );
+  }
+
+  Widget _buildGuestProfile(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.grey[50],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.account_circle, size: 80.sp, color: Colors.grey[400]),
+          SizedBox(height: 16.h),
+          Text(
+            "Chào mừng đến với E-Commerce",
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            "Đăng nhập để quản lý tài khoản",
+            style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
+          ),
+          SizedBox(height: 32.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A94FF),
+                foregroundColor: Colors.white,
+                minimumSize: Size(double.infinity, 48.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+              ),
+              child: const Text("Đăng nhập / Đăng ký"),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -13,7 +13,8 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   phoneNumber: json['phoneNumber'] as String?,
   avatar: json['avatar'] as String?,
   roleId: (json['roleId'] as num?)?.toInt(),
-  totpSecret: json['totpSecret'] as String?,
+  totpSecret: json['otpSecret'] as String?,
+  isTwoFactorEnabled: json['isTwoFactorEnabled'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -24,4 +25,5 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
   'avatar': instance.avatar,
   'roleId': instance.roleId,
   'totpSecret': instance.totpSecret,
+  'isTwoFactorEnabled': instance.isTwoFactorEnabled,
 };

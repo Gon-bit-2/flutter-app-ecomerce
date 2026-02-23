@@ -85,7 +85,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
             onPressed: () => _prevStep(),
           ),
-          title: Text("Forgot Password", style: AppTextStyles.h3),
+          title: Text("Quên mật khẩu", style: AppTextStyles.h3),
           centerTitle: true,
         ),
         body: SafeArea(
@@ -105,7 +105,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 if (state is AuthOtpSentSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("OTP Sent Successfully!"),
+                      content: Text("Gửi mã OTP thành công!"),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -115,7 +115,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 if (state is AuthVerifyOtpSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("OTP Verified!"),
+                      content: Text("Xác thực OTP thành công!"),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -125,7 +125,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 if (state is AuthResetPasswordSuccessResult) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Password Reset Successful! Please Login."),
+                      content: Text(
+                        "Đặt lại mật khẩu thành công! Vui lòng đăng nhập.",
+                      ),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -170,13 +172,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "Enter Email",
+            "Nhập Email",
             style: AppTextStyles.h2,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16.h),
           Text(
-            "We will send a verification code to your email.",
+            "Chúng tôi sẽ gửi mã xác nhận tới email của bạn.",
             style: AppTextStyles.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -186,14 +188,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             hintText: "Email",
             prefixIcon: Icons.email_outlined,
             validator: (v) {
-              if (v == null || v.isEmpty) return "Required";
-              if (!v.contains('@')) return "Invalid email";
+              if (v == null || v.isEmpty) return "Bắt buộc";
+              if (!v.contains('@')) return "Email không hợp lệ";
               return null;
             },
           ),
           SizedBox(height: 40.h),
           CustomButton(
-            text: "Send Code",
+            text: "Gửi mã",
             isLoading: state is AuthLoading,
             onPressed: () {
               if (_step1Key.currentState!.validate()) {
@@ -230,13 +232,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "Verification",
+            "Xác thực",
             style: AppTextStyles.h2,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16.h),
           Text(
-            "Enter the 6-digit code sent to ${_emailController.text}",
+            "Nhập mã 6 số đã gửi tới ${_emailController.text}",
             style: AppTextStyles.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -251,13 +253,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   border: Border.all(color: AppColors.primaryBlue),
                 ),
               ),
-              validator: (v) => (v?.length ?? 0) < 6 ? "Enter 6 digits" : null,
+              validator: (v) => (v?.length ?? 0) < 6 ? "Nhập đủ 6 số" : null,
               pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
             ),
           ),
           SizedBox(height: 40.h),
           CustomButton(
-            text: "Verify",
+            text: "Xác nhận",
             isLoading: state is AuthLoading,
             onPressed: () {
               if (_step2Key.currentState!.validate()) {
@@ -285,13 +287,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              "Reset Password",
+              "Đặt lại mật khẩu",
               style: AppTextStyles.h2,
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 16.h),
             Text(
-              "Enter your new password below.",
+              "Nhập mật khẩu mới bên dưới.",
               style: AppTextStyles.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -299,7 +301,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
             CustomTextField(
               controller: _newPasswordController,
-              hintText: "New Password",
+              hintText: "Mật khẩu mới",
               prefixIcon: Icons.lock_outline,
               obscureText: !_isPasswordVisible,
               suffixIcon: IconButton(
@@ -310,12 +312,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 onPressed: () =>
                     setState(() => _isPasswordVisible = !_isPasswordVisible),
               ),
-              validator: (v) => v!.length < 6 ? "Min 6 chars" : null,
+              validator: (v) => v!.length < 6 ? "Tối thiểu 6 ký tự" : null,
             ),
             SizedBox(height: 16.h),
             CustomTextField(
               controller: _confirmPasswordController,
-              hintText: "Confirm New Password",
+              hintText: "Xác nhận mật khẩu mới",
               prefixIcon: Icons.lock_outline,
               obscureText: !_isConfirmPasswordVisible,
               suffixIcon: IconButton(
@@ -331,7 +333,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               validator: (v) {
                 if (v != _newPasswordController.text) {
-                  return "Passwords do not match";
+                  return "Mật khẩu không khớp";
                 }
                 return null;
               },
@@ -339,7 +341,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
             SizedBox(height: 40.h),
             CustomButton(
-              text: "Reset Password",
+              text: "Đặt lại mật khẩu",
               backgroundColor: AppColors.success,
               isLoading: state is AuthLoading,
               onPressed: () {

@@ -38,7 +38,20 @@ class CategorySection extends StatelessWidget {
                 padding: EdgeInsets.all(10.w),
                 // If cat.logo is null, use Icon
                 child: cat.logo != null
-                    ? CachedNetworkImage(imageUrl: cat.logo!)
+                    ? CachedNetworkImage(
+                        imageUrl: cat.logo!,
+                        errorWidget: (context, url, error) => Icon(
+                          Icons.category,
+                          color: Colors.blue,
+                          size: 24.sp,
+                        ),
+                        placeholder: (context, url) => Padding(
+                          padding: EdgeInsets.all(10.w),
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      )
                     : Icon(Icons.category, color: Colors.blue, size: 24.sp),
               ),
               SizedBox(height: 5.h),

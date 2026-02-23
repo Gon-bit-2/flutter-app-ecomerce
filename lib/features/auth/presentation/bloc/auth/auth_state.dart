@@ -11,7 +11,14 @@ abstract class AuthState extends Equatable {
 class AuthInitial extends AuthState {}
 
 // 2. Đang tải (Hiện vòng quay)
-class AuthLoading extends AuthState {}
+class AuthLoading extends AuthState {
+  final UserEntity? user;
+
+  const AuthLoading({this.user});
+
+  @override
+  List<Object> get props => [if (user != null) user!];
+}
 
 // 3. Thành công (Đăng nhập/Đăng ký xong)
 class AuthSuccess extends AuthState {
@@ -26,11 +33,12 @@ class AuthSuccess extends AuthState {
 // 4. Thất bại (Hiện lỗi màu đỏ)
 class AuthFailure extends AuthState {
   final String message;
+  final UserEntity? user;
 
-  const AuthFailure(this.message);
+  const AuthFailure(this.message, {this.user});
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [message, if (user != null) user!];
 }
 
 // 5. Google Link Thành công (Có link để mở trình duyệt)
@@ -67,7 +75,27 @@ class AuthSetup2FASuccess extends AuthState {
 }
 
 // 11. Disable 2FA thành công
-class AuthDisable2FASuccess extends AuthState {}
+class AuthDisable2FASuccess extends AuthState {
+  final UserEntity? user;
+  const AuthDisable2FASuccess({this.user});
+
+  @override
+  List<Object> get props => [if (user != null) user!];
+}
 
 // 12. Unauthenticated (không có token hoặc token hết hạn)
 class AuthUnauthenticated extends AuthState {}
+
+// 13. Yêu cầu nhập mã 2FA khi đăng nhập
+class AuthLoginRequiresTwoFactor extends AuthState {
+  final String email;
+  final String password;
+
+  const AuthLoginRequiresTwoFactor({
+    required this.email,
+    required this.password,
+  });
+
+  @override
+  List<Object> get props => [email, password];
+}
