@@ -1,8 +1,6 @@
-import 'package:app_fe_ecomerce/features/brand/domain/entities/brand.dart';
 import 'package:app_fe_ecomerce/features/category/domain/entities/category.dart';
 import 'package:app_fe_ecomerce/features/product/domain/repositories/product_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../brand/domain/repositories/brand_repository.dart';
 import '../../../../category/domain/repositories/category_repository.dart';
 import '../../../../common/domain/repositories/common_repository.dart';
 
@@ -10,7 +8,6 @@ import 'add_product_event.dart';
 import 'add_product_state.dart';
 
 class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
-  final BrandRepository _brandRepository;
   final CategoryRepository _categoryRepository;
   final CommonRepository _commonRepository;
   final ProductRepository _productRepository;
@@ -18,12 +15,10 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
   int? _editingProductId;
 
   AddProductBloc({
-    required BrandRepository brandRepository,
     required CategoryRepository categoryRepository,
     required CommonRepository commonRepository,
     required ProductRepository productRepository,
-  }) : _brandRepository = brandRepository,
-       _categoryRepository = categoryRepository,
+  }) : _categoryRepository = categoryRepository,
        _commonRepository = commonRepository,
        _productRepository = productRepository,
        super(const AddProductState()) {
@@ -48,17 +43,10 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
   ) async {
     emit(state.copyWith(status: AddProductStatus.loading));
 
-    final brandResult = await _brandRepository.getBrands();
     final categoryResult = await _categoryRepository.getCategories();
 
-    List<Brand> brands = [];
     List<Category> categories = [];
     String? error;
-
-    brandResult.fold(
-      (l) => error = "Lỗi lấy danh sách thương hiệu: ${l.message}",
-      (r) => brands = r,
-    );
 
     categoryResult.fold(
       (l) => error = "Lỗi lấy danh sách danh mục: ${l.message}",
@@ -118,7 +106,6 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
     emit(
       state.copyWith(
         status: AddProductStatus.initial,
-        brands: brands,
         categories: categories,
         variants: variants,
         uploadedImageUrls: uploadedImages,
@@ -308,7 +295,7 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
       "description": event.description,
       "basePrice": event.basePrice,
       "virtualPrice": event.virtualPrice,
-      "brandId": event.brandId,
+      "brandName": event.brandName,
       "images": state.uploadedImageUrls,
       "categories": event.categoryId != null ? [event.categoryId] : [],
       "publishedAt": DateTime.now().toUtc().toIso8601String(),

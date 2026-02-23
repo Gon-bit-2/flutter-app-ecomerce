@@ -1,18 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:app_fe_ecomerce/features/brand/domain/entities/brand.dart';
-import 'package:app_fe_ecomerce/features/brand/domain/repositories/brand_repository.dart';
 import 'package:app_fe_ecomerce/features/category/domain/entities/category.dart';
 import 'package:app_fe_ecomerce/features/category/domain/repositories/category_repository.dart';
 import 'package:app_fe_ecomerce/features/common/domain/repositories/common_repository.dart';
-import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
 import 'package:app_fe_ecomerce/features/product/domain/repositories/product_repository.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/bloc/add_product/add_product_bloc.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/bloc/add_product/add_product_event.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/bloc/add_product/add_product_state.dart';
-
-class MockBrandRepository extends Mock implements BrandRepository {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
@@ -22,19 +17,16 @@ class MockProductRepository extends Mock implements ProductRepository {}
 
 void main() {
   late AddProductBloc bloc;
-  late MockBrandRepository brandRepository;
   late MockCategoryRepository categoryRepository;
   late MockCommonRepository commonRepository;
   late MockProductRepository productRepository;
 
   setUp(() {
-    brandRepository = MockBrandRepository();
     categoryRepository = MockCategoryRepository();
     commonRepository = MockCommonRepository();
     productRepository = MockProductRepository();
 
     bloc = AddProductBloc(
-      brandRepository: brandRepository,
       categoryRepository: categoryRepository,
       commonRepository: commonRepository,
       productRepository: productRepository,
@@ -51,14 +43,10 @@ void main() {
     });
 
     test('AddProductStarted emits loading then initial with data', () async {
-      final tBrands = [const Brand(id: 1, name: 'Brand 1', logo: 'logo')];
       final tCategories = [
-        const Category(id: 1, name: 'Category 1', image: 'img'),
+        const Category(id: 1, name: 'Category 1', logo: 'img'),
       ];
 
-      when(
-        () => brandRepository.getBrands(),
-      ).thenAnswer((_) async => Right(tBrands));
       when(
         () => categoryRepository.getCategories(),
       ).thenAnswer((_) async => Right(tCategories));
@@ -75,7 +63,6 @@ void main() {
           ),
           isA<AddProductState>()
               .having((s) => s.status, 'status', AddProductStatus.initial)
-              .having((s) => s.brands, 'brands', tBrands)
               .having((s) => s.categories, 'categories', tCategories)
               .having((s) => s.variants.length, 'variants length', 1),
         ]),
@@ -88,11 +75,7 @@ void main() {
         // Since we can't easily seed bloc state without hack or emit,
         // we will simulate the flow from initial
 
-        final tBrands = <Brand>[];
         final tCategories = <Category>[];
-        when(
-          () => brandRepository.getBrands(),
-        ).thenAnswer((_) async => Right(tBrands));
         when(
           () => categoryRepository.getCategories(),
         ).thenAnswer((_) async => Right(tCategories));
@@ -114,11 +97,7 @@ void main() {
       });
 
       test('generates combinations when multiple variants exist', () async {
-        final tBrands = <Brand>[];
         final tCategories = <Category>[];
-        when(
-          () => brandRepository.getBrands(),
-        ).thenAnswer((_) async => Right(tBrands));
         when(
           () => categoryRepository.getCategories(),
         ).thenAnswer((_) async => Right(tCategories));

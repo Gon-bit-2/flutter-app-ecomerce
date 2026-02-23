@@ -1,4 +1,3 @@
-import 'package:app_fe_ecomerce/features/brand/domain/repositories/brand_repository.dart';
 import 'package:app_fe_ecomerce/features/category/domain/repositories/category_repository.dart';
 import 'package:app_fe_ecomerce/features/common/domain/repositories/common_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -32,9 +31,9 @@ class _AddProductPageState extends State<AddProductPage> {
   final _descController = TextEditingController();
   final _basePriceController = TextEditingController();
   final _virtualPriceController = TextEditingController();
+  final _brandController = TextEditingController();
 
   // Selected Values not in controllers
-  int? _selectedBrandId;
   int? _selectedCategoryId;
 
   // Bulk Apply Controllers
@@ -48,7 +47,6 @@ class _AddProductPageState extends State<AddProductPage> {
   void initState() {
     super.initState();
     _bloc = AddProductBloc(
-      brandRepository: GetIt.I<BrandRepository>(),
       categoryRepository: GetIt.I<CategoryRepository>(),
       commonRepository: GetIt.I<CommonRepository>(),
       productRepository: GetIt.I<ProductRepository>(),
@@ -62,6 +60,7 @@ class _AddProductPageState extends State<AddProductPage> {
     _descController.dispose();
     _basePriceController.dispose();
     _virtualPriceController.dispose();
+    _brandController.dispose();
     _skuDefaultPriceController.dispose();
     _skuDefaultStockController.dispose();
     _skuDefaultImageController.dispose();
@@ -110,7 +109,7 @@ class _AddProductPageState extends State<AddProductPage> {
               _nameController.text.isEmpty &&
               widget.product != null) {
             // This simple check prevents re-writing if user cleared the name, but good enough for now
-            if (state.brands.isNotEmpty || state.categories.isNotEmpty) {
+            if (state.categories.isNotEmpty) {
               // Just ensures we have some data loaded
               _nameController.text = widget.product!.name;
               _descController.text = widget.product!.description ?? '';
@@ -122,7 +121,8 @@ class _AddProductPageState extends State<AddProductPage> {
                     .toInt()
                     .toString();
               }
-              _selectedBrandId = widget.product!.brandId;
+              // Brand name would need to be fetched from the backend
+              // For now we leave it empty for editing
               // Handle Category (Single hardcoded for now in UI logic, assuming complex mapping later)
               // But widget.product doesn't strictly have single category ID field in Entity unless we check categories list
               // Assuming first category for now if available
@@ -283,42 +283,49 @@ class _AddProductPageState extends State<AddProductPage> {
     return Row(
       children: [
         Expanded(
-          child: DropdownButtonFormField<int>(
-            initialValue: _selectedBrandId,
-            decoration: const InputDecoration(
+          child: TextFormField(
+            controller: _brandController,
+            decoration: InputDecoration(
               labelText: "Thương hiệu",
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12.w,
+                vertical: 12.h,
+              ),
             ),
-            items: state.brands
-                .map(
-                  (b) => DropdownMenuItem(
-                    value: b.id,
-                    child: Text(b.name, overflow: TextOverflow.ellipsis),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => _selectedBrandId = v),
-            validator: (v) => v == null ? 'Chọn thương hiệu' : null,
+            validator: (v) => (v == null || v.isEmpty) ? 'Bắt buộc' : null,
           ),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 8.w),
         Expanded(
           child: DropdownButtonFormField<int>(
+            isDense: true,
+            isExpanded: true,
             initialValue: _selectedCategoryId,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: "Danh mục",
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 8.w,
+                vertical: 12.h,
+              ),
             ),
             items: state.categories
                 .map(
                   (c) => DropdownMenuItem(
                     value: c.id,
-                    child: Text(c.name, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      c.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 )
                 .toList(),
             onChanged: (v) => setState(() => _selectedCategoryId = v),
-            validator: (v) => v == null ? 'Chọn danh mục' : null,
+            validator: (v) => v == null ? 'Bắt buộc' : null,
           ),
         ),
       ],
@@ -452,7 +459,7 @@ class _AddProductPageState extends State<AddProductPage> {
           description: _descController.text,
           basePrice: double.tryParse(_basePriceController.text) ?? 0,
           virtualPrice: double.tryParse(_virtualPriceController.text) ?? 0,
-          brandId: _selectedBrandId,
+          brandName: _brandController.text,
           categoryId: _selectedCategoryId,
         ),
       );
@@ -466,8 +473,6 @@ class _VariantItemWidget extends StatefulWidget {
   final VoidCallback onRemove;
 
   const _VariantItemWidget({
-    super.key, // Use Key derived from ID outside if possible, but here relying on index rebuilds is safer if list is small? No.
-    // Better provide key from parent
     required this.index,
     required this.variant,
     required this.onRemove,
@@ -553,12 +558,11 @@ class _VariantItemWidgetState extends State<_VariantItemWidget> {
               Expanded(
                 child: TextField(
                   controller: _optionController,
-                  decoration: const InputDecoration(
-                    labelText: "Thêm tùy chọn (VD: Đỏ)",
-                  ),
+                  decoration: const InputDecoration(labelText: "Thêm tùy chọn"),
                   onSubmitted: (v) => _addOption(),
                 ),
               ),
+              SizedBox(width: 4.w),
               TextButton(onPressed: _addOption, child: const Text("Thêm")),
             ],
           ),
@@ -595,7 +599,7 @@ class _SkuItemWidget extends StatefulWidget {
   final int index;
   final SkuInput sku;
 
-  const _SkuItemWidget({required this.index, required this.sku, super.key});
+  const _SkuItemWidget({required this.index, required this.sku});
 
   @override
   State<_SkuItemWidget> createState() => _SkuItemWidgetState();

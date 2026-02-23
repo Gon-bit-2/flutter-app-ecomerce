@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../../../brand/domain/entities/brand.dart';
 import '../../../../category/domain/entities/category.dart';
 
 enum AddProductStatus { initial, loading, success, failure }
@@ -61,7 +60,6 @@ class SkuInput extends Equatable {
 class AddProductState extends Equatable {
   final AddProductStatus status;
   final String? errorMessage;
-  final List<Brand> brands;
   final List<Category> categories;
   final List<String> uploadedImageUrls;
   final bool isUploadingImage;
@@ -74,7 +72,6 @@ class AddProductState extends Equatable {
   const AddProductState({
     this.status = AddProductStatus.initial,
     this.errorMessage,
-    this.brands = const [],
     this.categories = const [],
     this.uploadedImageUrls = const [],
     this.isUploadingImage = false,
@@ -86,7 +83,6 @@ class AddProductState extends Equatable {
   AddProductState copyWith({
     AddProductStatus? status,
     String? errorMessage,
-    List<Brand>? brands,
     List<Category>? categories,
     List<String>? uploadedImageUrls,
     bool? isUploadingImage,
@@ -97,7 +93,6 @@ class AddProductState extends Equatable {
     return AddProductState(
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
-      brands: brands ?? this.brands,
       categories: categories ?? this.categories,
       uploadedImageUrls: uploadedImageUrls ?? this.uploadedImageUrls,
       isUploadingImage: isUploadingImage ?? this.isUploadingImage,
@@ -111,7 +106,6 @@ class AddProductState extends Equatable {
   List<Object?> get props => [
     status,
     errorMessage,
-    brands,
     categories,
     uploadedImageUrls,
     isUploadingImage,

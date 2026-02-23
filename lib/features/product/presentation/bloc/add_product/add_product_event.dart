@@ -103,7 +103,7 @@ class AddProductSubmitted extends AddProductEvent {
   final String description;
   final double basePrice;
   final double virtualPrice;
-  final int? brandId;
+  final String? brandName;
   final int? categoryId;
 
   const AddProductSubmitted({
@@ -111,7 +111,7 @@ class AddProductSubmitted extends AddProductEvent {
     required this.description,
     required this.basePrice,
     required this.virtualPrice,
-    this.brandId,
+    this.brandName,
     this.categoryId,
   });
 
@@ -121,7 +121,7 @@ class AddProductSubmitted extends AddProductEvent {
     description,
     basePrice,
     virtualPrice,
-    brandId,
+    brandName,
     categoryId,
   ];
 }

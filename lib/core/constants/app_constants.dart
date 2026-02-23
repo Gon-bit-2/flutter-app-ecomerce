@@ -9,11 +9,23 @@ class AppConstants {
   // Nếu chạy Android Emulator: dùng 10.0.2.2
   // Nếu chạy iOS Simulator: dùng localhost
   // Nếu chạy máy thật: dùng địa chỉ IP LAN của máy tính (VD: 192.168.1.X)
+
+  // *** QUAN TRỌNG: Thay đổi cấu hình này tùy theo môi trường ***
+  // - Chạy trên emulator: đặt useRealDevice = false
+  // - Chạy trên điện thoại thật: đặt useRealDevice = true
+  static const bool useRealDevice = true;
+  static const String realDeviceIp = '192.168.29.93'; // IP máy tính của bạn
+
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:9999'; // Dành cho Web
     } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:9999'; // Dành cho Android Emulator
+      // Chọn IP phù hợp cho Android
+      if (useRealDevice) {
+        return 'http://$realDeviceIp:9999'; // Dành cho điện thoại thật
+      } else {
+        return 'http://10.0.2.2:9999'; // Dành cho Android Emulator
+      }
     } else {
       return 'http://localhost:9999'; // Dành cho iOS Simulator
     }

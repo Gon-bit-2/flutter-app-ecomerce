@@ -85,3 +85,17 @@ class AuthDisable2FASuccess extends AuthState {
 
 // 12. Unauthenticated (không có token hoặc token hết hạn)
 class AuthUnauthenticated extends AuthState {}
+
+// 13. Yêu cầu nhập mã 2FA khi đăng nhập
+class AuthLoginRequiresTwoFactor extends AuthState {
+  final String email;
+  final String password;
+
+  const AuthLoginRequiresTwoFactor({
+    required this.email,
+    required this.password,
+  });
+
+  @override
+  List<Object> get props => [email, password];
+}

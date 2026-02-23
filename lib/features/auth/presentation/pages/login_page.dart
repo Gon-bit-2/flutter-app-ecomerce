@@ -98,6 +98,9 @@ class _LoginViewState extends State<LoginView> {
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) async {
+            if (state is AuthLoginRequiresTwoFactor) {
+              _showOtpDialog(context, state.email, state.password);
+            }
             if (state is AuthFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -299,6 +302,52 @@ class _LoginViewState extends State<LoginView> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  void _showOtpDialog(BuildContext context, String email, String password) {
+    final otpController = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Xác thực 2FA"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Vui lòng nhập mã OTP (Authenticator/Email)."),
+            const SizedBox(height: 10),
+            TextField(
+              controller: otpController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: "Nhập mã 6 số",
+                border: OutlineInputBorder(),
+              ),
+              maxLength: 6,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Hủy"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AuthBloc>().add(
+                AuthLoginStarted(
+                  email: email,
+                  password: password,
+                  totpCode: otpController.text,
+                ),
+              );
+            },
+            child: const Text("Xác nhận"),
+          ),
+        ],
       ),
     );
   }

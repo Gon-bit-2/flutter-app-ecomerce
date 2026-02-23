@@ -211,19 +211,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   placeholder: (_, __) =>
                       const Center(child: CircularProgressIndicator()),
                 ),
-                // Debug overlay to verify URL
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    color: Colors.black54,
-                    child: Text(
-                      url,
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                  ),
-                ),
               ],
             );
           },

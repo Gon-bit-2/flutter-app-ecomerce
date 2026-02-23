@@ -60,10 +60,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           totpCode: event.totpCode,
         ),
       );
-      result.fold(
-        (failure) => emit(AuthFailure(failure.message)),
-        (user) => emit(AuthSuccess(user)),
-      );
+      result.fold((failure) {
+        final msg = failure.message.toLowerCase();
+        if (msg.contains('2fa') ||
+            msg.contains('otp') ||
+            msg.contains('verification code') ||
+            msg.contains('mã xác thực') ||
+            msg.contains('mã otp')) {
+          emit(
+            AuthLoginRequiresTwoFactor(
+              email: event.email,
+              password: event.password,
+            ),
+          );
+        } else {
+          emit(AuthFailure(failure.message));
+        }
+      }, (user) => emit(AuthSuccess(user)));
     });
 
     // 2. Xử lý Đăng Ký
