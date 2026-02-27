@@ -2,7 +2,7 @@
 
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
-import 'injection_container.config.dart'; // <-- Dòng này sẽ báo lỗi đỏ, ĐỪNG LO!
+import 'injection_container.config.dart';
 
 // Khởi tạo biến toàn cục cho "Tủ đồ"
 final getIt = GetIt.instance;
