@@ -13,7 +13,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   phoneNumber: json['phoneNumber'] as String?,
   avatar: json['avatar'] as String?,
   roleId: (json['roleId'] as num?)?.toInt(),
-  totpSecret: json['otpSecret'] as String?,
+  totpSecret: json['totpSecret'] as String?,
   isTwoFactorEnabled: json['isTwoFactorEnabled'] as bool? ?? false,
 );
 
