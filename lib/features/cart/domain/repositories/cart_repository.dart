@@ -3,8 +3,8 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
 
 abstract class CartRepository {
-  // Lấy giỏ hàng
-  Future<Either<Failure, CartEntity>> getCart();
+  // Lấy giỏ hàng (Hỗ trợ phân trang)
+  Future<Either<Failure, List<CartEntity>>> getCart({int? page, int? limit});
 
   // Thêm giỏ hàng
   Future<Either<Failure, CartEntity>> addToCart({
@@ -12,8 +12,10 @@ abstract class CartRepository {
     required int quantity,
   });
 
-  // Xóa giỏ hàng
-  Future<Either<Failure, void>> removeFromCart({required int id});
+  // Xóa sản phẩm khỏi giỏ hàng (1 hoặc nhiều sản phẩm)
+  Future<Either<Failure, void>> removeCartItems({
+    required List<int> cartItemIds,
+  });
 
   // Cập nhật giỏ hàng
   Future<Either<Failure, void>> updateCart({

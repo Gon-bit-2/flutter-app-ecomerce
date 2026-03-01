@@ -1,10 +1,12 @@
 import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
 import 'package:app_fe_ecomerce/features/cart/domain/repositories/cart_repository.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 
 import '../entities/cart_entity.dart';
 
+@injectable
 class AddCartUseCase implements UseCase<CartEntity, AddToCartParams> {
   final CartRepository _repository;
 
