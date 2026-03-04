@@ -60,7 +60,7 @@ class SkuInput extends Equatable {
 class AddProductState extends Equatable {
   final AddProductStatus status;
   final String? errorMessage;
-  final List<Category> categories;
+  final List<CategoryEntity> categories;
   final List<String> uploadedImageUrls;
   final bool isUploadingImage;
   final List<VariantInput> variants;
@@ -83,7 +83,7 @@ class AddProductState extends Equatable {
   AddProductState copyWith({
     AddProductStatus? status,
     String? errorMessage,
-    List<Category>? categories,
+    List<CategoryEntity>? categories,
     List<String>? uploadedImageUrls,
     bool? isUploadingImage,
     List<VariantInput>? variants,

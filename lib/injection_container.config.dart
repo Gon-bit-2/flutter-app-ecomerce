@@ -55,6 +55,15 @@ import 'features/category/data/datasources/category_remote_datasource.dart'
 import 'features/category/data/repositories/category_repository_impl.dart'
     as _i44;
 import 'features/category/domain/repositories/category_repository.dart' as _i5;
+import 'features/category/domain/usecases/create_category_usecase.dart'
+    as _i944;
+import 'features/category/domain/usecases/delete_category_usecase.dart'
+    as _i875;
+import 'features/category/domain/usecases/get_category_id_usecase.dart'
+    as _i206;
+import 'features/category/domain/usecases/get_category_usecase.dart' as _i351;
+import 'features/category/domain/usecases/update_category_usecase.dart'
+    as _i1032;
 import 'features/common/data/datasources/common_remote_datasource.dart' as _i74;
 import 'features/common/data/repositories/common_repository_impl.dart' as _i499;
 import 'features/common/domain/repositories/common_repository.dart' as _i493;
@@ -132,6 +141,21 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i841.ProductRepository>(
       () => _i531.ProductRepositoryImpl(gh<_i143.ProductRemoteDataSource>()),
+    );
+    gh.factory<_i944.CreateCategoryUseCase>(
+      () => _i944.CreateCategoryUseCase(gh<_i5.CategoryRepository>()),
+    );
+    gh.factory<_i875.DeleteCategoryUseCase>(
+      () => _i875.DeleteCategoryUseCase(gh<_i5.CategoryRepository>()),
+    );
+    gh.factory<_i206.GetCategoryIdUseCase>(
+      () => _i206.GetCategoryIdUseCase(gh<_i5.CategoryRepository>()),
+    );
+    gh.factory<_i351.GetCategoryUseCase>(
+      () => _i351.GetCategoryUseCase(gh<_i5.CategoryRepository>()),
+    );
+    gh.factory<_i1032.UpdateCategoryUseCase>(
+      () => _i1032.UpdateCategoryUseCase(gh<_i5.CategoryRepository>()),
     );
     gh.lazySingleton<_i1015.AuthRepository>(
       () => _i111.AuthRepositoryImpl(

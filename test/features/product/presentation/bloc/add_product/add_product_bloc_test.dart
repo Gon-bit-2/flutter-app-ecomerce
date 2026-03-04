@@ -44,7 +44,7 @@ void main() {
 
     test('AddProductStarted emits loading then initial with data', () async {
       final tCategories = [
-        const Category(id: 1, name: 'Category 1', logo: 'img'),
+        const CategoryEntity(id: 1, name: 'Category 1', logo: 'img'),
       ];
 
       when(
@@ -75,7 +75,7 @@ void main() {
         // Since we can't easily seed bloc state without hack or emit,
         // we will simulate the flow from initial
 
-        final tCategories = <Category>[];
+        final tCategories = <CategoryEntity>[];
         when(
           () => categoryRepository.getCategories(),
         ).thenAnswer((_) async => Right(tCategories));
@@ -97,7 +97,7 @@ void main() {
       });
 
       test('generates combinations when multiple variants exist', () async {
-        final tCategories = <Category>[];
+        final tCategories = <CategoryEntity>[];
         when(
           () => categoryRepository.getCategories(),
         ).thenAnswer((_) async => Right(tCategories));

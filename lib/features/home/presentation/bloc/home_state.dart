@@ -17,7 +17,7 @@ class HomeLoading extends HomeState {}
 
 class HomeLoaded extends HomeState {
   final List<BannerEntity> banners;
-  final List<Category> categories;
+  final List<CategoryEntity> categories;
   final FlashSaleEntity flashSale;
   final List<Product> dailyDiscoverProducts;
   final int dailyDiscoverPage;
@@ -34,7 +34,7 @@ class HomeLoaded extends HomeState {
 
   HomeLoaded copyWith({
     List<BannerEntity>? banners,
-    List<Category>? categories,
+    List<CategoryEntity>? categories,
     FlashSaleEntity? flashSale,
     List<Product>? dailyDiscoverProducts,
     int? dailyDiscoverPage,
