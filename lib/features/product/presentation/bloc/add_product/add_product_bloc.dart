@@ -3,6 +3,7 @@ import 'package:app_fe_ecomerce/features/product/domain/repositories/product_rep
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../category/domain/repositories/category_repository.dart';
 import '../../../../common/domain/repositories/common_repository.dart';
+import '../../../domain/helpers/sku_generator.dart';
 
 import 'add_product_event.dart';
 import 'add_product_state.dart';
@@ -97,10 +98,10 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
             )
             .toList();
       } else {
-        skus = _generateSkus(variants, []);
+        skus = await _generateSkus(variants, []);
       }
     } else {
-      skus = _generateSkus(variants, []);
+      skus = await _generateSkus(variants, []);
     }
 
     emit(
@@ -150,14 +151,14 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
     emit(state.copyWith(variants: newVariants));
   }
 
-  void _onVariantRemoved(
+  Future<void> _onVariantRemoved(
     AddProductVariantRemoved event,
     Emitter<AddProductState> emit,
-  ) {
+  ) async {
     if (event.index >= 0 && event.index < state.variants.length) {
       final newVariants = List<VariantInput>.from(state.variants)
         ..removeAt(event.index);
-      final newSkus = _generateSkus(newVariants, state.skus);
+      final newSkus = await _generateSkus(newVariants, state.skus);
       emit(state.copyWith(variants: newVariants, skus: newSkus));
     }
   }
@@ -175,10 +176,10 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
     }
   }
 
-  void _onVariantOptionAdded(
+  Future<void> _onVariantOptionAdded(
     AddProductVariantOptionAdded event,
     Emitter<AddProductState> emit,
-  ) {
+  ) async {
     if (event.variantIndex >= 0 && event.variantIndex < state.variants.length) {
       final variant = state.variants[event.variantIndex];
       if (!variant.options.contains(event.option)) {
@@ -187,16 +188,16 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
         final newVariants = List<VariantInput>.from(state.variants);
         newVariants[event.variantIndex] = variant.copyWith(options: newOptions);
 
-        final newSkus = _generateSkus(newVariants, state.skus);
+        final newSkus = await _generateSkus(newVariants, state.skus);
         emit(state.copyWith(variants: newVariants, skus: newSkus));
       }
     }
   }
 
-  void _onVariantOptionRemoved(
+  Future<void> _onVariantOptionRemoved(
     AddProductVariantOptionRemoved event,
     Emitter<AddProductState> emit,
-  ) {
+  ) async {
     if (event.variantIndex >= 0 && event.variantIndex < state.variants.length) {
       final variant = state.variants[event.variantIndex];
       if (variant.options.contains(event.option)) {
@@ -205,7 +206,7 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
         final newVariants = List<VariantInput>.from(state.variants);
         newVariants[event.variantIndex] = variant.copyWith(options: newOptions);
 
-        final newSkus = _generateSkus(newVariants, state.skus);
+        final newSkus = await _generateSkus(newVariants, state.skus);
         emit(state.copyWith(variants: newVariants, skus: newSkus));
       }
     }
@@ -318,16 +319,17 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
     );
   }
 
-  List<SkuInput> _generateSkus(
+  Future<List<SkuInput>> _generateSkus(
     List<VariantInput> variants,
     List<SkuInput> currentSkus,
-  ) {
+  ) async {
     final optionGroups = variants
         .map((v) => v.options)
         .where((o) => o.isNotEmpty)
         .toList();
 
-    final skuValues = _buildSkuValues(optionGroups);
+    // Sử dụng SkuGenerator để tính toán trên Background Isolate
+    final skuValues = await SkuGenerator.generateAsync(optionGroups);
 
     final Map<String, SkuInput> currentMap = {
       for (var sku in currentSkus) sku.value: sku,
@@ -350,23 +352,5 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
       }
     }
     return newSkus;
-  }
-
-  List<String> _buildSkuValues(List<List<String>> optionGroups) {
-    if (optionGroups.isEmpty) {
-      return ['Default'];
-    }
-
-    List<String> results = [''];
-    for (final group in optionGroups) {
-      final nextResults = <String>[];
-      for (final prefix in results) {
-        for (final option in group) {
-          nextResults.add(prefix.isEmpty ? option : '$prefix, $option');
-        }
-      }
-      results = nextResults;
-    }
-    return results;
   }
 }

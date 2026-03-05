@@ -46,6 +46,8 @@ class _AddProductPageState extends State<AddProductPage> {
   @override
   void initState() {
     super.initState();
+    // Use proper GetIt DI approach or default Provider. Since GetIt is used directly, inject the Bloc if it's registered
+    // For now keeping manual instantiation but it's cleaner to inject AddProductBloc directly
     _bloc = AddProductBloc(
       categoryRepository: GetIt.I<CategoryRepository>(),
       commonRepository: GetIt.I<CommonRepository>(),
@@ -86,15 +88,6 @@ class _AddProductPageState extends State<AddProductPage> {
       );
       Navigator.pop(context, true);
     }
-
-    if (state.isDataLoaded) {
-      // Only set text if empty (initial load) to avoid overwriting user edits if we used this listener deeply
-      // But here we rely on isDataLoaded being irrelevant after init?
-      // Actually isDataLoaded is true after first response.
-      // We should perform one-time population.
-      // But standard way: populate once in init if data available? No, data comes async.
-      // So checking condition:
-    }
   }
 
   @override
@@ -108,9 +101,7 @@ class _AddProductPageState extends State<AddProductPage> {
           if (state.isDataLoaded &&
               _nameController.text.isEmpty &&
               widget.product != null) {
-            // This simple check prevents re-writing if user cleared the name, but good enough for now
             if (state.categories.isNotEmpty) {
-              // Just ensures we have some data loaded
               _nameController.text = widget.product!.name;
               _descController.text = widget.product!.description ?? '';
               _basePriceController.text = widget.product!.basePrice
@@ -121,11 +112,11 @@ class _AddProductPageState extends State<AddProductPage> {
                     .toInt()
                     .toString();
               }
-              // Brand name would need to be fetched from the backend
-              // For now we leave it empty for editing
+              // Brand name would need to be fetched from the backend or mapped
+              // For now, if we don't have it on the Product entity, we can just leave it empty for user to edit or fetch
+              // _brandController.text = ...
+
               // Handle Category (Single hardcoded for now in UI logic, assuming complex mapping later)
-              // But widget.product doesn't strictly have single category ID field in Entity unless we check categories list
-              // Assuming first category for now if available
               // _selectedCategoryId = ...
             }
           }
