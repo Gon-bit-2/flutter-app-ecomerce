@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../category/domain/entities/category.dart';
 
 class CategorySection extends StatelessWidget {
-  final List<Category> categories;
+  final List<CategoryEntity> categories;
 
   const CategorySection({super.key, required this.categories});
 

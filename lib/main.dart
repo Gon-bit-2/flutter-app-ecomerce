@@ -7,6 +7,8 @@ import 'injection_container.dart'; // Import file cấu hình DI
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'features/cart/presentation/bloc/cart/cart_bloc.dart';
+import 'features/category/presentation/bloc/category/category_bloc.dart';
 
 void main() async {
   // 1. Đảm bảo Flutter Binding được khởi tạo trước
@@ -34,6 +36,10 @@ class MyApp extends StatelessWidget {
           providers: [
             BlocProvider<AuthBloc>(
               create: (context) => GetIt.I<AuthBloc>()..add(AuthCheckStatus()),
+            ),
+            BlocProvider<CartBloc>(create: (context) => GetIt.I<CartBloc>()),
+            BlocProvider<CategoryBloc>(
+              create: (context) => GetIt.I<CategoryBloc>(),
             ),
           ],
           child: MaterialApp(

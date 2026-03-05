@@ -11,7 +11,7 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       logo: json['logo'] as String?,
-      parentCategoryId: (json['parentCategoryId'] as num?)?.toInt(),
+      parentCategoryId: (json['parent_category_id'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
@@ -19,5 +19,5 @@ Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
       'id': instance.id,
       'name': instance.name,
       'logo': instance.logo,
-      'parentCategoryId': instance.parentCategoryId,
+      'parent_category_id': instance.parentCategoryId,
     };

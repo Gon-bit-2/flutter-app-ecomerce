@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
@@ -12,7 +13,7 @@ import '../repositories/home_repository.dart';
 
 class HomeData {
   final List<BannerEntity> banners;
-  final List<Category> categories;
+  final List<CategoryEntity> categories;
   final FlashSaleEntity flashSale;
 
   HomeData({
@@ -44,17 +45,19 @@ class GetHomeDataUseCase implements UseCase<HomeData, NoParams> {
     ]);
 
     final bannerResult = results[0] as Either<Failure, List<BannerEntity>>;
-    final categoryResult = results[1] as Either<Failure, List<Category>>;
+    final categoryResult = results[1] as Either<Failure, List<CategoryEntity>>;
     final productResult = results[2] as Either<Failure, List<Product>>;
 
     if (categoryResult.isLeft()) {
-      return Left((categoryResult as Left<Failure, List<Category>>).value);
+      return Left(
+        (categoryResult as Left<Failure, List<CategoryEntity>>).value,
+      );
     }
 
     // We can also check productResult if strict
 
     List<BannerEntity> banners = [];
-    List<Category> categories = [];
+    List<CategoryEntity> categories = [];
     List<Product> flashSaleProducts = [];
 
     bannerResult.fold((l) => null, (r) => banners = r);

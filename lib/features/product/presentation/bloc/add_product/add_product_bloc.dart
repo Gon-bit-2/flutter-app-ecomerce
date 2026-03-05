@@ -45,7 +45,7 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
 
     final categoryResult = await _categoryRepository.getCategories();
 
-    List<Category> categories = [];
+    List<CategoryEntity> categories = [];
     String? error;
 
     categoryResult.fold(

@@ -3,8 +3,8 @@ import '../../domain/entities/category.dart';
 
 part 'category_model.g.dart';
 
-@JsonSerializable()
-class CategoryModel extends Category {
+@JsonSerializable(fieldRename: FieldRename.snake)
+class CategoryModel extends CategoryEntity {
   const CategoryModel({
     required super.id,
     required super.name,

@@ -1,18 +1,27 @@
 import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
 import 'package:app_fe_ecomerce/features/cart/domain/repositories/cart_repository.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 
 import '../entities/cart_entity.dart';
 
-class GetCartUseCase implements UseCase<CartEntity, NoParams> {
+@injectable
+class GetCartUseCase implements UseCase<List<CartEntity>, GetCartParams> {
   final CartRepository _repository;
 
   GetCartUseCase(this._repository);
 
-  // Ví dụ hàm gọi Lấy danh sách Giỏ hàng
+  // Lấy danh sách Giỏ hàng
   @override
-  Future<Either<Failure, CartEntity>> call(NoParams params) async {
-    return await _repository.getCart();
+  Future<Either<Failure, List<CartEntity>>> call(GetCartParams params) async {
+    return await _repository.getCart(page: params.page, limit: params.limit);
   }
+}
+
+class GetCartParams {
+  final int? page;
+  final int? limit;
+
+  GetCartParams({this.page, this.limit});
 }

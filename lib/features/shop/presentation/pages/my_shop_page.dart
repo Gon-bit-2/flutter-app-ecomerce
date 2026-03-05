@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/features/category/presentation/pages/category_page.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -73,6 +74,18 @@ class MyShopPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddProductPage()),
+          );
+        },
+      },
+      {
+        "icon": Icons.category_outlined,
+        "title": "Quản lý danh mục",
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CategoryPage(isAdmin: true),
+            ),
           );
         },
       },
