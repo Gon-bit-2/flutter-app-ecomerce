@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:app_fe_ecomerce/features/shop/presentation/pages/my_shop_page.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:app_fe_ecomerce/features/order/presentation/pages/order_history_page.dart'
+    as app_fe_ecomerce_order;
 
 class ProfilePage extends StatelessWidget {
   final UserEntity user;
@@ -165,6 +167,21 @@ class ProfilePage extends StatelessWidget {
             ),
             const Divider(height: 1),
           ],
+          // --- Order History ---
+          _buildMenuItem(
+            Icons.receipt_long_outlined,
+            "Đơn hàng của tôi",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const app_fe_ecomerce_order.OrderHistoryPage(),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1),
           // ----------------------------
           _buildMenuItem(
             Icons.help_outline,

@@ -832,6 +832,19 @@ _No Body_
 - `orderBy`: "ASC" | "DESC" (default "DESC")
 - `sortBy`: "price" | "createdAt" | "sale" (default "createdAt")
 
+### Search Products
+
+**GET** `/product/search?q=keyword&page=1&limit=10`
+
+_No Auth Headers_
+_No Body_
+
+**Query Params:**
+
+- `q`: string (required) — search keyword
+- `page`: number (default 1)
+- `limit`: number (default 10)
+
 ### Get Product Detail
 
 **GET** `/product/:productId`
@@ -1060,6 +1073,18 @@ _No Body_
 ]
 ```
 
+**Note:** Either `receiver` or `userAddressId` must be provided. You can use a saved address instead of manually providing receiver info:
+
+```json
+[
+  {
+    "shopId": 1,
+    "userAddressId": 1,
+    "cartItemIds": [1, 2]
+  }
+]
+```
+
 ### Cancel Order
 
 **PUT** `/order/:orderId`
@@ -1069,6 +1094,20 @@ _No Body_
 - `Authorization`: `Bearer <accessToken>`
 
 _No Body_
+
+### Update Order Status
+
+**POST** `/order/:orderId/status`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+```json
+{
+  "status": "DELIVERED" // DELIVERED, RETURNED
+}
+```
 
 ---
 
@@ -1277,19 +1316,25 @@ _No Auth Headers_
 
 ### List Shop Videos
 
-**GET** `/shop-videos?page=1&limit=10`
+**GET** `/shop-video?page=1&limit=10`
 
 _No Auth Headers_ (Public)
 
+**Query Params:**
+
+- `page`: number (default 1)
+- `limit`: number (default 10)
+- `shopId`: number (optional)
+
 ### Get Shop Video Detail
 
-**GET** `/shop-videos/:id`
+**GET** `/shop-video/:id`
 
-_No Auth Headers_ (Public, but optimal if authenticated)
+_No Auth Headers_ (Public, but optimal if authenticated — returns whether current user has liked the video)
 
 ### Create Shop Video
 
-**POST** `/shop-videos`
+**POST** `/shop-video`
 
 **Headers**
 
@@ -1297,17 +1342,16 @@ _No Auth Headers_ (Public, but optimal if authenticated)
 
 ```json
 {
-  "title": "Video title",
+  "caption": "Video caption",
   "videoUrl": "https://example.com/video.mp4",
   "thumbnailUrl": "https://example.com/thumb.jpg",
-  "description": "Video description",
-  "productId": 1
+  "productIds": [1, 2]
 }
 ```
 
 ### Update Shop Video
 
-**PUT** `/shop-videos/:id`
+**PUT** `/shop-video/:id`
 
 **Headers**
 
@@ -1315,14 +1359,16 @@ _No Auth Headers_ (Public, but optimal if authenticated)
 
 ```json
 {
-  "title": "Updated title",
-  "description": "Updated description"
+  "caption": "Updated caption",
+  "status": "ACTIVE", // ACTIVE, INACTIVE
+  "thumbnailUrl": "https://example.com/new-thumb.jpg",
+  "productIds": [1, 3]
 }
 ```
 
 ### Delete Shop Video
 
-**DELETE** `/shop-videos/:id`
+**DELETE** `/shop-video/:id`
 
 **Headers**
 
@@ -1330,7 +1376,7 @@ _No Auth Headers_ (Public, but optimal if authenticated)
 
 ### Toggle Like
 
-**POST** `/shop-videos/:id/like`
+**POST** `/shop-video/:id/like`
 
 **Headers**
 
@@ -1340,7 +1386,7 @@ _No Body_
 
 ### Add Comment
 
-**POST** `/shop-videos/:id/comments`
+**POST** `/shop-video/:id/comments`
 
 **Headers**
 
@@ -1348,13 +1394,14 @@ _No Body_
 
 ```json
 {
-  "content": "Nice video!"
+  "content": "Nice video!",
+  "parentId": 1 // Optional — for reply to another comment
 }
 ```
 
 ### Get Comments
 
-**GET** `/shop-videos/:id/comments?page=1&limit=20`
+**GET** `/shop-video/:id/comments?page=1&limit=20`
 
 _No Auth Headers_ (Public)
 
@@ -1406,3 +1453,83 @@ _No Body_
 Provide `Authorization: Bearer <accessToken>` in headers or query param `?token=<accessToken>`
 
 **Events**: Real-time events will be pushed to the client via `user_${userId}` room mapping natively.
+
+---
+
+## Address Module
+
+### List Addresses
+
+**GET** `/address`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+_No Body_
+
+### Get Address Detail
+
+**GET** `/address/:addressId`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+_No Body_
+
+### Create Address
+
+**POST** `/address`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+```json
+{
+  "name": "John Doe",
+  "phone": "0123456789",
+  "address": "123 Main St, District 1, Ho Chi Minh City",
+  "isDefault": true // Optional, default: false. First address is automatically set as default.
+}
+```
+
+### Update Address
+
+**PUT** `/address/:addressId`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+```json
+{
+  "name": "Jane Doe", // Optional
+  "phone": "0987654321", // Optional
+  "address": "456 Second St, District 2, Ho Chi Minh City", // Optional
+  "isDefault": true // Optional
+}
+```
+
+### Delete Address
+
+**DELETE** `/address/:addressId`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+_No Body_
+
+**Note:** If the deleted address was the default, the most recently created address will be automatically set as the new default.
+
+### Set Default Address
+
+**PUT** `/address/:addressId/default`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+_No Body_

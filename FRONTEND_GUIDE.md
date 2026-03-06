@@ -251,17 +251,51 @@ Chức năng lướt xem video giới thiệu sản phẩm của Shop tương t�
 
 ### a. Lấy danh sách Video
 
-- Gọi `GET /shop-videos?page=1&limit=10`.
+- Gọi `GET /shop-video?page=1&limit=10` (có thể lọc theo `shopId`).
 - Hiển thị UI theo dạng cuộn trang (swiping up/down) hoặc carousel dọc. Dữ liệu trả về sẽ bao gồm URL video (`videoUrl`) và các thông số tương tác (like, cmt).
 
 ### b. Xử lý Tương Tác
 
 1. **Thích (Like):**
-   - Nút thả tim gọi API `POST /shop-videos/:id/like`.
+   - Nút thả tim gọi API `POST /shop-video/:id/like`.
    - UI nên là **Optimistic Update**: Ngay khi click thì UI chuyển tim đỏ liền + tăng số đếm (dù API chưa trả về xong) để cho người xem cảm giác thao tác cực nhanh.
 2. **Bình luận (Comments):**
-   - Lấy danh sách bình luận (Public - không cần đăng nhập vẫn xem được): `GET /shop-videos/:id/comments` (Có phân trang).
-   - Thêm bình luận (Cần đăng nhập): `POST /shop-videos/:id/comments`.
+   - Lấy danh sách bình luận (Public - không cần đăng nhập vẫn xem được): `GET /shop-video/:id/comments` (Có phân trang).
+   - Thêm bình luận (Cần đăng nhập): `POST /shop-video/:id/comments`.
+   - Hỗ trợ trả lời bình luận (reply): gửi kèm `parentId` để reply một comment cụ thể.
+
+## 11. Tích Hợp Address Module (Quản lý Địa chỉ)
+
+Người dùng có thể lưu nhiều địa chỉ giao hàng và chọn một địa chỉ mặc định.
+
+### a. Quản lý Địa chỉ
+
+- **Danh sách:** `GET /address` — trả về tất cả địa chỉ của user, sắp xếp theo mặc định trước.
+- **Thêm mới:** `POST /address` với `name`, `phone`, `address`, `isDefault` (optional). Địa chỉ đầu tiên tự động trở thành mặc định.
+- **Cập nhật:** `PUT /address/:addressId` — partial update (chỉ truyền field cần sửa).
+- **Xóa:** `DELETE /address/:addressId` — nếu xóa địa chỉ mặc định, hệ thống tự động chọn địa chỉ mới nhất còn lại làm mặc định.
+- **Đặt mặc định:** `PUT /address/:addressId/default`.
+
+### b. Sử dụng Địa chỉ khi Đặt hàng
+
+Khi tạo đơn hàng (`POST /order`), bạn có thể:
+
+1. **Truyền `receiver` trực tiếp** — phù hợp khi user nhập tay:
+   ```json
+   { "shopId": 1, "receiver": { "name": "...", "phone": "...", "address": "..." }, "cartItemIds": [1] }
+   ```
+2. **Truyền `userAddressId`** — sử dụng địa chỉ đã lưu:
+   ```json
+   { "shopId": 1, "userAddressId": 1, "cartItemIds": [1] }
+   ```
+
+_Chỉ cần truyền một trong hai (`receiver` hoặc `userAddressId`)._
+
+## 12. Tìm Kiếm Sản Phẩm
+
+- Gọi `GET /product/search?q=keyword&page=1&limit=10` để tìm sản phẩm theo từ khóa.
+- Tham số `q` là bắt buộc.
+- Endpoint này tách biệt với `GET /product` (list with filters) và phù hợp cho thanh search bar trên giao diện.
 
 ---
 

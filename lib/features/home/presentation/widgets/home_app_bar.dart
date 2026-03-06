@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import '../../../shop/presentation/pages/my_shop_page.dart';
+import '../../../cart/presentation/pages/cart_page.dart';
+import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
 
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
@@ -49,7 +51,24 @@ class HomeAppBar extends StatelessWidget {
               ),
             ),
             SizedBox(width: 15.w),
-            _buildIconAction(Icons.shopping_cart_outlined, badgeCount: 2),
+            BlocBuilder<CartBloc, CartState>(
+              builder: (context, state) {
+                int cartCount = 0;
+                if (state is CartLoaded) {
+                  cartCount = state.items.length;
+                }
+                return _buildIconAction(
+                  Icons.shopping_cart_outlined,
+                  badgeCount: cartCount,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CartPage()),
+                    );
+                  },
+                );
+              },
+            ),
             SizedBox(width: 15.w),
             _buildIconAction(Icons.chat_bubble_outline, badgeCount: 9),
             SizedBox(width: 15.w),
@@ -76,35 +95,42 @@ class HomeAppBar extends StatelessWidget {
     );
   }
 
-  Widget _buildIconAction(IconData icon, {int badgeCount = 0}) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Icon(icon, color: Colors.white, size: 24.sp),
-        if (badgeCount > 0)
-          Positioned(
-            top: -5,
-            right: -5,
-            child: Container(
-              padding: EdgeInsets.all(4.w),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              constraints: BoxConstraints(minWidth: 16.w, minHeight: 16.w),
-              child: Center(
-                child: Text(
-                  '$badgeCount',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.bold,
+  Widget _buildIconAction(
+    IconData icon, {
+    int badgeCount = 0,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(icon, color: Colors.white, size: 24.sp),
+          if (badgeCount > 0)
+            Positioned(
+              top: -5,
+              right: -5,
+              child: Container(
+                padding: EdgeInsets.all(4.w),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                constraints: BoxConstraints(minWidth: 16.w, minHeight: 16.w),
+                child: Center(
+                  child: Text(
+                    '$badgeCount',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

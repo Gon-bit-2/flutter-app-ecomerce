@@ -4,6 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/product.dart';
+import '../../../cart/presentation/pages/cart_page.dart';
+import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -39,98 +42,242 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
+  int? _getSelectedSkuId() {
+    if (widget.product.skus.isEmpty) return null;
+    if (widget.product.variants == null || widget.product.variants!.isEmpty) {
+      return widget.product.skus.first.id;
+    }
+
+    // Kiểm tra xem đã chọn đủ các thuộc tính chưa
+    for (var v in widget.product.variants!) {
+      if (v is Map) {
+        String name = v['value'];
+        if (!_selectedVariants.containsKey(name)) {
+          return null;
+        }
+      }
+    }
+
+    // Ghép theo thứ tự các variant
+    List<String> orderedOptions = [];
+    for (var v in widget.product.variants!) {
+      if (v is Map) {
+        orderedOptions.add(_selectedVariants[v['value']]!);
+      }
+    }
+    String targetValue = orderedOptions.join(', ');
+
+    try {
+      return widget.product.skus
+          .firstWhere((sku) => sku.value == targetValue)
+          .id;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void _addToCart() {
+    final skuId = _getSelectedSkuId();
+    if (skuId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Vui lòng chọn đầy đủ phân loại sản phẩm',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    context.read<CartBloc>().add(
+      CartItemAdded(skuId: skuId, quantity: _quantity),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  // App Bar (Floating over image usually, but here sticky or standard)
-                  SliverAppBar(
-                    pinned: true,
-                    floating: true,
-                    backgroundColor: Colors
-                        .transparent, // Make it transparent initially? Or white.
-                    // For a product detail, usually we have a translucent back button.
-                    // Let's stick to standard white app bar for simplicity or "glassmorphism" overlay?
-                    // The image suggests a standard header with Back, Share, Cart.
-                    leading: IconButton(
-                      icon: const CircleAvatar(
-                        backgroundColor: Colors.black26,
-                        child: Icon(Icons.arrow_back, color: Colors.white),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const CircleAvatar(
-                          backgroundColor: Colors.black26,
-                          child: Icon(Icons.share, color: Colors.white),
-                        ),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const CircleAvatar(
-                          backgroundColor: Colors.black26,
-                          child: Icon(Icons.shopping_cart, color: Colors.white),
-                        ),
-                        onPressed: () {},
-                      ),
-                      SizedBox(width: 8.w),
-                    ],
-                    expandedHeight: 300.h,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: _buildImageSlider(),
-                    ),
-                  ),
-
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildPriceSection(),
-                          SizedBox(height: 8.h),
-                          Text(
-                            widget.product.name,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 8.h),
-                          _buildRatingSection(),
-                          SizedBox(height: 16.h),
-                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
-                          _buildShippingSection(),
-                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
-                          _buildVariantSelector(),
-                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
-                          _buildQuantitySelector(),
-                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
-                          _buildSpecifications(),
-                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
-                          _buildDescription(),
-                          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
-                          _buildReviews(),
-                          SizedBox(height: 20.h),
-                          _buildRecommendations(),
-                          SizedBox(height: 80.h), // Spacing for bottom bar
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+      body: BlocListener<CartBloc, CartState>(
+        listener: (context, state) {
+          if (state is CartOperationSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 1),
               ),
-            ),
-          ],
+            );
+          } else if (state is CartFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    // App Bar (Floating over image usually, but here sticky or standard)
+                    SliverAppBar(
+                      pinned: true,
+                      floating: true,
+                      backgroundColor: Colors
+                          .transparent, // Make it transparent initially? Or white.
+                      // For a product detail, usually we have a translucent back button.
+                      // Let's stick to standard white app bar for simplicity or "glassmorphism" overlay?
+                      // The image suggests a standard header with Back, Share, Cart.
+                      leading: IconButton(
+                        icon: const CircleAvatar(
+                          backgroundColor: Colors.black26,
+                          child: Icon(Icons.arrow_back, color: Colors.white),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      actions: [
+                        IconButton(
+                          icon: const CircleAvatar(
+                            backgroundColor: Colors.black26,
+                            child: Icon(Icons.share, color: Colors.white),
+                          ),
+                          onPressed: () {},
+                        ),
+                        BlocBuilder<CartBloc, CartState>(
+                          builder: (context, state) {
+                            int count = 0;
+                            if (state is CartLoaded) count = state.items.length;
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                IconButton(
+                                  icon: const CircleAvatar(
+                                    backgroundColor: Colors.black26,
+                                    child: Icon(
+                                      Icons.shopping_cart,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const CartPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                if (count > 0)
+                                  Positioned(
+                                    top: 5,
+                                    right: 5,
+                                    child: Container(
+                                      padding: EdgeInsets.all(4.w),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: BoxConstraints(
+                                        minWidth: 16.w,
+                                        minHeight: 16.w,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$count',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10.sp,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                        SizedBox(width: 8.w),
+                      ],
+                      expandedHeight: 300.h,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: _buildImageSlider(),
+                      ),
+                    ),
+
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildPriceSection(),
+                            SizedBox(height: 8.h),
+                            Text(
+                              widget.product.name,
+                              style: TextStyle(
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 8.h),
+                            _buildRatingSection(),
+                            SizedBox(height: 16.h),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildShippingSection(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildVariantSelector(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildQuantitySelector(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildSpecifications(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildDescription(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildReviews(),
+                            SizedBox(height: 20.h),
+                            _buildRecommendations(),
+                            SizedBox(height: 80.h), // Spacing for bottom bar
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomSheet: _buildBottomBar(),
@@ -680,20 +827,36 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ],
             ),
             SizedBox(width: 16.w),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add_shopping_cart, color: Colors.grey[700]),
-                Text(
-                  "Thêm vào giỏ",
-                  style: TextStyle(fontSize: 10.sp, color: Colors.grey[700]),
+            InkWell(
+              onTap: _addToCart,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_shopping_cart, color: Colors.grey[700]),
+                    Text(
+                      "Thêm vào giỏ",
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
             SizedBox(width: 16.w),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  _addToCart();
+                  // Có thể tuỳ chọn nhảy đến CartPage
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CartPage()),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,

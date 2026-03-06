@@ -60,4 +60,7 @@ class AppConstants {
   // Cart Endpoints
   static const String cartEndpoint = '/cart';
   static const String cartDeleteEndpoint = '/cart/delete';
+
+  // Order Endpoints
+  static const String ordersEndpoint = '/order';
 }
