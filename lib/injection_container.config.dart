@@ -75,6 +75,14 @@ import 'features/home/domain/repositories/home_repository.dart' as _i649;
 import 'features/home/domain/usecases/get_daily_discover_usecase.dart' as _i259;
 import 'features/home/domain/usecases/get_home_data_usecase.dart' as _i702;
 import 'features/home/presentation/bloc/home_bloc.dart' as _i123;
+import 'features/order/data/datasources/order_remote_datasource.dart' as _i176;
+import 'features/order/data/repositories/order_repository_impl.dart' as _i113;
+import 'features/order/domain/repositories/order_repository.dart' as _i608;
+import 'features/order/domain/usecases/cancel_order_usecase.dart' as _i255;
+import 'features/order/domain/usecases/create_order_usecase.dart' as _i93;
+import 'features/order/domain/usecases/get_order_detail_usecase.dart' as _i1062;
+import 'features/order/domain/usecases/get_orders_usecase.dart' as _i836;
+import 'features/order/presentation/bloc/order/order_bloc.dart' as _i289;
 import 'features/product/data/datasources/product_remote_datasource.dart'
     as _i143;
 import 'features/product/data/repositories/product_repository_impl.dart'
@@ -120,6 +128,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i588.AuthRemoteDataSource>(
       () => _i588.AuthRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i176.OrderRemoteDataSource>(
+      () => _i176.OrderRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i143.ProductRemoteDataSource>(
       () => _i143.ProductRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -137,6 +148,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i303.CartRepository>(
       () => _i302.CartRepositoryImpl(gh<_i987.CartRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i608.OrderRepository>(
+      () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>()),
     );
     gh.lazySingleton<_i5.CategoryRepository>(
       () => _i44.CategoryRepositoryImpl(gh<_i979.CategoryRemoteDataSource>()),
@@ -189,6 +203,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i225.Setup2FAUseCase>(
       () => _i225.Setup2FAUseCase(gh<_i1015.AuthRepository>()),
     );
+    gh.factory<_i255.CancelOrderUseCase>(
+      () => _i255.CancelOrderUseCase(gh<_i608.OrderRepository>()),
+    );
+    gh.factory<_i93.CreateOrderUseCase>(
+      () => _i93.CreateOrderUseCase(gh<_i608.OrderRepository>()),
+    );
+    gh.factory<_i1062.GetOrderDetailUseCase>(
+      () => _i1062.GetOrderDetailUseCase(gh<_i608.OrderRepository>()),
+    );
+    gh.factory<_i836.GetOrdersUseCase>(
+      () => _i836.GetOrdersUseCase(gh<_i608.OrderRepository>()),
+    );
     gh.lazySingleton<_i468.BrandRepository>(
       () => _i831.BrandRepositoryImpl(gh<_i1043.BrandRemoteDataSource>()),
     );
@@ -239,6 +265,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i293.VerifyOtpUseCase>(
       () => _i293.VerifyOtpUseCase(gh<_i1015.AuthRepository>()),
+    );
+    gh.factory<_i289.OrderBloc>(
+      () => _i289.OrderBloc(
+        gh<_i93.CreateOrderUseCase>(),
+        gh<_i836.GetOrdersUseCase>(),
+        gh<_i1062.GetOrderDetailUseCase>(),
+        gh<_i255.CancelOrderUseCase>(),
+      ),
     );
     gh.factory<_i123.HomeBloc>(
       () => _i123.HomeBloc(

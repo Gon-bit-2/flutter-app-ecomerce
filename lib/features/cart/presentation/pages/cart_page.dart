@@ -7,6 +7,8 @@ import 'package:app_fe_ecomerce/features/cart/presentation/widgets/cart_summary_
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart'
+    as app_fe_ecomerce_order;
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -162,11 +164,28 @@ class _CartViewState extends State<CartView> {
                 selectedCount: _selectedIds.length,
                 totalPrice: _calculateTotalPrice(items),
                 onCheckout: () {
-                  // TODO: Điều hướng sang trang Thanh toán
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Chức năng Thanh toán đang phát triển...'),
-                      backgroundColor: AppColors.primaryBlue,
+                  final checkoutItems = items
+                      .where((e) => _selectedIds.contains(e.id))
+                      .toList();
+                  if (checkoutItems.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Vui lòng chọn ít nhất 1 sản phẩm để thanh toán',
+                        ),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                    return;
+                  }
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => app_fe_ecomerce_order.CheckoutPage(
+                        selectedItems: checkoutItems,
+                        totalPrice: _calculateTotalPrice(items),
+                      ),
                     ),
                   );
                 },
