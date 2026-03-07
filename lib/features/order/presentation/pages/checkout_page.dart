@@ -48,16 +48,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void _submitOrder() {
     if (_formKey.currentState!.validate()) {
       // Logic gom nhóm sản phẩm theo shopId
-      // Ở đây giả định model Product/CartEntity gửi về có chứa shopId
-      // Tạm thời nếu api chưa cung cấp shopId cho CartEntity, ta mock một shopId = 1 cho demo
-      // Trong thực tế CartEntity cần có trường shopId để group:
-
       final Map<int, List<int>> shopItems = {};
 
       for (var item in widget.selectedItems) {
-        // FIXME: Ở bước entity entity.dart chưa có trường shopId, nên tạm hardcode shopId = 1
-        // Hãy thêm trường shopId vào CartEntity nếu backend có trả về
-        int shopId = 1;
+        // Use the actual shopId from cart item
+        int? shopId = item.shopId;
+
+        // Fallback to shopId = 1 if not available (shouldn't happen with updated cart API)
+        if (shopId == null) {
+          print('WARNING: Cart item ${item.id} has no shopId, defaulting to 1');
+          shopId = 1;
+        }
 
         if (shopItems.containsKey(shopId)) {
           shopItems[shopId]!.add(item.id);

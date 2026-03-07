@@ -5,6 +5,7 @@ import '../models/product_model.dart';
 
 abstract class ProductRemoteDataSource {
   Future<List<ProductModel>> getProducts({int page = 1, int limit = 10});
+  Future<ProductModel> getProductById(int productId);
   Future<bool> createProduct(Map<String, dynamic> productData);
   Future<bool> updateProduct(int id, Map<String, dynamic> productData);
 }
@@ -35,6 +36,23 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     } else {
       return [];
     }
+  }
+
+  @override
+  Future<ProductModel> getProductById(int productId) async {
+    final response = await _dioClient.get(
+      '${AppConstants.productsEndpoint}/$productId',
+    );
+
+    // Response could be wrapped in 'data' or be the product directly
+    if (response.data is Map) {
+      final data = response.data as Map<String, dynamic>;
+      if (data.containsKey('data')) {
+        return ProductModel.fromJson(data['data']);
+      }
+      return ProductModel.fromJson(data);
+    }
+    throw Exception('Invalid response format');
   }
 
   @override

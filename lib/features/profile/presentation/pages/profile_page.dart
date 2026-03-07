@@ -6,6 +6,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/pages/order_history_page.dart'
     as app_fe_ecomerce_order;
+import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final UserEntity user;
@@ -108,6 +109,19 @@ class ProfilePage extends StatelessWidget {
             Icons.person_outline,
             "Thiết lập tài khoản",
             onTap: () {},
+          ),
+          const Divider(height: 1),
+          _buildMenuItem(
+            Icons.location_on_outlined,
+            "Sổ địa chỉ",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddressListPage(),
+                ),
+              );
+            },
           ),
           const Divider(height: 1),
           SwitchListTile(

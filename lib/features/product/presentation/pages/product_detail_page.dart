@@ -4,9 +4,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/product.dart';
+import '../../domain/repositories/product_repository.dart';
+import '../../domain/helpers/sku_generator.dart';
 import '../../../cart/presentation/pages/cart_page.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../injection_container.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -22,13 +25,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   // Map to store selected options for each variant type. Key: Variant Name (e.g. "Color"), Value: Selected Option (e.g. "Red")
   final Map<String, String> _selectedVariants = {};
   int _quantity = 1;
+  bool _isBuyNow = false;
+
+  // State for fetching full product details
+  Product? _productDetails;
+  bool _isLoadingDetails = false;
+  String? _errorMessage;
 
   // Calculate price to show. Range if multiple SKUs, or single price.
   // For now, simple logic.
 
+  // Use product details if available, otherwise use the passed product
+  Product get _currentProduct => _productDetails ?? widget.product;
+
   @override
   void initState() {
     super.initState();
+    _fetchProductDetails();
     // Pre-select first options if available? Or leave empty.
     if (widget.product.variants != null) {
       for (var v in widget.product.variants!) {
@@ -42,54 +55,245 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
+  Future<void> _fetchProductDetails() async {
+    setState(() {
+      _isLoadingDetails = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final repository = getIt<ProductRepository>();
+      final result = await repository.getProductById(widget.product.id);
+
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoadingDetails = false;
+            _errorMessage = failure.message;
+          });
+        },
+        (product) {
+          setState(() {
+            _productDetails = product;
+            _isLoadingDetails = false;
+          });
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoadingDetails = false;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
+  bool get _hasInvalidData {
+    // Kiểm tra xem có variants nhưng không có SKUs không (data lỗi)
+    return (_currentProduct.variants != null &&
+        _currentProduct.variants!.isNotEmpty &&
+        _currentProduct.skus.isEmpty);
+  }
+
   int? _getSelectedSkuId() {
-    if (widget.product.skus.isEmpty) return null;
-    if (widget.product.variants == null || widget.product.variants!.isEmpty) {
-      return widget.product.skus.first.id;
+    // Nếu không có SKUs và không có variants, có thể mua trực tiếp (không cần SKU)
+    if (_currentProduct.skus.isEmpty) {
+      if (_currentProduct.variants == null ||
+          _currentProduct.variants!.isEmpty) {
+        // Không có variants, không cần SKU - có thể là sản phẩm đơn giản
+        return -1; // Dùng -1 để báo hiệu không cần SKU
+      }
+      // Có variants nhưng không có SKUs - dữ liệu lỗi!
+      return null;
+    }
+    if (_currentProduct.variants == null || _currentProduct.variants!.isEmpty) {
+      return _currentProduct.skus.first.id;
     }
 
+    print('DEBUG: === Starting SKU selection ===');
+    print('DEBUG: Total variants: ${_currentProduct.variants!.length}');
+
     // Kiểm tra xem đã chọn đủ các thuộc tính chưa
-    for (var v in widget.product.variants!) {
+    for (var v in _currentProduct.variants!) {
       if (v is Map) {
         String name = v['value'];
-        if (!_selectedVariants.containsKey(name)) {
-          return null;
+        List opts = v['options'] as List? ?? [];
+        print('DEBUG: Variant "$name" has ${opts.length} options: $opts');
+        // Nếu variant này không có option nào thì bỏ qua
+        if (opts.isNotEmpty) {
+          if (!_selectedVariants.containsKey(name)) {
+            print('DEBUG: Thiếu thuộc tính: $name');
+            return null;
+          }
         }
       }
     }
 
-    // Ghép theo thứ tự các variant
+    // Ghép theo thứ tự các variant (chỉ lấy những cái có options)
     List<String> orderedOptions = [];
-    for (var v in widget.product.variants!) {
+    for (var v in _currentProduct.variants!) {
       if (v is Map) {
-        orderedOptions.add(_selectedVariants[v['value']]!);
+        String name = v['value'];
+        List opts = v['options'] as List? ?? [];
+        if (opts.isNotEmpty) {
+          orderedOptions.add(_selectedVariants[name]!);
+        }
       }
     }
-    String targetValue = orderedOptions.join(', ');
+
+    print('DEBUG: User selected options in order: $orderedOptions');
+    print('DEBUG: Available SKUs:');
+    for (var sku in _currentProduct.skus) {
+      print('  SKU ID ${sku.id}: "${sku.value}"');
+    }
 
     try {
-      return widget.product.skus
-          .firstWhere((sku) => sku.value == targetValue)
-          .id;
+      final matchedSku = _currentProduct.skus.firstWhere((sku) {
+        // SKU value can be in format: "Đen-S" (hyphen) or "Đen, S" (comma)
+        // Try comma first, then hyphen
+        List<String> skuOptions;
+        if (sku.value.contains(',')) {
+          skuOptions = sku.value.split(',').map((e) => e.trim()).toList();
+        } else if (sku.value.contains('-')) {
+          skuOptions = sku.value.split('-').map((e) => e.trim()).toList();
+        } else {
+          // Single value, no separator
+          skuOptions = [sku.value.trim()];
+        }
+
+        print(
+          'DEBUG: Checking SKU ${sku.id} with options: $skuOptions (count: ${skuOptions.length})',
+        );
+
+        // Nếu số lượng option không khớp thì chắc chắn sai
+        if (skuOptions.length != orderedOptions.length) {
+          print(
+            '  -> Length mismatch: ${skuOptions.length} != ${orderedOptions.length}',
+          );
+          return false;
+        }
+
+        // Kiểm tra xem tất cả các lựa chọn của user có nằm trong skuOptions không
+        for (var opt in orderedOptions) {
+          if (!skuOptions.contains(opt.trim())) {
+            print('  -> Missing option: "$opt" not in $skuOptions');
+            return false; // Thiếu 1 option
+          }
+        }
+        print('  -> MATCHED!');
+        return true; // Khớp tất cả
+      });
+      print('DEBUG: Final matched SKU ID: ${matchedSku.id}');
+      return matchedSku.id;
     } catch (e) {
+      print('DEBUG: ERROR - Could not find matching SKU!');
+      print('DEBUG: Searched for: $orderedOptions');
+      print(
+        'DEBUG: Available SKUs: ${_currentProduct.skus.map((e) => '${e.id}:"${e.value}"').toList()}',
+      );
       return null;
     }
   }
 
-  void _addToCart() {
-    final skuId = _getSelectedSkuId();
-    if (skuId == null) {
+  void _showDebugDialog() {
+    // Thu thập thông tin debug
+    StringBuffer debugInfo = StringBuffer();
+    debugInfo.writeln('=== DEBUG INFO ===\n');
+    debugInfo.writeln('Selected: $_selectedVariants\n');
+    debugInfo.writeln('Variants:');
+    if (_currentProduct.variants != null) {
+      for (var v in _currentProduct.variants!) {
+        if (v is Map) {
+          debugInfo.writeln('  ${v['value']}: ${v['options']}');
+        }
+      }
+    }
+    debugInfo.writeln('\nTotal SKUs: ${_currentProduct.skus.length}');
+    if (_currentProduct.skus.isEmpty) {
+      debugInfo.writeln('⚠️ KHÔNG CÓ SKU NÀO!');
+      debugInfo.writeln('Sản phẩm này chưa có SKUs trong database.');
+    } else {
+      debugInfo.writeln('SKUs:');
+      for (var sku in _currentProduct.skus) {
+        debugInfo.writeln('  ID ${sku.id}: "${sku.value}"');
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Debug Info'),
+        content: SingleChildScrollView(child: Text(debugInfo.toString())),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addToCart({bool buyNow = false}) {
+    // Kiểm tra lỗi data trước
+    if (_hasInvalidData) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Vui lòng chọn đầy đủ phân loại sản phẩm',
+            '⚠️ Sản phẩm có lỗi dữ liệu. Vui lòng liên hệ admin!',
             style: TextStyle(color: Colors.white),
           ),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
         ),
       );
+      _showDebugDialog();
       return;
     }
+
+    final skuId = _getSelectedSkuId();
+    print('DEBUG: Selected variants: $_selectedVariants');
+    print('DEBUG: SKU ID found: $skuId');
+    if (skuId == null) {
+      // Kiểm tra xem variant nào chưa được chọn
+      List<String> missingVariants = [];
+      if (_currentProduct.variants != null) {
+        for (var v in _currentProduct.variants!) {
+          if (v is Map) {
+            String name = v['value'];
+            List opts = v['options'] as List? ?? [];
+            if (opts.isNotEmpty && !_selectedVariants.containsKey(name)) {
+              missingVariants.add(name);
+            }
+          }
+        }
+      }
+
+      String errorMessage = missingVariants.isEmpty
+          ? 'Vui lòng chọn đầy đủ phân loại sản phẩm'
+          : 'Vui lòng chọn: ${missingVariants.join(", ")}';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            errorMessage,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Hiển thị debug dialog
+      _showDebugDialog();
+      return;
+    }
+
+    if (buyNow) {
+      setState(() {
+        _isBuyNow = true;
+      });
+    }
+
     context.read<CartBloc>().add(
       CartItemAdded(skuId: skuId, quantity: _quantity),
     );
@@ -112,7 +316,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 duration: const Duration(seconds: 1),
               ),
             );
+            if (_isBuyNow) {
+              setState(() {
+                _isBuyNow = false;
+              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CartPage()),
+              );
+            }
           } else if (state is CartFailure) {
+            setState(() {
+              _isBuyNow = false;
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -225,7 +441,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             _buildPriceSection(),
                             SizedBox(height: 8.h),
                             Text(
-                              widget.product.name,
+                              _currentProduct.name,
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.w500,
@@ -293,11 +509,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               _currentImageIndex = index;
             });
           },
-          itemCount: widget.product.images.isNotEmpty
-              ? widget.product.images.length
+          itemCount: _currentProduct.images.isNotEmpty
+              ? _currentProduct.images.length
               : 1,
           itemBuilder: (context, index) {
-            final images = widget.product.images;
+            final images = _currentProduct.images;
             if (images.isEmpty || images[index].isEmpty) {
               return Container(
                 color: Colors.grey[200],
@@ -372,7 +588,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
-              "${_currentImageIndex + 1}/${widget.product.images.length}",
+              "${_currentImageIndex + 1}/${_currentProduct.images.length}",
               style: TextStyle(color: Colors.white, fontSize: 12.sp),
             ),
           ),
@@ -384,11 +600,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget _buildPriceSection() {
     final formatCurrency = NumberFormat("#,##0", "vi_VN");
     double discount = 0;
-    if (widget.product.virtualPrice != null &&
-        widget.product.virtualPrice! > widget.product.basePrice) {
+    if (_currentProduct.virtualPrice != null &&
+        _currentProduct.virtualPrice! > _currentProduct.basePrice) {
       discount =
-          ((widget.product.virtualPrice! - widget.product.basePrice) /
-              widget.product.virtualPrice!) *
+          ((_currentProduct.virtualPrice! - _currentProduct.basePrice) /
+              _currentProduct.virtualPrice!) *
           100;
     }
 
@@ -396,18 +612,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          'đ${formatCurrency.format(widget.product.basePrice)}',
+          'đ${formatCurrency.format(_currentProduct.basePrice)}',
           style: TextStyle(
             color: Theme.of(context).primaryColor,
             fontSize: 24.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
-        if (widget.product.virtualPrice != null &&
-            widget.product.virtualPrice! > widget.product.basePrice) ...[
+        if (_currentProduct.virtualPrice != null &&
+            _currentProduct.virtualPrice! > _currentProduct.basePrice) ...[
           SizedBox(width: 8.w),
           Text(
-            'đ${formatCurrency.format(widget.product.virtualPrice)}',
+            'đ${formatCurrency.format(_currentProduct.virtualPrice)}',
             style: TextStyle(
               color: Colors.grey,
               fontSize: 14.sp,
@@ -438,14 +654,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Icon(Icons.star, color: Colors.amber, size: 16.sp),
         SizedBox(width: 4.w),
         Text(
-          "${widget.product.rating ?? 4.9}",
+          "${_currentProduct.rating ?? 4.9}",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
         ),
         SizedBox(width: 8.w),
         Container(height: 12.h, width: 1, color: Colors.grey),
         SizedBox(width: 8.w),
         Text(
-          "${widget.product.sold ?? 100} Đã bán",
+          "${_currentProduct.sold ?? 100} Đã bán",
           style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
         ),
         const Spacer(),
@@ -492,7 +708,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildVariantSelector() {
-    if (widget.product.variants == null || widget.product.variants!.isEmpty) {
+    if (_currentProduct.variants == null || _currentProduct.variants!.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -501,7 +717,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(height: 8.h),
-        ...widget.product.variants!.map((variant) {
+        ..._currentProduct.variants!.map((variant) {
           if (variant is! Map) return const SizedBox.shrink();
           String name = variant['value'] ?? '';
           List options = variant['options'] as List? ?? [];
@@ -536,11 +752,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
-                        if (selected) {
-                          _selectedVariants[name] = opt.toString();
-                        } else {
-                          _selectedVariants.remove(name);
-                        }
+                        // Chỉ cho phép chọn, không cho bỏ chọn
+                        // User must always have one option selected
+                        _selectedVariants[name] = opt.toString();
                       });
                     },
                     selectedColor: Theme.of(
@@ -689,7 +903,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ),
         SizedBox(height: 8.h),
         Text(
-          widget.product.description ?? "Chưa có mô tả.",
+          _currentProduct.description ?? "Chưa có mô tả.",
           style: TextStyle(
             fontSize: 14.sp,
             color: Colors.grey[800],
@@ -850,12 +1064,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  _addToCart();
-                  // Có thể tuỳ chọn nhảy đến CartPage
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CartPage()),
-                  );
+                  _addToCart(buyNow: true);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,

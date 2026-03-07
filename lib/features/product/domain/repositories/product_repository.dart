@@ -9,6 +9,8 @@ abstract class ProductRepository {
     // Add other filters as needed
   });
 
+  Future<Either<Failure, Product>> getProductById(int productId);
+
   Future<Either<Failure, bool>> createProduct(Map<String, dynamic> productData);
   Future<Either<Failure, bool>> updateProduct(
     int id,

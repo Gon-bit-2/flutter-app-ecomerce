@@ -3,9 +3,9 @@ import 'package:app_fe_ecomerce/features/order/data/models/order_model.dart';
 
 class OrderCreationResultModel extends OrderCreationResultEntity {
   const OrderCreationResultModel({
-    required List<OrderModel> orders,
-    int? paymentId,
-  }) : super(orders: orders, paymentId: paymentId);
+    required List<OrderModel> super.orders,
+    super.paymentId,
+  });
 
   factory OrderCreationResultModel.fromJson(Map<String, dynamic> json) {
     return OrderCreationResultModel(

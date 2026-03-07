@@ -34,7 +34,7 @@ class _CartViewState extends State<CartView> {
   void initState() {
     super.initState();
     // Tải giỏ hàng khi mở trang
-    context.read<CartBloc>().add(const CartLoadRequested());
+    context.read<CartBloc>().add(const CartLoadRequested(page: 1, limit: 100));
   }
 
   @override

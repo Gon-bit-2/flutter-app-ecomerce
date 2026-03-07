@@ -15,6 +15,7 @@ CartModel _$CartModelFromJson(Map<String, dynamic> json) => CartModel(
   image: json['image'] as String?,
   skuValue: json['skuValue'] as String?,
   price: json['price'] as num?,
+  shopId: (json['shopId'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$CartModelToJson(CartModel instance) => <String, dynamic>{
@@ -26,4 +27,5 @@ Map<String, dynamic> _$CartModelToJson(CartModel instance) => <String, dynamic>{
   'image': instance.image,
   'skuValue': instance.skuValue,
   'price': instance.price,
+  'shopId': instance.shopId,
 };

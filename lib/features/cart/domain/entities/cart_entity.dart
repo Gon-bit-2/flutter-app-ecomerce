@@ -11,6 +11,7 @@ class CartEntity extends Equatable {
   final String? image;
   final String? skuValue; // Ví dụ: Màu Đỏ - Size M
   final num? price;
+  final int? shopId; // ID của shop sở hữu sản phẩm
 
   const CartEntity({
     required this.id,
@@ -21,6 +22,7 @@ class CartEntity extends Equatable {
     this.image,
     this.skuValue,
     this.price,
+    this.shopId,
   });
 
   @override
@@ -33,6 +35,7 @@ class CartEntity extends Equatable {
     image,
     skuValue,
     price,
+    shopId,
   ];
 
   CartEntity copyWith({
@@ -44,6 +47,7 @@ class CartEntity extends Equatable {
     String? image,
     String? skuValue,
     num? price,
+    int? shopId,
   }) {
     return CartEntity(
       id: id ?? this.id,
@@ -54,6 +58,7 @@ class CartEntity extends Equatable {
       image: image ?? this.image,
       skuValue: skuValue ?? this.skuValue,
       price: price ?? this.price,
+      shopId: shopId ?? this.shopId,
     );
   }
 }

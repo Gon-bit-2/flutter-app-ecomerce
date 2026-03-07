@@ -14,6 +14,7 @@ class CartModel extends CartEntity {
     super.image,
     super.skuValue,
     super.price,
+    super.shopId,
   });
 
   // Lưu ý: Nếu API giỏ hàng trả về cấu trúc lồng nhau (nested JSON, ví dụ có object "sku" chứa "price"),

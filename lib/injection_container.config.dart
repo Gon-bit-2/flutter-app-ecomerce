@@ -20,6 +20,20 @@ import 'core/network/auth_interceptor.dart' as _i8;
 import 'core/network/dio_client.dart' as _i45;
 import 'core/network/network_info.dart' as _i75;
 import 'core/services/deep_link_service.dart' as _i872;
+import 'features/address/data/datasources/address_remote_data_source.dart'
+    as _i315;
+import 'features/address/data/repositories/address_repository_impl.dart'
+    as _i423;
+import 'features/address/domain/repositories/address_repository.dart' as _i535;
+import 'features/address/domain/usecases/create_address_usecase.dart' as _i924;
+import 'features/address/domain/usecases/delete_address_usecase.dart' as _i78;
+import 'features/address/domain/usecases/get_address_detail_usecase.dart'
+    as _i145;
+import 'features/address/domain/usecases/get_addresses_usecase.dart' as _i494;
+import 'features/address/domain/usecases/set_default_address_usecase.dart'
+    as _i679;
+import 'features/address/domain/usecases/update_address_usecase.dart' as _i803;
+import 'features/address/presentation/bloc/address_bloc.dart' as _i400;
 import 'features/auth/data/datasources/auth_local_datasource.dart' as _i1043;
 import 'features/auth/data/datasources/auth_remote_datasource.dart' as _i588;
 import 'features/auth/data/repositories/auth_repository_impl.dart' as _i111;
@@ -129,6 +143,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i45.DioClient>(
       () => _i45.DioClient(gh<_i361.Dio>(), gh<_i8.AuthInterceptor>()),
     );
+    gh.lazySingleton<_i315.AddressRemoteDataSource>(
+      () => _i315.AddressRemoteDataSourceImpl(apiClient: gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i979.CategoryRemoteDataSource>(
       () => _i979.CategoryRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -140,6 +157,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i143.ProductRemoteDataSource>(
       () => _i143.ProductRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
+    gh.lazySingleton<_i535.AddressRepository>(
+      () => _i423.AddressRepositoryImpl(
+        remoteDataSource: gh<_i315.AddressRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i987.CartRemoteDataSource>(
       () => _i987.CartRemoteDataSourceImpl(gh<_i45.DioClient>()),
@@ -164,6 +186,24 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i303.CartRepository>(
       () => _i302.CartRepositoryImpl(gh<_i987.CartRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i924.CreateAddressUseCase>(
+      () => _i924.CreateAddressUseCase(gh<_i535.AddressRepository>()),
+    );
+    gh.lazySingleton<_i78.DeleteAddressUseCase>(
+      () => _i78.DeleteAddressUseCase(gh<_i535.AddressRepository>()),
+    );
+    gh.lazySingleton<_i145.GetAddressDetailUseCase>(
+      () => _i145.GetAddressDetailUseCase(gh<_i535.AddressRepository>()),
+    );
+    gh.lazySingleton<_i494.GetAddressesUseCase>(
+      () => _i494.GetAddressesUseCase(gh<_i535.AddressRepository>()),
+    );
+    gh.lazySingleton<_i679.SetDefaultAddressUseCase>(
+      () => _i679.SetDefaultAddressUseCase(gh<_i535.AddressRepository>()),
+    );
+    gh.lazySingleton<_i803.UpdateAddressUseCase>(
+      () => _i803.UpdateAddressUseCase(gh<_i535.AddressRepository>()),
     );
     gh.lazySingleton<_i608.OrderRepository>(
       () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>()),
@@ -218,6 +258,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i225.Setup2FAUseCase>(
       () => _i225.Setup2FAUseCase(gh<_i1015.AuthRepository>()),
+    );
+    gh.factory<_i400.AddressBloc>(
+      () => _i400.AddressBloc(
+        getAddressesUseCase: gh<_i494.GetAddressesUseCase>(),
+        createAddressUseCase: gh<_i924.CreateAddressUseCase>(),
+        updateAddressUseCase: gh<_i803.UpdateAddressUseCase>(),
+        deleteAddressUseCase: gh<_i78.DeleteAddressUseCase>(),
+        setDefaultAddressUseCase: gh<_i679.SetDefaultAddressUseCase>(),
+      ),
     );
     gh.factory<_i255.CancelOrderUseCase>(
       () => _i255.CancelOrderUseCase(gh<_i608.OrderRepository>()),
