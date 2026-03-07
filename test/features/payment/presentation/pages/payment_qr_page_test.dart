@@ -1,4 +1,3 @@
-import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
 import 'package:app_fe_ecomerce/features/payment/domain/entities/payment_config_entity.dart';
 import 'package:app_fe_ecomerce/features/payment/domain/usecases/get_payment_config_usecase.dart';
 import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';

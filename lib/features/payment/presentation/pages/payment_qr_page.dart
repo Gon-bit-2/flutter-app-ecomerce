@@ -64,8 +64,9 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
   }
 
   void _initSocket() {
-    if (widget.isTestingMode)
+    if (widget.isTestingMode) {
       return; // Prevent connecting real socket during testing
+    }
 
     // Assuming backend endpoint is baseUrl without trailing slash
     final socketUrl =
