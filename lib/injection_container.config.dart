@@ -83,6 +83,13 @@ import 'features/order/domain/usecases/create_order_usecase.dart' as _i93;
 import 'features/order/domain/usecases/get_order_detail_usecase.dart' as _i1062;
 import 'features/order/domain/usecases/get_orders_usecase.dart' as _i836;
 import 'features/order/presentation/bloc/order/order_bloc.dart' as _i289;
+import 'features/payment/data/datasources/payment_remote_datasource.dart'
+    as _i983;
+import 'features/payment/data/repositories/payment_repository_impl.dart'
+    as _i210;
+import 'features/payment/domain/repositories/payment_repository.dart' as _i376;
+import 'features/payment/domain/usecases/get_payment_config_usecase.dart'
+    as _i813;
 import 'features/product/data/datasources/product_remote_datasource.dart'
     as _i143;
 import 'features/product/data/repositories/product_repository_impl.dart'
@@ -137,11 +144,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i987.CartRemoteDataSource>(
       () => _i987.CartRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i983.PaymentRemoteDataSource>(
+      () => _i983.PaymentRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i74.CommonRemoteDataSource>(
       () => _i74.CommonRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i376.PaymentRepository>(
+      () => _i210.PaymentRepositoryImpl(gh<_i983.PaymentRemoteDataSource>()),
+    );
     gh.lazySingleton<_i493.CommonRepository>(
       () => _i499.CommonRepositoryImpl(gh<_i74.CommonRemoteDataSource>()),
+    );
+    gh.factory<_i813.GetPaymentConfigUseCase>(
+      () => _i813.GetPaymentConfigUseCase(gh<_i376.PaymentRepository>()),
     );
     gh.lazySingleton<_i1043.BrandRemoteDataSource>(
       () => _i1043.BrandRemoteDataSourceImpl(gh<_i45.DioClient>()),

@@ -1,17 +1,21 @@
 import 'package:app_fe_ecomerce/core/error/failures.dart';
 import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
+import 'package:app_fe_ecomerce/features/order/domain/entities/order_creation_result_entity.dart';
 import 'package:app_fe_ecomerce/features/order/domain/repositories/order_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
 @injectable
-class CreateOrderUseCase implements UseCase<void, CreateOrderParams> {
+class CreateOrderUseCase
+    implements UseCase<OrderCreationResultEntity, CreateOrderParams> {
   final OrderRepository repository;
 
   CreateOrderUseCase(this.repository);
 
   @override
-  Future<Either<Failure, void>> call(CreateOrderParams params) {
+  Future<Either<Failure, OrderCreationResultEntity>> call(
+    CreateOrderParams params,
+  ) {
     return repository.createOrder(orders: params.orders);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:app_fe_ecomerce/core/error/failures.dart';
 import 'package:app_fe_ecomerce/features/order/data/datasources/order_remote_datasource.dart';
+import 'package:app_fe_ecomerce/features/order/domain/entities/order_creation_result_entity.dart';
 import 'package:app_fe_ecomerce/features/order/domain/entities/order_entity.dart';
 import 'package:app_fe_ecomerce/features/order/domain/repositories/order_repository.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usecase.dart';
@@ -66,16 +67,16 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createOrder({
+  Future<Either<Failure, OrderCreationResultEntity>> createOrder({
     required List<ShopOrderParams> orders,
   }) async {
     try {
-      await remoteDataSource.createOrder(orders: orders);
-      return const Right(null);
+      final result = await remoteDataSource.createOrder(orders: orders);
+      return right(result);
     } on DioException catch (e) {
-      return Left(_handleError(e));
+      return left(_handleError(e));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return left(ServerFailure(e.toString()));
     }
   }
 

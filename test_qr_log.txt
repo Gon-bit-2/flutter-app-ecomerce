@@ -1,0 +1,59 @@
+00:00 +0: loading D:/Works/app-ecomerce/app_fe_ecomerce/test/features/payment/presentation/pages/payment_qr_page_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: should display CircularProgressIndicator when loading
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///D:/Works/app-ecomerce/app_fe_ecomerce/test/features/payment/presentation/pages/payment_qr_page_test.dart:71:5)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  should display CircularProgressIndicator when loading
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:05 +0 -1: should display CircularProgressIndicator when loading [E]
+  Test failed. See exception logs above.
+  The test description was: should display CircularProgressIndicator when loading
+  
+00:05 +0 -1: should display error message when usecase returns failure
+00:05 +1 -1: should display QR Image and information correctly on successful config fetch
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure>.<anonymous closure> (file:///D:/Works/app-ecomerce/app_fe_ecomerce/test/features/payment/presentation/pages/payment_qr_page_test.dart:99:9)
+<asynchronous suspension>
+#3      main.<anonymous closure> (file:///D:/Works/app-ecomerce/app_fe_ecomerce/test/features/payment/presentation/pages/payment_qr_page_test.dart:96:7)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  should display QR Image and information correctly on successful config fetch
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:08 +1 -2: should display QR Image and information correctly on successful config fetch [E]
+  Test failed. See exception logs above.
+  The test description was: should display QR Image and information correctly on successful config fetch
+  
+00:08 +1 -2: (tearDownAll)
+00:08 +1 -2: Some tests failed.

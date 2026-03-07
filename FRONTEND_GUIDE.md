@@ -297,6 +297,115 @@ _Chỉ cần truyền một trong hai (`receiver` hoặc `userAddressId`)._
 - Tham số `q` là bắt buộc.
 - Endpoint này tách biệt với `GET /product` (list with filters) và phù hợp cho thanh search bar trên giao diện.
 
+## 13. Tích Hợp Thanh Toán SePay (QR Code Transfer)
+
+Hệ thống sử dụng **SePay** để nhận thanh toán qua chuyển khoản ngân hàng. Backend xử lý xác nhận tự động qua Webhook.
+
+### a. Luồng Thanh Toán Tổng Quan
+
+```
+User đặt hàng:
+1. GET /payment/config → Lấy thông tin bank (accountNumber, bankCode, prefix)
+2. POST /order → Nhận paymentId
+→ Frontend gen QR từ config + paymentId
+→ Hiển thị màn hình QR Code
+→ User chuyển khoản với nội dung {prefix}{paymentId}
+→ SePay detect → Gọi webhook → Backend xác nhận
+→ WebSocket emit "payment" event → Frontend cập nhật UI
+```
+
+### b. Lấy Thông Tin Ngân Hàng
+
+Gọi API `GET /payment/config` (Public, không cần auth) để lấy thông tin tài khoản nhận tiền:
+
+```json
+{
+  "accountNumber": "0123456789",
+  "bankCode": "VCB",
+  "prefix": "PM"
+}
+```
+
+> **Khuyến nghị:** Gọi API này một lần khi khởi tạo app hoặc khi vào trang Checkout, cache lại kết quả.
+
+### c. Tạo QR Code Thanh Toán
+
+Sau khi gọi `POST /order` thành công, response trả về:
+
+```json
+{
+  "orders": [...],
+  "paymentId": 123
+}
+```
+
+**Frontend tự gen mã QR** bằng URL của SePay, kết hợp thông tin từ `GET /payment/config`:
+
+```javascript
+// Lấy config
+const config = await fetch('/payment/config').then(r => r.json())
+
+// Sau khi tạo order
+const order = await fetch('/order', { method: 'POST', ... }).then(r => r.json())
+
+// Gen QR URL
+const qrUrl = `https://qr.sepay.vn/img?acc=${config.accountNumber}&bank=${config.bankCode}&amount=${totalAmount}&des=${config.prefix}${order.paymentId}`
+```
+
+**Các tham số:**
+
+| Tham số  | Mô tả                            | Nguồn                                   |
+| -------- | -------------------------------- | --------------------------------------- |
+| `acc`    | Số tài khoản ngân hàng nhận tiền | `GET /payment/config` → `accountNumber` |
+| `bank`   | Mã ngân hàng (VCB, MB, ACB,...)  | `GET /payment/config` → `bankCode`      |
+| `amount` | Tổng tiền thanh toán             | Tính từ danh sách items trong order     |
+| `des`    | Nội dung chuyển khoản            | `{prefix}{paymentId}` (ví dụ `PM123`)   |
+
+> **⚠️ QUAN TRỌNG:** Nội dung chuyển khoản (`des`) **PHẢI** theo đúng format `{prefix}{paymentId}` (ví dụ `PM123`). Backend dùng prefix này để trích xuất `paymentId` và xác nhận thanh toán. Sai format sẽ khiến thanh toán không được nhận diện.
+
+### d. Hiển thị Màn Hình QR Code
+
+**Flow UI khuyến nghị:**
+
+1. User chọn phương thức thanh toán **"Chuyển khoản ngân hàng"** trên CheckoutPage
+2. Bấm **"Đặt hàng"** → Gọi `POST /order`
+3. Sau khi API trả về thành công → **Điều hướng sang màn hình QR Code riêng biệt** với:
+   - Mã QR (gen từ URL SePay)
+   - Thông tin chuyển khoản: Ngân hàng, STK, Số tiền, Nội dung CK
+   - Bộ đếm ngược 24h (thời gian chờ thanh toán trước khi tự động hủy)
+   - Trạng thái: "Đang chờ thanh toán..."
+4. Khi WebSocket nhận event `payment` → Cập nhật UI thành **"Thanh toán thành công!"** → Cho phép điều hướng về trang đơn hàng
+
+### e. Lắng Nghe Thanh Toán Real-time (WebSocket)
+
+Kết nối vào **namespace `payment`** để nhận thông báo thanh toán:
+
+```javascript
+import { io } from 'socket.io-client'
+
+const paymentSocket = io('http://localhost:9999/payment', {
+  extraHeaders: {
+    Authorization: `Bearer ${accessToken}`,
+  },
+})
+
+paymentSocket.on('payment', (data) => {
+  if (data.status === 'success') {
+    // Thanh toán thành công!
+    // → Cập nhật UI, hiển thị thông báo, điều hướng
+  }
+})
+```
+
+> **Lưu ý:** Namespace thanh toán là `/payment`, tách biệt với namespace chat mặc định.
+
+### f. Xử Lý Timeout & Hủy Đơn
+
+- Backend tự động **hủy đơn hàng sau 24 giờ** nếu chưa thanh toán (sử dụng BullMQ job queue)
+- Khi đơn bị hủy: Payment → `FAILED`, Orders → `CANCELLED`, stock được hoàn lại
+- Frontend nên hiển thị **bộ đếm ngược** trên trang QR và thông báo khi hết thời gian
+- User có thể chủ động hủy bằng `PUT /order/:orderId`
+
 ---
 
 _Tài liệu này được dùng kèm với `API_LIST.md` để tra cứu chi tiết từng endpoint._

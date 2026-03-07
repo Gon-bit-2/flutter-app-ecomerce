@@ -11,7 +11,14 @@ class OrderInitial extends OrderState {}
 
 class OrderLoading extends OrderState {}
 
-class OrderCreated extends OrderState {}
+class OrderCreated extends OrderState {
+  final OrderCreationResultEntity result;
+
+  const OrderCreated({required this.result});
+
+  @override
+  List<Object?> get props => [result];
+}
 
 class OrdersLoaded extends OrderState {
   final List<OrderEntity> orders;

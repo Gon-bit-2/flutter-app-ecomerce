@@ -55,6 +55,7 @@ dependencies:
   carousel_slider: ^5.1.1
   flutter_staggered_grid_view: ^0.7.0
   image_picker: ^1.2.1
+  socket_io_client: ^3.1.4
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -62,12 +63,14 @@ dev_dependencies:
 
   # --- CODE GENERATION (Công cụ sinh code tự động) ---
   # Build_runner: "Tổng chỉ huy" chạy các tool sinh code bên dưới
-  build_runner: ^2.10.5
+  build_runner: ^2.12.2
   # Sinh code cho Dependency Injection (Injectable)
   injectable_generator: ^2.12.0
   # Sinh code cho Model (fromJson/toJson)
   json_serializable: ^6.11.4
   mocktail: ^1.0.4
+  mockito: ^5.6.3
+  network_image_mock: ^2.1.1
 flutter:
   uses-material-design: true
 scripts:
