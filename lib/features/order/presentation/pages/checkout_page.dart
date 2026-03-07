@@ -4,6 +4,7 @@ import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/bloc/order/order_bloc.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/widgets/checkout_item_widget.dart';
+import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -110,7 +111,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             );
           } else if (state is OrderCreated) {
-            _showSuccessDialog();
+            if (_paymentMethod == 'SEPAY') {
+              // Bỏ qua tất cả màn hình trên stack và đến trang QR
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PaymentQRPage(
+                    paymentId: state.result.paymentId ?? 0,
+                    totalAmount: widget.totalPrice + 30000,
+                  ),
+                ),
+              );
+            } else {
+              _showSuccessDialog();
+            }
           }
         },
         builder: (context, state) {
@@ -304,17 +318,34 @@ class _CheckoutPageState extends State<CheckoutPage> {
               borderRadius: BorderRadius.circular(8.r),
               color: AppColors.primaryBlue.withOpacity(0.05),
             ),
-            child: RadioListTile(
-              title: Text(
-                'Thanh toán khi nhận hàng (COD)',
-                style: AppTextStyles.bodyMedium,
-              ),
-              value: 'COD',
-              groupValue: _paymentMethod,
-              onChanged: (value) {
-                setState(() => _paymentMethod = value.toString());
-              },
-              activeColor: AppColors.primaryBlue,
+            child: Column(
+              children: [
+                RadioListTile(
+                  title: Text(
+                    'Thanh toán chuyển khoản (SePay)',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                  value: 'SEPAY',
+                  groupValue: _paymentMethod,
+                  onChanged: (value) {
+                    setState(() => _paymentMethod = value.toString());
+                  },
+                  activeColor: AppColors.primaryBlue,
+                ),
+                const Divider(),
+                RadioListTile(
+                  title: Text(
+                    'Thanh toán khi nhận hàng (COD)',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                  value: 'COD',
+                  groupValue: _paymentMethod,
+                  onChanged: (value) {
+                    setState(() => _paymentMethod = value.toString());
+                  },
+                  activeColor: AppColors.primaryBlue,
+                ),
+              ],
             ),
           ),
         ],

@@ -63,4 +63,8 @@ class AppConstants {
 
   // Order Endpoints
   static const String ordersEndpoint = '/order';
+
+  // Payment Endpoints
+  static const String paymentConfigEndpoint = '/payment/config';
+  static const String paymentSocketNamespace = '/payment';
 }

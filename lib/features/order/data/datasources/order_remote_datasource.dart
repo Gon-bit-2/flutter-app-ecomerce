@@ -1,5 +1,6 @@
 import 'package:app_fe_ecomerce/core/constants/app_constants.dart';
 import 'package:app_fe_ecomerce/core/network/dio_client.dart';
+import 'package:app_fe_ecomerce/features/order/data/models/order_creation_result_model.dart';
 import 'package:app_fe_ecomerce/features/order/data/models/order_model.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usecase.dart';
 import 'package:injectable/injectable.dart';
@@ -7,7 +8,9 @@ import 'package:injectable/injectable.dart';
 abstract class OrderRemoteDataSource {
   Future<List<OrderModel>> getOrders({int? page, int? limit, String? status});
   Future<OrderModel> getOrderDetail(int id);
-  Future<void> createOrder({required List<ShopOrderParams> orders});
+  Future<OrderCreationResultModel> createOrder({
+    required List<ShopOrderParams> orders,
+  });
   Future<void> cancelOrder(int id);
 }
 
@@ -45,9 +48,15 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   }
 
   @override
-  Future<void> createOrder({required List<ShopOrderParams> orders}) async {
+  Future<OrderCreationResultModel> createOrder({
+    required List<ShopOrderParams> orders,
+  }) async {
     final payload = orders.map((o) => o.toJson()).toList();
-    await _dioClient.post(AppConstants.ordersEndpoint, data: payload);
+    final response = await _dioClient.post(
+      AppConstants.ordersEndpoint,
+      data: payload,
+    );
+    return OrderCreationResultModel.fromJson(response.data);
   }
 
   @override

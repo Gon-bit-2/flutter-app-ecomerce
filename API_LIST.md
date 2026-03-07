@@ -1113,11 +1113,42 @@ _No Body_
 
 ## Payment Module
 
+### Payment Flow Overview
+
+1. Frontend gọi `GET /payment/config` → Lấy thông tin ngân hàng (`accountNumber`, `bankCode`, `prefix`)
+2. Frontend gọi `POST /order` → Backend tạo đơn hàng + Payment (PENDING) → Trả về `paymentId`
+3. Frontend gen QR Code từ `paymentId` + thông tin bank config → User chuyển khoản
+4. SePay phát hiện giao dịch → Gọi Webhook `POST /payment/receiver`
+5. Backend xác nhận thanh toán → Cập nhật Order sang `PENDING_PICKUP` → Emit WebSocket event `payment` tới user
+6. Nếu không thanh toán trong 24h → Tự động hủy đơn, hoàn lại stock
+
+### Get Payment Config
+
+**GET** `/payment/config`
+
+_No Auth Headers_ (Public)
+
+**Response:**
+
+```json
+{
+  "accountNumber": "0123456789",
+  "bankCode": "VCB",
+  "prefix": "PM"
+}
+```
+
+**Mô tả:** Trả về thông tin tài khoản ngân hàng nhận tiền và prefix nội dung chuyển khoản. Frontend dùng response này để gen mã QR SePay:
+
+```
+https://qr.sepay.vn/img?acc={accountNumber}&bank={bankCode}&amount={totalAmount}&des={prefix}{paymentId}
+```
+
 ### Webhook Receiver (SePay)
 
 **POST** `/payment/receiver`
 
-_No Auth Headers_ (Public Endpoint for Webhook)
+_No Auth Headers_ (Public Endpoint — Secured by API Key header)
 
 ```json
 {
@@ -1126,19 +1157,38 @@ _No Auth Headers_ (Public Endpoint for Webhook)
   "transactionDate": "2023-10-27 10:00:00",
   "accountNumber": "0123456789",
   "subAccount": null,
-  "amountIn": 0,
-  "amountOut": 0,
-  "accumulated": 0,
-  "code": "PAY123",
-  "transactionContent": "Thanh toan don hang",
-  "referenceNumber": null,
-  "body": null,
-  "transferType": "in", // or "out"
+  "code": "PM123",
+  "content": "PM123",
+  "transferType": "in", // "in" = tiền vào, "out" = tiền ra
   "transferAmount": 100000,
+  "accumulated": 500000,
   "referenceCode": null,
   "description": "Full sms content"
 }
 ```
+
+**Xử lý Backend:**
+
+- Backend trích xuất `paymentId` từ `code` hoặc `content` bằng prefix `PM` (ví dụ `PM123` → paymentId = 123)
+- Kiểm tra `transferAmount` có bằng tổng tiền đơn hàng không
+- Nếu hợp lệ → cập nhật Payment `SUCCESS`, Orders `PENDING_PICKUP`, xóa job auto-cancel
+- Gửi WebSocket event `payment` với `{ status: 'success' }` tới user
+
+### WebSocket Payment Notification
+
+**Namespace:** `payment`
+
+**Event:** `payment`
+
+**Data:**
+
+```json
+{
+  "status": "success"
+}
+```
+
+**Lưu ý:** Frontend cần kết nối vào namespace `payment` của WebSocket (không phải namespace mặc định) để nhận thông báo thanh toán thành công real-time.
 
 ---
 

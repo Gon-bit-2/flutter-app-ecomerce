@@ -1,0 +1,6 @@
+00:00 +0: loading D:/Works/app-ecomerce/app_fe_ecomerce/test/features/payment/data/repositories/payment_repository_impl_test.dart
+00:00 +0: getPaymentConfig should return remote data when the call to remote data source is successful
+00:00 +1: getPaymentConfig should return server failure when the call to remote data source is unsuccessful with DioException
+00:00 +2: getPaymentConfig should return server failure when there is a connection error
+00:00 +3: getPaymentConfig should catch native exception and return string message string
+00:00 +4: All tests passed!

@@ -3,6 +3,7 @@ import 'package:app_fe_ecomerce/features/order/domain/usecases/cancel_order_usec
 import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/get_order_detail_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/get_orders_usecase.dart';
+import 'package:app_fe_ecomerce/features/order/domain/entities/order_creation_result_entity.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -30,7 +31,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       );
       result.fold(
         (failure) => emit(OrderFailure(failure.message)),
-        (_) => emit(OrderCreated()),
+        (orderResult) => emit(OrderCreated(result: orderResult)),
       );
     });
 

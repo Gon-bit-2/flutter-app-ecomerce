@@ -1,0 +1,34 @@
+00:00 +0: loading D:/Works/app-ecomerce/app_fe_ecomerce/test/features/payment/domain/usecases/get_payment_config_usecase_test.dart
+00:00 +0: should get payment config from the repository
+00:00 +0 -1: should get payment config from the repository [E]
+  MissingDummyValueError: Either<Failure, PaymentConfigEntity>
+  
+  This means Mockito was not smart enough to generate a dummy value of type
+  'Either<Failure, PaymentConfigEntity>'. Please consider using either 'provideDummy' or 'provideDummyBuilder'
+  functions to give Mockito a proper dummy value.
+  
+  Please note that due to implementation details Mockito sometimes needs users
+  to provide dummy values for some types, even if they plan to explicitly stub
+  all the called methods.
+  
+  package:mockito/src/dummies.dart 160:3                                                  dummyValue
+  test\features\payment\domain\usecases\get_payment_config_usecase_test.mocks.dart 49:23  MockPaymentRepository.getPaymentConfig
+  test\features\payment\domain\usecases\get_payment_config_usecase_test.dart 32:29        main.<fn>
+  
+00:00 +0 -1: should return a failure when getting payment config fails
+00:00 +0 -2: should return a failure when getting payment config fails [E]
+  MissingDummyValueError: Either<Failure, PaymentConfigEntity>
+  
+  This means Mockito was not smart enough to generate a dummy value of type
+  'Either<Failure, PaymentConfigEntity>'. Please consider using either 'provideDummy' or 'provideDummyBuilder'
+  functions to give Mockito a proper dummy value.
+  
+  Please note that due to implementation details Mockito sometimes needs users
+  to provide dummy values for some types, even if they plan to explicitly stub
+  all the called methods.
+  
+  package:mockito/src/dummies.dart 160:3                                                  dummyValue
+  test\features\payment\domain\usecases\get_payment_config_usecase_test.mocks.dart 49:23  MockPaymentRepository.getPaymentConfig
+  test\features\payment\domain\usecases\get_payment_config_usecase_test.dart 45:29        main.<fn>
+  
+00:00 +0 -2: Some tests failed.
