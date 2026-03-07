@@ -44,7 +44,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       result.fold((failure) => emit(CartFailure(failure.message)), (_) {
         emit(const CartOperationSuccess(message: 'Đã thêm vào giỏ hàng'));
         // Tải lại giỏ hàng sau khi thêm thành công
-        add(const CartLoadRequested());
+        add(const CartLoadRequested(page: 1, limit: 100));
       });
     });
 
@@ -56,7 +56,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
       result.fold((failure) => emit(CartFailure(failure.message)), (_) {
         // Sau khi cập nhật thành công, tải lại giỏ hàng
-        add(const CartLoadRequested());
+        add(const CartLoadRequested(page: 1, limit: 100));
       });
     });
 
@@ -69,7 +69,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       result.fold((failure) => emit(CartFailure(failure.message)), (_) {
         emit(const CartOperationSuccess(message: 'Đã xóa sản phẩm'));
         // Sau khi xóa thành công, tải lại giỏ hàng
-        add(const CartLoadRequested());
+        add(const CartLoadRequested(page: 1, limit: 100));
       });
     });
   }

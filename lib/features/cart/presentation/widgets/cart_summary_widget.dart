@@ -96,7 +96,9 @@ class CartSummaryWidget extends StatelessWidget {
   }
 
   String _formatPrice(num price) {
-    return price
+    // Handle potential null or 0 values safely
+    final safePrice = price is int || price is double ? price : 0;
+    return safePrice
         .toStringAsFixed(0)
         .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),

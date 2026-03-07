@@ -51,6 +51,18 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Either<Failure, Product>> getProductById(int productId) async {
+    try {
+      final product = await remoteDataSource.getProductById(productId);
+      return Right(product);
+    } on DioException catch (e) {
+      return Left(_handleError(e));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> createProduct(
     Map<String, dynamic> productData,
   ) async {
