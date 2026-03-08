@@ -97,6 +97,8 @@ import 'features/order/domain/usecases/create_order_usecase.dart' as _i93;
 import 'features/order/domain/usecases/get_order_detail_usecase.dart' as _i1062;
 import 'features/order/domain/usecases/get_orders_usecase.dart' as _i836;
 import 'features/order/presentation/bloc/order/order_bloc.dart' as _i289;
+import 'features/order/presentation/bloc/seller_order/seller_order_bloc.dart'
+    as _i337;
 import 'features/payment/data/datasources/payment_remote_datasource.dart'
     as _i983;
 import 'features/payment/data/repositories/payment_repository_impl.dart'
@@ -109,6 +111,8 @@ import 'features/product/data/datasources/product_remote_datasource.dart'
 import 'features/product/data/repositories/product_repository_impl.dart'
     as _i531;
 import 'features/product/domain/repositories/product_repository.dart' as _i841;
+import 'features/product/presentation/bloc/my_products/my_products_bloc.dart'
+    as _i947;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -280,8 +284,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i836.GetOrdersUseCase>(
       () => _i836.GetOrdersUseCase(gh<_i608.OrderRepository>()),
     );
+    gh.factory<_i947.MyProductsBloc>(
+      () => _i947.MyProductsBloc(gh<_i841.ProductRepository>()),
+    );
     gh.lazySingleton<_i468.BrandRepository>(
       () => _i831.BrandRepositoryImpl(gh<_i1043.BrandRemoteDataSource>()),
+    );
+    gh.factory<_i337.SellerOrderBloc>(
+      () => _i337.SellerOrderBloc(gh<_i608.OrderRepository>()),
     );
     gh.lazySingleton<_i259.GetDailyDiscoverUseCase>(
       () => _i259.GetDailyDiscoverUseCase(gh<_i841.ProductRepository>()),

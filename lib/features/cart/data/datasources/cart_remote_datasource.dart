@@ -54,12 +54,8 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
           // IMPORTANT: Backend validates shopId against sku.createdById
           // Try multiple sources: sku.createdById > product.createdById > shopIdFromGroup
           int? shopId = skuData?['createdById'] as int?;
-          if (shopId == null) {
-            shopId = productData?['createdById'] as int?;
-          }
-          if (shopId == null) {
-            shopId = shopIdFromGroup;
-          }
+          shopId ??= productData?['createdById'] as int?;
+          shopId ??= shopIdFromGroup;
 
           // Extract price: use sku.price if > 0, otherwise use product.basePrice
           num? price;

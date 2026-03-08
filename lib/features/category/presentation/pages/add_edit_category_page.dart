@@ -2,9 +2,12 @@ import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/category/domain/entities/category.dart';
 import 'package:app_fe_ecomerce/features/category/presentation/bloc/category/category_bloc.dart';
+import 'package:app_fe_ecomerce/features/common/domain/repositories/common_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// Trang thêm/sửa danh mục.
 /// - `category != null` → Chế độ sửa (pre-fill dữ liệu)
@@ -22,7 +25,9 @@ class AddEditCategoryPage extends StatefulWidget {
 class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _logoController;
+
+  String? _logoUrl; // URL ảnh đã upload hoặc ảnh cũ
+  bool _isUploadingImage = false;
 
   bool get _isEditing => widget.category != null;
 
@@ -30,28 +35,66 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _logoController = TextEditingController(text: widget.category?.logo ?? '');
+    _logoUrl = widget.category?.logo;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _logoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (pickedFile == null) return;
+
+    setState(() => _isUploadingImage = true);
+
+    final commonRepo = GetIt.I<CommonRepository>();
+    final result = await commonRepo.uploadFile(pickedFile);
+
+    result.fold(
+      (failure) {
+        setState(() => _isUploadingImage = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tải ảnh thất bại: ${failure.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      (url) {
+        setState(() {
+          _logoUrl = url;
+          _isUploadingImage = false;
+        });
+      },
+    );
+  }
+
+  void _removeImage() {
+    setState(() => _logoUrl = null);
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameController.text.trim();
-    final logo = _logoController.text.trim();
 
     if (_isEditing) {
       context.read<CategoryBloc>().add(
         CategoryUpdated(
           id: widget.category!.id,
           name: name,
-          logo: logo.isNotEmpty ? logo : null,
+          logo: _logoUrl,
           parentCategoryId: widget.category!.parentCategoryId,
         ),
       );
@@ -59,7 +102,7 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
       context.read<CategoryBloc>().add(
         CategoryCreated(
           name: name,
-          logo: logo.isNotEmpty ? logo : null,
+          logo: _logoUrl,
           parentCategoryId: widget.parentCategoryId,
         ),
       );
@@ -148,21 +191,10 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
 
                 SizedBox(height: 24.h),
 
-                // Logo URL
-                _buildLabel('Logo (URL)', isRequired: false),
+                // Logo upload
+                _buildLabel('Logo', isRequired: false),
                 SizedBox(height: 8.h),
-                TextFormField(
-                  controller: _logoController,
-                  decoration: _inputDecoration(
-                    hintText: 'https://example.com/logo.png',
-                    prefixIcon: Icons.image_outlined,
-                  ),
-                ),
-
-                SizedBox(height: 16.h),
-
-                // Preview logo
-                if (_logoController.text.trim().isNotEmpty) _buildLogoPreview(),
+                _buildImagePicker(),
 
                 SizedBox(height: 32.h),
 
@@ -260,41 +292,140 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
     );
   }
 
-  Widget _buildLogoPreview() {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: AppColors.inputBackground,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
-            child: Image.network(
-              _logoController.text.trim(),
-              width: 56.w,
-              height: 56.w,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 56.w,
-                height: 56.w,
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Icon(
-                  Icons.broken_image_outlined,
-                  color: AppColors.error,
-                  size: 28.sp,
+  Widget _buildImagePicker() {
+    if (_isUploadingImage) {
+      return Container(
+        height: 120.w,
+        decoration: BoxDecoration(
+          color: AppColors.inputBackground,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        ),
+      );
+    }
+
+    if (_logoUrl != null && _logoUrl!.isNotEmpty) {
+      return Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.inputBackground,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.r),
+              child: Image.network(
+                _logoUrl!,
+                width: 80.w,
+                height: 80.w,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 80.w,
+                  height: 80.w,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    color: AppColors.error,
+                    size: 32.sp,
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text('Xem trước logo', style: AppTextStyles.bodyMedium),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Logo đã tải lên', style: AppTextStyles.bodyMedium),
+                  SizedBox(height: 8.h),
+                  Row(
+                    children: [
+                      _actionButton(
+                        icon: Icons.refresh,
+                        label: 'Đổi ảnh',
+                        onTap: _pickAndUploadImage,
+                      ),
+                      SizedBox(width: 8.w),
+                      _actionButton(
+                        icon: Icons.delete_outline,
+                        label: 'Xóa',
+                        onTap: _removeImage,
+                        color: AppColors.error,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: _pickAndUploadImage,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        height: 120.w,
+        decoration: BoxDecoration(
+          color: AppColors.inputBackground,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cloud_upload_outlined,
+              size: 36.sp,
+              color: AppColors.textSecondary,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Nhấn để chọn ảnh',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'JPG, PNG, WEBP (tối đa 5MB)',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 11.sp,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    final c = color ?? AppColors.primaryBlue;
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16.sp, color: c),
+          SizedBox(width: 4.w),
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(color: c, fontSize: 12.sp),
           ),
         ],
       ),

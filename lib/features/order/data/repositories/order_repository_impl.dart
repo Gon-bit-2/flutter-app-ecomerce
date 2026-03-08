@@ -91,4 +91,16 @@ class OrderRepositoryImpl implements OrderRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateOrderStatus(int id, String status) async {
+    try {
+      await remoteDataSource.updateOrderStatus(id, status);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_handleError(e));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

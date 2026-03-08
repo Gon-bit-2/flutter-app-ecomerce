@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
-import '../../domain/helpers/sku_generator.dart';
 import '../../../cart/presentation/pages/cart_page.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
