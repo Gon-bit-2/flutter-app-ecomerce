@@ -42,3 +42,13 @@ class CartFailure extends CartState {
   @override
   List<Object> get props => [message];
 }
+
+// 6. Chưa đăng nhập (Unauthorized 401)
+class CartUnauthenticated extends CartState {
+  final String message;
+
+  const CartUnauthenticated(this.message);
+
+  @override
+  List<Object> get props => [message];
+}

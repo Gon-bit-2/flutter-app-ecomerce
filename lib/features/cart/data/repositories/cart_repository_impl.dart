@@ -14,6 +14,13 @@ class CartRepositoryImpl implements CartRepository {
 
   ServerFailure _handleError(DioException e) {
     try {
+      if (e.response?.statusCode == 401) {
+        return const ServerFailure(
+          "Vui lòng đăng nhập để sử dụng tính năng này.",
+          401,
+        );
+      }
+
       if (e.response?.data != null) {
         final msg = e.response!.data['message'];
         if (msg is String) {

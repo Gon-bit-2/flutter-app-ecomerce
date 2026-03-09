@@ -59,7 +59,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<bool> createProduct(Map<String, dynamic> productData) async {
-    final response = await _dioClient.post(
+    await _dioClient.post(
       AppConstants.manageProductsEndpoint,
       data: productData,
     );

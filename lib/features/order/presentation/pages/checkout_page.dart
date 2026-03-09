@@ -5,6 +5,8 @@ import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usec
 import 'package:app_fe_ecomerce/features/order/presentation/bloc/order/order_bloc.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/widgets/checkout_item_widget.dart';
 import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';
+import 'package:app_fe_ecomerce/features/address/domain/entities/address_entity.dart';
+import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -27,25 +29,34 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers cho thông tin giao hàng
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
+  AddressEntity? _selectedAddress;
   final _noteController = TextEditingController();
-
-  // Phương thức thanh toán (mặc định COD)
   String _paymentMethod = 'COD';
 
   @override
+  void initState() {
+    super.initState();
+    // TODO: Ideally context.read<AddressBloc>().add(GetAddressesEvent()) and listen to State to set default address.
+    // For now we assume user will pick or we load default if possible.
+  }
+
+  @override
   void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
     _noteController.dispose();
     super.dispose();
   }
 
   void _submitOrder() {
+    if (_selectedAddress == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn địa chỉ giao hàng'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       // Logic gom nhóm sản phẩm theo shopId
       final Map<int, List<int>> shopItems = {};
@@ -67,16 +78,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }
       }
 
-      final receiver = ReceiverInfoParams(
-        name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-      );
-
       final List<ShopOrderParams> orders = shopItems.entries.map((e) {
         return ShopOrderParams(
           shopId: e.key,
-          receiver: receiver,
+          userAddressId: _selectedAddress!.id,
           cartItemIds: e.value,
         );
       }).toList();
@@ -113,7 +118,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
             );
           } else if (state is OrderCreated) {
             if (_paymentMethod == 'SEPAY') {
-              // Bỏ qua tất cả màn hình trên stack và đến trang QR
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -135,22 +139,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 padding: EdgeInsets.only(bottom: 100.h),
                 child: Column(
                   children: [
-                    // Phần thông tin giao hàng
                     _buildDeliverySection(),
-
-                    // Phần danh sách sản phẩm
                     _buildProductsSection(),
-
-                    // Phương thức thanh toán
                     _buildPaymentMethodSection(),
-
-                    // Tổng quan đơn hàng
                     _buildOrderSummarySection(),
                   ],
                 ),
               ),
-
-              // Nút đặt hàng ở dưới cùng
               _buildBottomBar(state is OrderLoading),
             ],
           );
@@ -170,71 +165,77 @@ class _CheckoutPageState extends State<CheckoutPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  Icons.location_on,
-                  color: AppColors.primaryBlue,
-                  size: 20.sp,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      color: AppColors.primaryBlue,
+                      size: 20.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Địa chỉ nhận hàng',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 8.w),
-                Text(
-                  'Thông tin nhận hàng',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.bold,
+                TextButton(
+                  onPressed: () async {
+                    // Navigate to Address list to pick
+                    final selected = await Navigator.push<AddressEntity>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const AddressListPage(isSelecting: true),
+                      ),
+                    );
+                    if (selected != null) {
+                      setState(() {
+                        _selectedAddress = selected;
+                      });
+                    }
+                  },
+                  child: Text(
+                    _selectedAddress == null ? 'Chọn' : 'Thay đổi',
+                    style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontSize: 14.sp,
+                    ),
                   ),
                 ),
               ],
             ),
+            if (_selectedAddress != null) ...[
+              SizedBox(height: 8.h),
+              Text(
+                '${_selectedAddress!.name} | ${_selectedAddress!.phone}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                _selectedAddress!.address,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ] else ...[
+              SizedBox(height: 16.h),
+              Center(
+                child: Text(
+                  'Vui lòng chọn địa chỉ giao hàng',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ),
+            ],
             SizedBox(height: 16.h),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Họ tên người nhận',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
-                ),
-              ),
-              validator: (value) =>
-                  value!.isEmpty ? 'Vui lòng nhập họ tên' : null,
-            ),
-            SizedBox(height: 12.h),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Số điện thoại',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
-                ),
-              ),
-              validator: (value) => value!.isEmpty ? 'Vui lòng nhập SDT' : null,
-            ),
-            SizedBox(height: 12.h),
-            TextFormField(
-              controller: _addressController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: 'Địa chỉ giao hàng chi tiết',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
-                ),
-              ),
-              validator: (value) =>
-                  value!.isEmpty ? 'Vui lòng nhập địa chỉ' : null,
-            ),
-            SizedBox(height: 12.h),
             TextFormField(
               controller: _noteController,
               decoration: InputDecoration(
