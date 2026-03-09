@@ -18,4 +18,6 @@ abstract class OrderRepository {
   });
 
   Future<Either<Failure, void>> cancelOrder(int id);
+
+  Future<Either<Failure, void>> updateOrderStatus(int id, String status);
 }

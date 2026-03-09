@@ -12,6 +12,7 @@ abstract class OrderRemoteDataSource {
     required List<ShopOrderParams> orders,
   });
   Future<void> cancelOrder(int id);
+  Future<void> updateOrderStatus(int id, String status);
 }
 
 @LazySingleton(as: OrderRemoteDataSource)
@@ -61,8 +62,14 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
 
   @override
   Future<void> cancelOrder(int id) async {
-    // Calling PUT /order/:id with some payload to cancel it.
-    // Wait, API LIST says "PUT /order/:id No Body". Just hitting PUT.
     await _dioClient.put('${AppConstants.ordersEndpoint}/$id');
+  }
+
+  @override
+  Future<void> updateOrderStatus(int id, String status) async {
+    await _dioClient.post(
+      '${AppConstants.ordersEndpoint}/$id/status',
+      data: {'status': status},
+    );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:app_fe_ecomerce/features/category/presentation/pages/category_page.dart';
+import 'package:app_fe_ecomerce/features/order/presentation/pages/seller_orders_page.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
+import 'package:app_fe_ecomerce/features/product/presentation/pages/my_products_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -93,19 +95,19 @@ class MyShopPage extends StatelessWidget {
         "icon": Icons.inventory_2_outlined,
         "title": "Sản phẩm của tôi",
         "onTap": () {
-          // TODO: Implement My Products List
-          ScaffoldMessenger.of(
+          Navigator.push(
             context,
-          ).showSnackBar(const SnackBar(content: Text("Danh sách sản phẩm")));
+            MaterialPageRoute(builder: (context) => const MyProductsPage()),
+          );
         },
       },
       {
         "icon": Icons.list_alt,
         "title": "Đơn hàng",
         "onTap": () {
-          // TODO: Implement Orders
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Đơn hàng - Sắp ra mắt")),
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SellerOrdersPage()),
           );
         },
       },

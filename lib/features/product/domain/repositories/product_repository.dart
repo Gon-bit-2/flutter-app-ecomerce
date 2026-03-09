@@ -16,4 +16,9 @@ abstract class ProductRepository {
     int id,
     Map<String, dynamic> productData,
   );
+  Future<Either<Failure, void>> deleteProduct(int id);
+  Future<Either<Failure, List<Product>>> getManageProducts({
+    int page = 1,
+    int limit = 10,
+  });
 }

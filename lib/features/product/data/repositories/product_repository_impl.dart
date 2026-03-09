@@ -90,4 +90,34 @@ class ProductRepositoryImpl implements ProductRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteProduct(int id) async {
+    try {
+      await remoteDataSource.deleteProduct(id);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_handleError(e));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Product>>> getManageProducts({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final products = await remoteDataSource.getManageProducts(
+        page: page,
+        limit: limit,
+      );
+      return Right(products);
+    } on DioException catch (e) {
+      return Left(_handleError(e));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

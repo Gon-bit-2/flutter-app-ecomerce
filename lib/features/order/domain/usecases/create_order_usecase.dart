@@ -28,25 +28,34 @@ class CreateOrderParams {
 
 class ShopOrderParams {
   final int shopId;
-  final ReceiverInfoParams receiver;
+  final ReceiverInfoParams? receiver;
+  final int? userAddressId;
   final List<int> cartItemIds;
 
   const ShopOrderParams({
     required this.shopId,
-    required this.receiver,
+    this.receiver,
+    this.userAddressId,
     required this.cartItemIds,
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'shopId': shopId,
-      'receiver': {
-        'name': receiver.name,
-        'phone': receiver.phone,
-        'address': receiver.address,
-      },
       'cartItemIds': cartItemIds,
     };
+
+    if (userAddressId != null) {
+      data['userAddressId'] = userAddressId;
+    } else if (receiver != null) {
+      data['receiver'] = {
+        'name': receiver!.name,
+        'phone': receiver!.phone,
+        'address': receiver!.address,
+      };
+    }
+
+    return data;
   }
 }
 

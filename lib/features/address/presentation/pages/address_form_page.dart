@@ -89,67 +89,91 @@ class _AddressFormPageState extends State<AddressFormPage> {
         builder: (context, state) {
           final isLoading = state is AddressLoading;
 
-          return Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Họ và tên',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Vui lòng nhập họ và tên'
-                      : null,
-                  enabled: !isLoading,
+          return Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  children: [
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.only(left: 16),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Column(
+                        children: [
+                          _buildTextField(
+                            controller: _nameController,
+                            label: 'Họ và tên',
+                            isLoading: isLoading,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Vui lòng nhập họ và tên'
+                                : null,
+                          ),
+                          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                          _buildTextField(
+                            controller: _phoneController,
+                            label: 'Số điện thoại',
+                            keyboardType: TextInputType.phone,
+                            isLoading: isLoading,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Vui lòng nhập số điện thoại'
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.only(left: 16),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: _buildTextField(
+                        controller: _addressController,
+                        label: 'Địa chỉ cụ thể',
+                        isLoading: isLoading,
+                        maxLines: 2,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Vui lòng nhập địa chỉ cụ thể'
+                            : null,
+                      ),
+                    ),
+                    if (widget.address?.isDefault != true)
+                      Container(
+                        color: Colors.white,
+                        child: SwitchListTile(
+                          title: const Text(
+                            'Đặt làm địa chỉ mặc định',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          activeThumbColor: const Color(
+                            0xFFEE4D2D,
+                          ), // Shopee orange
+                          value: _isDefault,
+                          onChanged: isLoading
+                              ? null
+                              : (value) {
+                                  setState(() {
+                                    _isDefault = value;
+                                  });
+                                },
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Số điện thoại',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Vui lòng nhập số điện thoại'
-                      : null,
-                  enabled: !isLoading,
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Địa chỉ cụ thể',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Vui lòng nhập địa chỉ cụ thể'
-                      : null,
-                  enabled: !isLoading,
-                ),
-                const SizedBox(height: 16),
-                if (widget.address?.isDefault !=
-                    true) // Không cho huỷ mặc định trực tiếp ở đây (chỉ set qua API default)
-                  SwitchListTile(
-                    title: const Text('Đặt làm địa chỉ mặc định'),
-                    value: _isDefault,
-                    onChanged: isLoading
-                        ? null
-                        : (value) {
-                            setState(() {
-                              _isDefault = value;
-                            });
-                          },
-                  ),
-                const SizedBox(height: 32),
-                ElevatedButton(
+                child: ElevatedButton(
                   onPressed: isLoading ? null : _submitData,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFFEE4D2D), // Shopee orange
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                   child: isLoading
                       ? const SizedBox(
@@ -161,15 +185,45 @@ class _AddressFormPageState extends State<AddressFormPage> {
                           ),
                         )
                       : const Text(
-                          'Lưu thông tin',
-                          style: TextStyle(fontSize: 16),
+                          'HOÀN THÀNH',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required bool isLoading,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
+        ).copyWith(left: 0),
+      ),
+      validator: validator,
+      enabled: !isLoading,
     );
   }
 }
