@@ -456,7 +456,67 @@ paymentSocket.on('payment', (data) => {
 - Khi đơn bị hủy: Payment → `FAILED`, Orders → `CANCELLED`, stock được hoàn lại
 - Frontend nên hiển thị **bộ đếm ngược** trên trang QR và thông báo khi hết thời gian
 - User có thể chủ động hủy bằng `PUT /order/:orderId`
+- **Hoàn voucher:** Khi đơn bị hủy, hệ thống tự động hoàn lại voucher đã sử dụng — user có thể dùng lại voucher cho đơn hàng khác
 
 ---
 
 _Tài liệu này được dùng kèm với `API_LIST.md` để tra cứu chi tiết từng endpoint._
+
+## 14. Hệ Thống Voucher & Discount
+
+Hệ thống hỗ trợ nhiều loại voucher tương tự Shopee/Tiki.
+
+### a. Các Loại Voucher
+
+| Type           | Mô tả                | Cách tính                                                                              |
+| -------------- | -------------------- | -------------------------------------------------------------------------------------- |
+| `PERCENTAGE`   | Giảm % giá trị đơn   | `discountAmount = orderValue * value / 100`, tối đa `maxDiscountValue`                 |
+| `FIXED_AMOUNT` | Giảm số tiền cố định | `discountAmount = value`                                                               |
+| `SHIPPING`     | Giảm/miễn phí ship   | `value >= 100` → miễn phí ship, `value < 100` → giảm % ship, tối đa `maxDiscountValue` |
+
+### b. Xếp Chồng Voucher (Stacking)
+
+- ✅ **1 Voucher Shop + 1 Voucher Sàn** → Được áp dụng cùng lúc
+- ❌ Không được dùng 2 voucher Shop hoặc 2 voucher Sàn cùng lúc
+- ✅ **Voucher Freeship** có thể dùng kết hợp với voucher giảm giá
+
+### c. Preview Voucher Trước Khi Đặt Hàng
+
+Gọi `POST /discount/preview` để kiểm tra tính hợp lệ và xem trước số tiền giảm:
+
+```javascript
+const result = await fetch('/discount/preview', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  body: JSON.stringify({
+    code: 'SUMMER10',
+    orderValue: 200000,
+    shippingFee: 30000, // Phí ship (bắt buộc nếu dùng voucher SHIPPING)
+    userId: 1,
+    shopId: 1,
+    items: [{ productId: 1, categoryId: 1, price: 100000, quantity: 2 }],
+  }),
+}).then((r) => r.json())
+
+// Response:
+// {
+//   isValid: true,
+//   discountAmount: 20000,       // Giảm trên giá sản phẩm
+//   shippingDiscount: 0,         // Giảm trên phí ship (> 0 nếu SHIPPING voucher)
+//   finalPrice: 180000,          // Giá sau giảm
+//   finalShippingFee: 30000,     // Phí ship sau giảm
+//   message: 'Áp dụng mã thành công'
+// }
+```
+
+### d. Hiển Thị Voucher
+
+- **Voucher giảm giá:** Hiển thị `discountAmount` và `finalPrice`
+- **Voucher freeship:** Hiển thị `shippingDiscount` và `finalShippingFee`
+- **`maxDiscountValue`:** Hiển thị dạng "Giảm {value}%, tối đa {maxDiscountValue}đ" hoặc "Freeship tối đa {maxDiscountValue}đ"
+
+### e. Hoàn Voucher Khi Hủy Đơn
+
+- Khi user hủy đơn hàng (`PUT /order/:orderId`), hệ thống **tự động hoàn voucher**
+- User có thể sử dụng lại voucher cho đơn hàng khác
+- Frontend không cần xử lý gì thêm — backend tự xử lý hoàn toàn

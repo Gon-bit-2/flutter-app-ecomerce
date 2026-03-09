@@ -83,6 +83,30 @@ import 'features/category/presentation/bloc/category/category_bloc.dart'
 import 'features/common/data/datasources/common_remote_datasource.dart' as _i74;
 import 'features/common/data/repositories/common_repository_impl.dart' as _i499;
 import 'features/common/domain/repositories/common_repository.dart' as _i493;
+import 'features/discount/data/datasources/discount_remote_datasource.dart'
+    as _i772;
+import 'features/discount/data/repositories/discount_repository_impl.dart'
+    as _i732;
+import 'features/discount/domain/repositories/discount_repository.dart'
+    as _i506;
+import 'features/discount/domain/usecases/create_discount_usecase.dart'
+    as _i791;
+import 'features/discount/domain/usecases/delete_discount_usecase.dart'
+    as _i350;
+import 'features/discount/domain/usecases/get_admin_discounts_usecase.dart'
+    as _i361;
+import 'features/discount/domain/usecases/get_available_discounts.dart'
+    as _i760;
+import 'features/discount/domain/usecases/get_discount_detail_usecase.dart'
+    as _i516;
+import 'features/discount/domain/usecases/get_my_vouchers.dart' as _i440;
+import 'features/discount/domain/usecases/preview_discount.dart' as _i855;
+import 'features/discount/domain/usecases/update_discount_usecase.dart'
+    as _i258;
+import 'features/discount/presentation/bloc/discount/discount_bloc.dart'
+    as _i1016;
+import 'features/discount/presentation/bloc/seller_discount/seller_discount_bloc.dart'
+    as _i406;
 import 'features/home/data/datasources/home_local_datasource.dart' as _i429;
 import 'features/home/data/repositories/home_repository_impl.dart' as _i689;
 import 'features/home/domain/repositories/home_repository.dart' as _i649;
@@ -159,6 +183,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i176.OrderRemoteDataSource>(
       () => _i176.OrderRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i772.DiscountRemoteDataSource>(
+      () => _i772.DiscountRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i143.ProductRemoteDataSource>(
       () => _i143.ProductRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -218,6 +245,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i841.ProductRepository>(
       () => _i531.ProductRepositoryImpl(gh<_i143.ProductRemoteDataSource>()),
     );
+    gh.lazySingleton<_i506.DiscountRepository>(
+      () => _i732.DiscountRepositoryImpl(
+        remoteDataSource: gh<_i772.DiscountRemoteDataSource>(),
+      ),
+    );
     gh.factory<_i944.CreateCategoryUseCase>(
       () => _i944.CreateCategoryUseCase(gh<_i5.CategoryRepository>()),
     );
@@ -232,6 +264,30 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i1032.UpdateCategoryUseCase>(
       () => _i1032.UpdateCategoryUseCase(gh<_i5.CategoryRepository>()),
+    );
+    gh.lazySingleton<_i791.CreateDiscountUseCase>(
+      () => _i791.CreateDiscountUseCase(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i350.DeleteDiscountUseCase>(
+      () => _i350.DeleteDiscountUseCase(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i361.GetAdminDiscountsUseCase>(
+      () => _i361.GetAdminDiscountsUseCase(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i760.GetAvailableDiscounts>(
+      () => _i760.GetAvailableDiscounts(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i516.GetDiscountDetailUseCase>(
+      () => _i516.GetDiscountDetailUseCase(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i440.GetMyVouchers>(
+      () => _i440.GetMyVouchers(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i855.PreviewDiscount>(
+      () => _i855.PreviewDiscount(gh<_i506.DiscountRepository>()),
+    );
+    gh.lazySingleton<_i258.UpdateDiscountUseCase>(
+      () => _i258.UpdateDiscountUseCase(gh<_i506.DiscountRepository>()),
     );
     gh.factory<_i584.CategoryBloc>(
       () => _i584.CategoryBloc(
@@ -263,6 +319,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i225.Setup2FAUseCase>(
       () => _i225.Setup2FAUseCase(gh<_i1015.AuthRepository>()),
     );
+    gh.factory<_i406.SellerDiscountBloc>(
+      () => _i406.SellerDiscountBloc(
+        gh<_i361.GetAdminDiscountsUseCase>(),
+        gh<_i791.CreateDiscountUseCase>(),
+        gh<_i258.UpdateDiscountUseCase>(),
+        gh<_i350.DeleteDiscountUseCase>(),
+      ),
+    );
     gh.factory<_i400.AddressBloc>(
       () => _i400.AddressBloc(
         getAddressesUseCase: gh<_i494.GetAddressesUseCase>(),
@@ -283,6 +347,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i836.GetOrdersUseCase>(
       () => _i836.GetOrdersUseCase(gh<_i608.OrderRepository>()),
+    );
+    gh.factory<_i1016.DiscountBloc>(
+      () => _i1016.DiscountBloc(
+        getMyVouchers: gh<_i440.GetMyVouchers>(),
+        getAvailableDiscounts: gh<_i760.GetAvailableDiscounts>(),
+        previewDiscount: gh<_i855.PreviewDiscount>(),
+      ),
     );
     gh.factory<_i947.MyProductsBloc>(
       () => _i947.MyProductsBloc(gh<_i841.ProductRepository>()),

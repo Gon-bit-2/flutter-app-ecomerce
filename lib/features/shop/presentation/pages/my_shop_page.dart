@@ -2,6 +2,7 @@ import 'package:app_fe_ecomerce/features/category/presentation/pages/category_pa
 import 'package:app_fe_ecomerce/features/order/presentation/pages/seller_orders_page.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/my_products_page.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/pages/seller_discount_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -108,6 +109,20 @@ class MyShopPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const SellerOrdersPage()),
+          );
+        },
+      },
+      {
+        "icon": Icons.local_offer_outlined,
+        "title": "Khuyến mãi",
+        "onTap": () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SellerDiscountListPage(
+                shopId: 1,
+              ), // Tạm thời truyển shopId = 1
+            ),
           );
         },
       },
