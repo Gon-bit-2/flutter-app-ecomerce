@@ -67,4 +67,13 @@ class AppConstants {
   // Payment Endpoints
   static const String paymentConfigEndpoint = '/payment/config';
   static const String paymentSocketNamespace = '/payment';
+
+  // Discount Endpoints
+  static const String myVouchersEndpoint = '/discount/my-vouchers';
+  static const String availableDiscountsEndpoint = '/discount/available';
+  static const String previewDiscountEndpoint = '/discount/preview';
+  static const String discountEndpoint =
+      '/discount'; // For Admin/Seller List, Create, Update, Delete
+      
+  static const String saveDiscountEndpoint = '/discount'; // Needs id and /save appended
 }

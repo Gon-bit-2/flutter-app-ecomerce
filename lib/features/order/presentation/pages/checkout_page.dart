@@ -10,16 +10,24 @@ import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:app_fe_ecomerce/features/discount/domain/entities/discount.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/widgets/discount_selection_bottom_sheet.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_bloc.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_event.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_state.dart';
+import 'package:get_it/get_it.dart';
 
 class CheckoutPage extends StatefulWidget {
   // Lấy các sản phẩm đã chọn từ giỏ hàng sang
   final List<CartEntity> selectedItems;
   final num totalPrice;
+  final num discountAmount;
 
   const CheckoutPage({
     super.key,
     required this.selectedItems,
     required this.totalPrice,
+    this.discountAmount = 0,
   });
 
   @override
@@ -33,9 +41,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _noteController = TextEditingController();
   String _paymentMethod = 'COD';
 
+  Discount? _appliedDiscount;
+  double _checkoutDiscountAmount = 0.0;
+
   @override
   void initState() {
     super.initState();
+    _checkoutDiscountAmount = widget.discountAmount.toDouble();
     // TODO: Ideally context.read<AddressBloc>().add(GetAddressesEvent()) and listen to State to set default address.
     // For now we assume user will pick or we load default if possible.
   }
@@ -83,6 +95,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           shopId: e.key,
           userAddressId: _selectedAddress!.id,
           cartItemIds: e.value,
+          paymentMethod: _paymentMethod,
         );
       }).toList();
 
@@ -92,62 +105,110 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.inputBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryBlue,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Thanh toán',
-          style: AppTextStyles.h3.copyWith(color: Colors.white),
-        ),
-        centerTitle: true,
-      ),
-      body: BlocConsumer<OrderBloc, OrderState>(
-        listener: (context, state) {
-          if (state is OrderFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
+    return BlocProvider(
+      create: (context) => GetIt.I<DiscountBloc>(),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            backgroundColor: AppColors.inputBackground,
+            appBar: AppBar(
+              backgroundColor: AppColors.primaryBlue,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
               ),
-            );
-          } else if (state is OrderCreated) {
-            if (_paymentMethod == 'SEPAY') {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PaymentQRPage(
-                    paymentId: state.result.paymentId ?? 0,
-                    totalAmount: widget.totalPrice + 30000,
-                  ),
-                ),
-              );
-            } else {
-              _showSuccessDialog();
-            }
-          }
-        },
-        builder: (context, state) {
-          return Stack(
-            children: [
-              SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: 100.h),
-                child: Column(
-                  children: [
-                    _buildDeliverySection(),
-                    _buildProductsSection(),
-                    _buildPaymentMethodSection(),
-                    _buildOrderSummarySection(),
-                  ],
-                ),
+              title: Text(
+                'Thanh toán',
+                style: AppTextStyles.h3.copyWith(color: Colors.white),
               ),
-              _buildBottomBar(state is OrderLoading),
-            ],
+              centerTitle: true,
+            ),
+            body: MultiBlocListener(
+              listeners: [
+                BlocListener<OrderBloc, OrderState>(
+                  listener: (context, state) {
+                    if (state is OrderFailure) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    } else if (state is OrderCreated) {
+                      if (_paymentMethod == 'SEPAY') {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PaymentQRPage(
+                              paymentId: state.result.paymentId ?? 0,
+                              totalAmount:
+                                  widget.totalPrice +
+                                  30000 -
+                                  _checkoutDiscountAmount,
+                            ),
+                          ),
+                        );
+                      } else {
+                        _showSuccessDialog();
+                      }
+                    }
+                  },
+                ),
+                BlocListener<DiscountBloc, DiscountState>(
+                  listener: (context, state) {
+                    if (state is DiscountError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                      setState(() {
+                        _checkoutDiscountAmount = 0.0;
+                      });
+                    }
+                    if (state is DiscountPreviewLoaded) {
+                      setState(() {
+                        _checkoutDiscountAmount =
+                            (state.previewData['discountValue'] ?? 0.0)
+                                .toDouble();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Áp dụng mã giảm thành công: -$_checkoutDiscountAmountđ',
+                            ),
+                            backgroundColor: AppColors.success,
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      });
+                    }
+                  },
+                ),
+              ],
+              child: BlocBuilder<OrderBloc, OrderState>(
+                builder: (context, state) {
+                  return Stack(
+                    children: [
+                      SingleChildScrollView(
+                        padding: EdgeInsets.only(bottom: 100.h),
+                        child: Column(
+                          children: [
+                            _buildDeliverySection(),
+                            _buildProductsSection(),
+                            _buildDiscountSection(context),
+                            _buildPaymentMethodSection(),
+                            _buildOrderSummarySection(),
+                          ],
+                        ),
+                      ),
+                      _buildBottomBar(state is OrderLoading),
+                    ],
+                  );
+                },
+              ),
+            ),
           );
         },
       ),
@@ -293,6 +354,107 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  // Khối Voucher UI
+  Widget _buildDiscountSection(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        DiscountSelectionBottomSheet.show(
+          context,
+          currentSelectedDiscount: _appliedDiscount,
+          onDiscountSelected: (discount) {
+            setState(() {
+              _appliedDiscount = discount;
+            });
+            _previewDiscount(widget.selectedItems);
+          },
+          onClearDiscount: () {
+            setState(() {
+              _appliedDiscount = null;
+              _checkoutDiscountAmount = 0.0;
+            });
+          },
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(top: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            bottom: BorderSide(
+              color: AppColors.border.withOpacity(0.5),
+              width: 1,
+            ),
+            top: BorderSide(color: AppColors.border.withOpacity(0.5), width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.local_activity,
+              color: Theme.of(context).primaryColor,
+              size: 24.sp,
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                _appliedDiscount != null
+                    ? 'Đã áp dụng mã: ${_appliedDiscount!.code}'
+                    : 'Shopee Voucher / Chọn hoặc Nhập Mã',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: _appliedDiscount != null
+                      ? Colors.green
+                      : AppColors.textPrimary,
+                  fontWeight: _appliedDiscount != null
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textSecondary,
+              size: 20.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper trigger preview
+  void _previewDiscount(List<CartEntity> items) {
+    if (_appliedDiscount == null || items.isEmpty) {
+      setState(() {
+        _checkoutDiscountAmount = 0.0;
+      });
+      return;
+    }
+
+    num subTotal = 0;
+    for (final item in items) {
+      subTotal += (item.price ?? 0) * item.quantity;
+    }
+
+    context.read<DiscountBloc>().add(
+      DoPreviewDiscount(
+        code: _appliedDiscount!.code,
+        orderValue: subTotal.toDouble(),
+        userId: 1, // Optional: backend handle from token
+        shopId: _appliedDiscount!.shopId ?? 0,
+        items: items
+            .map(
+              (e) => {
+                "productId": e.productId,
+                "price": e.price,
+                "quantity": e.quantity,
+              },
+            )
+            .toList(),
+      ),
+    );
+  }
+
   Widget _buildPaymentMethodSection() {
     return Container(
       margin: EdgeInsets.only(top: 8.h),
@@ -399,6 +561,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Text('$shippingFee đ', style: AppTextStyles.bodyMedium),
             ],
           ),
+          if (_checkoutDiscountAmount > 0) ...[
+            SizedBox(height: 8.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Voucher giảm giá', style: AppTextStyles.bodyMedium),
+                Text(
+                  '- $_checkoutDiscountAmount đ',
+                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.green),
+                ),
+              ],
+            ),
+          ],
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -410,7 +585,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
               Text(
-                '$total đ',
+                '${total - _checkoutDiscountAmount} đ',
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],
@@ -445,7 +620,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text('Tổng cộng', style: AppTextStyles.bodyMedium),
                   Text(
-                    '${widget.totalPrice + 30000} đ',
+                    '${widget.totalPrice + 30000 - _checkoutDiscountAmount} đ',
                     style: AppTextStyles.h3.copyWith(color: AppColors.error),
                   ),
                 ],

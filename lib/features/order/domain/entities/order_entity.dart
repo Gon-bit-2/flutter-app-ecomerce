@@ -10,6 +10,7 @@ class OrderEntity extends Equatable {
   final String? receiverName;
   final String? receiverPhone;
   final String? receiverAddress;
+  final String? paymentMethod;
   final List<OrderItemEntity>? items;
   final DateTime? createdAt;
 
@@ -21,6 +22,7 @@ class OrderEntity extends Equatable {
     this.receiverName,
     this.receiverPhone,
     this.receiverAddress,
+    this.paymentMethod,
     this.items,
     this.createdAt,
   });
@@ -34,6 +36,7 @@ class OrderEntity extends Equatable {
     receiverName,
     receiverPhone,
     receiverAddress,
+    paymentMethod,
     items,
     createdAt,
   ];

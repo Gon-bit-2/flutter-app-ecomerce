@@ -103,7 +103,7 @@ class OrderDetailPage extends StatelessWidget {
                 ),
               ),
               Text(
-                order.status ?? 'N/A',
+                _getFriendlyStatus(order.status),
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
@@ -148,7 +148,7 @@ class OrderDetailPage extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            '${order.receiverName}  |  ${order.receiverPhone}',
+            '${order.receiverName ?? 'Khách hàng'}  |  ${order.receiverPhone ?? 'Chưa cập nhật'}',
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -279,8 +279,19 @@ class OrderDetailPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text('Phương thức', style: AppTextStyles.bodyMedium),
+              Text(
+                order.paymentMethod ?? 'Chuyển khoản / COD',
+                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text('Tạm tính', style: AppTextStyles.bodyMedium),
-              Text('${order.totalAmount} đ', style: AppTextStyles.bodyMedium),
+              Text('${order.totalAmount ?? 0} đ', style: AppTextStyles.bodyMedium),
             ],
           ),
           const Divider(height: 24),
@@ -294,7 +305,7 @@ class OrderDetailPage extends StatelessWidget {
                 ),
               ),
               Text(
-                '${order.totalAmount} đ',
+                '${order.totalAmount ?? 0} đ',
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],
@@ -352,5 +363,24 @@ class OrderDetailPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _getFriendlyStatus(String? status) {
+    switch (status) {
+      case 'PENDING_PAYMENT':
+        return 'Chờ thanh toán';
+      case 'PENDING_PICKUP':
+        return 'Chờ lấy hàng';
+      case 'PENDING_DELIVERY':
+        return 'Đang giao hàng';
+      case 'DELIVERED':
+        return 'Đã giao thành công';
+      case 'RETURNED':
+        return 'Trả hàng';
+      case 'CANCELLED':
+        return 'Đã hủy';
+      default:
+        return status ?? 'N/A';
+    }
   }
 }

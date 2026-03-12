@@ -9,7 +9,11 @@ abstract class ProductRemoteDataSource {
   Future<bool> createProduct(Map<String, dynamic> productData);
   Future<bool> updateProduct(int id, Map<String, dynamic> productData);
   Future<void> deleteProduct(int id);
-  Future<List<ProductModel>> getManageProducts({int page = 1, int limit = 10});
+  Future<List<ProductModel>> getManageProducts({
+    int page = 1,
+    int limit = 10,
+    required int createdById,
+  });
 }
 
 @LazySingleton(as: ProductRemoteDataSource)
@@ -84,10 +88,15 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   Future<List<ProductModel>> getManageProducts({
     int page = 1,
     int limit = 10,
+    required int createdById,
   }) async {
     final response = await _dioClient.get(
       AppConstants.manageProductsEndpoint,
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        'createdById': createdById,
+      },
     );
 
     if (response.data is List) {

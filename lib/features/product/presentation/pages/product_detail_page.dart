@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../domain/entities/product.dart';
+
 import '../../domain/repositories/product_repository.dart';
 import '../../../cart/presentation/pages/cart_page.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
@@ -11,6 +12,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart'
+    as app_fe_ecomerce_cart;
+import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart'
+    as app_fe_ecomerce_order;
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -313,14 +318,36 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 duration: const Duration(seconds: 1),
               ),
             );
+          } else if (state is CartLoaded) {
             if (_isBuyNow) {
               setState(() {
                 _isBuyNow = false;
               });
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CartPage()),
-              );
+
+              // Lấy skuId hiện tại
+              final skuId = _getSelectedSkuId();
+
+              // Tìm cart item tương ứng
+              app_fe_ecomerce_cart.CartEntity? matchingCartItem;
+              if (skuId != null) {
+                try {
+                  matchingCartItem = state.items.firstWhere(
+                    (item) => item.skuId == skuId,
+                  );
+                } catch (_) {}
+              }
+
+              if (matchingCartItem != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => app_fe_ecomerce_order.CheckoutPage(
+                      selectedItems: [matchingCartItem!],
+                      totalPrice: (matchingCartItem.price ?? 0) * matchingCartItem.quantity,
+                    ),
+                  ),
+                );
+              }
             }
           } else if (state is CartFailure) {
             setState(() {
@@ -778,7 +805,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 top: 16.h,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 16.h,
               ),
-              height: MediaQuery.of(context).size.height * 0.7,
+              height:
+                  MediaQuery.of(context).size.height *
+                  0.8, // Increased height to prevent overflow
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

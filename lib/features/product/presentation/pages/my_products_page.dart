@@ -3,6 +3,7 @@ import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/bloc/my_products/my_products_bloc.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,17 +24,41 @@ class _MyProductsPageState extends State<MyProductsPage> {
   final int _limit = 10;
   bool _isFetchingMore = false;
 
+  int get _userId {
+    try {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthSuccess) {
+        return authState.user.id;
+      }
+    } catch (_) {}
+    return 0;
+  }
+
   @override
   void initState() {
     super.initState();
     _bloc = GetIt.I<MyProductsBloc>();
-    _loadProducts(refresh: true);
     _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Chỉ load lần đầu
+    if (_currentPage == 1 && _bloc.state is MyProductsInitial) {
+      _loadProducts(refresh: true);
+    }
   }
 
   void _loadProducts({bool refresh = false}) {
     if (refresh) _currentPage = 1;
-    _bloc.add(MyProductsLoadRequested(page: _currentPage, limit: _limit));
+    _bloc.add(
+      MyProductsLoadRequested(
+        page: _currentPage,
+        limit: _limit,
+        createdById: _userId,
+      ),
+    );
   }
 
   void _onScroll() {

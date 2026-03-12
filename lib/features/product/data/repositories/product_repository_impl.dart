@@ -107,11 +107,13 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Either<Failure, List<Product>>> getManageProducts({
     int page = 1,
     int limit = 10,
+    required int createdById,
   }) async {
     try {
       final products = await remoteDataSource.getManageProducts(
         page: page,
         limit: limit,
+        createdById: createdById,
       );
       return Right(products);
     } on DioException catch (e) {

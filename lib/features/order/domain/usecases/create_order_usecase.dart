@@ -15,8 +15,22 @@ class CreateOrderUseCase
   @override
   Future<Either<Failure, OrderCreationResultEntity>> call(
     CreateOrderParams params,
-  ) {
-    return repository.createOrder(orders: params.orders);
+  ) async {
+    final result = await repository.createOrder(orders: params.orders);
+
+    if (result.isRight()) {
+      final orderResult = result.getOrElse((l) => throw Exception());
+      final isCod = params.orders.any((o) => o.paymentMethod == 'COD');
+      
+      if (isCod) {
+        for (final order in orderResult.orders) {
+          await repository.updateOrderStatus(order.id, 'PENDING_PICKUP');
+        }
+      }
+      return right(orderResult);
+    }
+
+    return result;
   }
 }
 
@@ -31,12 +45,14 @@ class ShopOrderParams {
   final ReceiverInfoParams? receiver;
   final int? userAddressId;
   final List<int> cartItemIds;
+  final String? paymentMethod;
 
   const ShopOrderParams({
     required this.shopId,
     this.receiver,
     this.userAddressId,
     required this.cartItemIds,
+    this.paymentMethod,
   });
 
   Map<String, dynamic> toJson() {
@@ -53,6 +69,10 @@ class ShopOrderParams {
         'phone': receiver!.phone,
         'address': receiver!.address,
       };
+    }
+
+    if (paymentMethod != null) {
+      data['paymentMethod'] = paymentMethod;
     }
 
     return data;
