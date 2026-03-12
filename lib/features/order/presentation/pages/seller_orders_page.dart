@@ -68,7 +68,9 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
     if (_isBottom && !_isFetchingMore) {
       final state = _bloc.state;
       if (state is SellerOrdersLoaded && !state.hasReachedMax) {
-        _isFetchingMore = true;
+        setState(() {
+          _isFetchingMore = true;
+        });
         _currentPage++;
         _loadOrders();
       }
@@ -126,9 +128,13 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
                   backgroundColor: AppColors.error,
                 ),
               );
-              _isFetchingMore = false;
+              setState(() {
+                _isFetchingMore = false;
+              });
             } else if (state is SellerOrdersLoaded) {
-              _isFetchingMore = false;
+              setState(() {
+                _isFetchingMore = false;
+              });
             } else if (state is SellerOrderStatusUpdated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

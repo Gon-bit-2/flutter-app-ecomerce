@@ -1113,7 +1113,9 @@ _No Body_
       "phone": "0123456789",
       "address": "123 St, City"
     },
-    "cartItemIds": [1, 2]
+    "cartItemIds": [1, 2],
+    "shopDiscountCode": "SHOP10",
+    "platformDiscountCode": "PLATFORM20"
   }
 ]
 ```
@@ -1125,10 +1127,45 @@ _No Body_
   {
     "shopId": 1,
     "userAddressId": 1,
-    "cartItemIds": [1, 2]
+    "cartItemIds": [1, 2],
+    "shopDiscountCode": "SHOP10"
   }
 ]
 ```
+
+**Các field voucher (optional):**
+
+| Field                  | Mô tả                              |
+| ---------------------- | ---------------------------------- |
+| `shopDiscountCode`     | Mã voucher của shop (scope `SHOP`) |
+| `platformDiscountCode` | Mã voucher sàn (scope `PLATFORM`)  |
+
+- Có thể truyền cả 2 code cùng lúc (1 Shop + 1 Platform)
+- Không bắt buộc — nếu không truyền thì đơn hàng không áp dụng voucher
+- Hệ thống tự động validate mã, tính giảm giá, và tạo `DiscountUsage` trong cùng transaction
+- Nếu mã không hợp lệ (hết hạn, hết lượt, không đủ điều kiện) → trả lỗi `400 Bad Request`
+
+**Response:**
+
+```json
+{
+  "paymentId": 123,
+  "orders": [
+    {
+      "id": 1,
+      "userId": 1,
+      "shopId": 1,
+      "status": "PENDING_PAYMENT",
+      "discountAmount": 30000,
+      "shippingFee": 0,
+      "receiver": { "name": "...", "phone": "...", "address": "..." },
+      "paymentId": 123
+    }
+  ]
+}
+```
+
+- `discountAmount`: Tổng số tiền đã được giảm giá (bao gồm cả shop + platform voucher). Mặc định `0` nếu không dùng voucher.
 
 ### Cancel Order
 
@@ -1371,6 +1408,25 @@ _No Auth Headers_ (Public Endpoint — Secured by API Key header)
 **Headers**
 
 - `Authorization`: `Bearer <accessToken>`
+
+### Save Voucher (User)
+
+**POST** `/discount/:discountId/save`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+_No Body_
+
+**Mô tả:** User lưu voucher vào "Kho voucher" của mình để sử dụng sau. Voucher đã lưu có thể xem qua `GET /discount/my-vouchers`.
+
+**Lưu ý:**
+
+- Chỉ lưu được voucher đang active và chưa hết hạn
+- Gọi lại endpoint này nếu đã lưu rồi → trả về kết quả cũ (idempotent), không báo lỗi
+- Khi user dùng voucher đặt hàng → hệ thống tự động đánh dấu `isUsed = true`
+- Khi user hủy đơn → hệ thống tự động reset `isUsed = false`, user có thể dùng lại
 
 ### Preview Discount
 

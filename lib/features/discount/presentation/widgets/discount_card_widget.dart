@@ -6,13 +6,17 @@ class DiscountCardWidget extends StatelessWidget {
   final Discount discount;
   final bool isSelected;
   final VoidCallback? onTap;
+  final bool showSaveButton;
+  final VoidCallback? onSave;
 
   const DiscountCardWidget({
-    Key? key,
+    super.key,
     required this.discount,
     this.isSelected = false,
     this.onTap,
-  }) : super(key: key);
+    this.showSaveButton = false,
+    this.onSave,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +150,7 @@ class DiscountCardWidget extends StatelessWidget {
                   ),
                 ),
 
-                // Phần phải: Thông tin thẻ
+                  // Phần phải: Thông tin thẻ
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -223,7 +227,24 @@ class DiscountCardWidget extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            if (isSelected)
+                            if (showSaveButton)
+                              SizedBox(
+                                height: 28,
+                                child: ElevatedButton(
+                                  onPressed: onSave,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: tagColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  child: const Text('Lưu'),
+                                ),
+                              )
+                            else if (isSelected)
                               Icon(
                                 Icons.check_circle,
                                 color: tagColor,

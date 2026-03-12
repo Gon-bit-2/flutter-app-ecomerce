@@ -34,4 +34,5 @@ abstract class DiscountRepository {
     Map<String, dynamic> data,
   );
   Future<Either<Failure, void>> deleteDiscount(int discountId);
+  Future<Either<Failure, void>> saveDiscount(int discountId);
 }

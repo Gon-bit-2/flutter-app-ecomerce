@@ -202,6 +202,24 @@ class DiscountRepositoryImpl implements DiscountRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> saveDiscount(int discountId) async {
+    try {
+      await remoteDataSource.saveDiscount(discountId);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(
+        ServerFailure(
+          _parseErrorMessage(e.response?.data['message']) ??
+              e.message ??
+              'Lưu voucher thất bại',
+        ),
+      );
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   String? _parseErrorMessage(dynamic messageData) {
     if (messageData == null) return null;
     if (messageData is String) return messageData;

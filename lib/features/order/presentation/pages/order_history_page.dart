@@ -69,7 +69,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage>
     if (_isBottom && !_isFetchingMore) {
       final state = _orderBloc.state;
       if (state is OrdersLoaded && !state.hasReachedMax) {
-        _isFetchingMore = true;
+        setState(() {
+          _isFetchingMore = true;
+        });
         _currentPage++;
         _loadOrders();
       }
@@ -126,9 +128,13 @@ class _OrderHistoryPageState extends State<OrderHistoryPage>
                   backgroundColor: AppColors.error,
                 ),
               );
-              _isFetchingMore = false;
+              setState(() {
+                _isFetchingMore = false;
+              });
             } else if (state is OrdersLoaded) {
-              _isFetchingMore = false;
+              setState(() {
+                _isFetchingMore = false;
+              });
             }
           },
           builder: (context, state) {

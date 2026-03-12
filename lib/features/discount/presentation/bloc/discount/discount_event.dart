@@ -45,3 +45,12 @@ class DoPreviewDiscount extends DiscountEvent {
   @override
   List<Object?> get props => [code, orderValue, userId, shopId, items];
 }
+
+class SaveVoucherRequested extends DiscountEvent {
+  final int discountId;
+
+  const SaveVoucherRequested({required this.discountId});
+
+  @override
+  List<Object?> get props => [discountId];
+}

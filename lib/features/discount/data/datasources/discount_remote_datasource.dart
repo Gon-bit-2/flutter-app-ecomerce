@@ -32,6 +32,7 @@ abstract class DiscountRemoteDataSource {
     Map<String, dynamic> data,
   );
   Future<void> deleteDiscount(int discountId);
+  Future<void> saveDiscount(int discountId);
 }
 
 @LazySingleton(as: DiscountRemoteDataSource)
@@ -196,5 +197,10 @@ class DiscountRemoteDataSourceImpl implements DiscountRemoteDataSource {
   @override
   Future<void> deleteDiscount(int discountId) async {
     await _dioClient.delete('${AppConstants.discountEndpoint}/$discountId');
+  }
+
+  @override
+  Future<void> saveDiscount(int discountId) async {
+    await _dioClient.post('${AppConstants.saveDiscountEndpoint}/$discountId/save');
   }
 }

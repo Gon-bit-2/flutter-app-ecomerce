@@ -7,7 +7,7 @@ import '../widgets/discount_card_widget.dart';
 import 'package:get_it/get_it.dart';
 
 class VoucherWalletPage extends StatefulWidget {
-  const VoucherWalletPage({Key? key}) : super(key: key);
+  const VoucherWalletPage({super.key});
 
   @override
   State<VoucherWalletPage> createState() => _VoucherWalletPageState();

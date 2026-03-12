@@ -49,3 +49,14 @@ class DiscountPreviewLoaded extends DiscountState {
   @override
   List<Object?> get props => [previewData];
 }
+
+class SaveVoucherLoading extends DiscountState {}
+
+class SaveVoucherSuccess extends DiscountState {
+  final int discountId;
+
+  const SaveVoucherSuccess({required this.discountId});
+
+  @override
+  List<Object?> get props => [discountId];
+}

@@ -91,10 +91,11 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
     );
     if (picked != null) {
       setState(() {
-        if (isStart)
+        if (isStart) {
           _startDate = picked;
-        else
+        } else {
           _endDate = picked;
+        }
       });
     }
   }
@@ -272,7 +273,7 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                     title: 'Thiết lập mã giảm giá',
                     children: [
                       DropdownButtonFormField<String>(
-                        value: _type,
+                        initialValue: _type,
                         decoration: const InputDecoration(
                           labelText: 'Loại giảm giá *',
                         ),
@@ -405,7 +406,7 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                           style: TextStyle(fontSize: 14),
                         ),
                         value: _isActive,
-                        activeColor: Theme.of(context).primaryColor,
+                        activeThumbColor: Theme.of(context).primaryColor,
                         onChanged: (val) => setState(() => _isActive = val),
                       ),
                     ],

@@ -13,11 +13,11 @@ class DiscountSelectionBottomSheet extends StatefulWidget {
   final VoidCallback onClearDiscount;
 
   const DiscountSelectionBottomSheet({
-    Key? key,
+    super.key,
     this.currentSelectedDiscount,
     required this.onDiscountSelected,
     required this.onClearDiscount,
-  }) : super(key: key);
+  });
 
   static Future<void> show(
     BuildContext context, {
@@ -47,6 +47,7 @@ class _DiscountSelectionBottomSheetState
   final TextEditingController _codeController = TextEditingController();
   Discount? _tempSelectedDiscount;
   late DiscountBloc _discountBloc;
+  bool _showAvailable = false;
 
   @override
   void initState() {
@@ -174,29 +175,107 @@ class _DiscountSelectionBottomSheetState
 
           const SizedBox(height: 8),
 
+          // Tabs
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showAvailable = false;
+                      });
+                      _discountBloc.add(const FetchMyVouchers());
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: !_showAvailable
+                                ? Theme.of(context).primaryColor
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Voucher của bạn',
+                        style: TextStyle(
+                          fontWeight: !_showAvailable ? FontWeight.bold : FontWeight.normal,
+                          color: !_showAvailable ? Theme.of(context).primaryColor : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showAvailable = true;
+                      });
+                      _discountBloc.add(const FetchAvailableDiscounts());
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _showAvailable
+                                ? Theme.of(context).primaryColor
+                                : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Có thể lưu',
+                        style: TextStyle(
+                          fontWeight: _showAvailable ? FontWeight.bold : FontWeight.normal,
+                          color: _showAvailable ? Theme.of(context).primaryColor : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
           // Voucher List
           Expanded(
-            child: BlocBuilder<DiscountBloc, DiscountState>(
+            child: BlocConsumer<DiscountBloc, DiscountState>(
               bloc: _discountBloc,
-              builder: (context, state) {
-                if (state is DiscountLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is DiscountError) {
-                  return Center(
-                    child: Text(
-                      'Lỗi: ${state.message}',
-                      style: const TextStyle(color: Colors.red),
-                    ),
+              listener: (context, state) {
+                if (state is SaveVoucherSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Lưu voucher thành công!')),
                   );
-                } else if (state is MyVouchersLoaded) {
+                  // Quay trở về tab voucher của bạn
+                  setState(() {
+                    _showAvailable = false;
+                  });
+                } else if (state is DiscountError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is DiscountLoading || state is SaveVoucherLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is MyVouchersLoaded && !_showAvailable) {
                   final vouchers = state.vouchers;
-
                   if (vouchers.isEmpty) {
                     return const Center(
                       child: Text('Bạn chưa có voucher nào.'),
                     );
                   }
-
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: vouchers.length,
@@ -220,7 +299,32 @@ class _DiscountSelectionBottomSheetState
                       );
                     },
                   );
+                } else if (state is AvailableDiscountsLoaded && _showAvailable) {
+                  final vouchers = state.vouchers;
+                  if (vouchers.isEmpty) {
+                    return const Center(
+                      child: Text('Không có voucher nào để lưu.'),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: vouchers.length,
+                    itemBuilder: (context, index) {
+                      final discount = vouchers[index];
+
+                      return DiscountCardWidget(
+                        discount: discount,
+                        isSelected: false, // Cannot select available until saved
+                        showSaveButton: true,
+                        onSave: () {
+                          _discountBloc.add(SaveVoucherRequested(discountId: discount.id));
+                        },
+                        onTap: () {}, // Can't select
+                      );
+                    },
+                  );
                 }
+                // Fallback for preserving list during background load
                 return const SizedBox.shrink();
               },
             ),

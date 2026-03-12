@@ -78,6 +78,13 @@ class CommonRemoteDataSourceImpl implements CommonRemoteDataSource {
             resultUrl = data['data']['url'];
           } else if (data['data'] is String) {
             resultUrl = data['data']; // If data is the url
+          } else if (data['data'] is List && (data['data'] as List).isNotEmpty) {
+            final firstItem = (data['data'] as List).first;
+            if (firstItem is Map && firstItem['url'] != null) {
+              resultUrl = firstItem['url'];
+            } else if (firstItem is String) {
+              resultUrl = firstItem;
+            }
           }
         } else if (data['url'] != null) {
           resultUrl = data['url'];

@@ -10,11 +10,16 @@ abstract class MyProductsEvent extends Equatable {
 class MyProductsLoadRequested extends MyProductsEvent {
   final int page;
   final int limit;
+  final int createdById;
 
-  const MyProductsLoadRequested({this.page = 1, this.limit = 10});
+  const MyProductsLoadRequested({
+    this.page = 1,
+    this.limit = 10,
+    required this.createdById,
+  });
 
   @override
-  List<Object?> get props => [page, limit];
+  List<Object?> get props => [page, limit, createdById];
 }
 
 class MyProductsDeleteRequested extends MyProductsEvent {

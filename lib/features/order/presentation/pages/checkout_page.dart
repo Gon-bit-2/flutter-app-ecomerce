@@ -95,6 +95,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           shopId: e.key,
           userAddressId: _selectedAddress!.id,
           cartItemIds: e.value,
+          paymentMethod: _paymentMethod,
         );
       }).toList();
 
@@ -175,7 +176,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Áp dụng mã giảm thành công: -${_checkoutDiscountAmount}đ',
+                              'Áp dụng mã giảm thành công: -$_checkoutDiscountAmountđ',
                             ),
                             backgroundColor: AppColors.success,
                             duration: const Duration(seconds: 1),
@@ -567,7 +568,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 Text('Voucher giảm giá', style: AppTextStyles.bodyMedium),
                 Text(
-                  '- ${_checkoutDiscountAmount} đ',
+                  '- $_checkoutDiscountAmount đ',
                   style: AppTextStyles.bodyMedium.copyWith(color: Colors.green),
                 ),
               ],

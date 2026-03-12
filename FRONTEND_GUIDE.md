@@ -340,7 +340,7 @@ Khi tạo đơn hàng (`POST /order`), bạn có thể:
    { "shopId": 1, "userAddressId": 1, "cartItemIds": [1] }
    ```
 
-_Chỉ cần truyền một trong hai (`receiver` hoặc `userAddressId`)._
+_Chỉ cần truyền một trong hai (`receiver` hoặc `userAddressId`). Có thể kèm `shopDiscountCode` / `platformDiscountCode` để áp dụng voucher (xem mục 14)._
 
 ## 12. Tìm Kiếm Sản Phẩm
 
@@ -464,7 +464,7 @@ _Tài liệu này được dùng kèm với `API_LIST.md` để tra cứu chi ti
 
 ## 14. Hệ Thống Voucher & Discount
 
-Hệ thống hỗ trợ nhiều loại voucher tương tự Shopee/Tiki.
+Hệ thống hỗ trợ nhiều loại voucher tương tự Shopee/Tiki, bao gồm: lưu voucher, preview, áp dụng khi đặt hàng, và tự động hoàn trả khi hủy đơn.
 
 ### a. Các Loại Voucher
 
@@ -480,7 +480,30 @@ Hệ thống hỗ trợ nhiều loại voucher tương tự Shopee/Tiki.
 - ❌ Không được dùng 2 voucher Shop hoặc 2 voucher Sàn cùng lúc
 - ✅ **Voucher Freeship** có thể dùng kết hợp với voucher giảm giá
 
-### c. Preview Voucher Trước Khi Đặt Hàng
+### c. Lưu Voucher (Save)
+
+User có thể "bấm lưu" voucher vào kho voucher cá nhân để dùng sau:
+
+```javascript
+// Lưu voucher
+await fetch('/discount/5/save', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+})
+
+// Xem kho voucher đã lưu
+const myVouchers = await fetch('/discount/my-vouchers?page=1&limit=10', {
+  headers: { Authorization: `Bearer ${token}` },
+}).then((r) => r.json())
+```
+
+**Lưu ý:**
+
+- Chỉ lưu được voucher đang active và chưa hết hạn
+- Gọi lưu lại voucher đã lưu rồi → trả về kết quả cũ (idempotent), không lỗi
+- `GET /discount/my-vouchers` chỉ trả về voucher chưa dùng (`isUsed = false`), còn hiệu lực
+
+### d. Preview Voucher Trước Khi Đặt Hàng
 
 Gọi `POST /discount/preview` để kiểm tra tính hợp lệ và xem trước số tiền giảm:
 
@@ -509,14 +532,69 @@ const result = await fetch('/discount/preview', {
 // }
 ```
 
-### d. Hiển Thị Voucher
+### e. Áp Dụng Voucher Khi Đặt Hàng
+
+Truyền mã voucher vào `POST /order` khi tạo đơn hàng:
+
+```javascript
+const order = await fetch('/order', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  body: JSON.stringify([
+    {
+      shopId: 1,
+      userAddressId: 1,
+      cartItemIds: [1, 2],
+      shopDiscountCode: 'SHOP10', // Optional — mã voucher shop
+      platformDiscountCode: 'PLATFORM20', // Optional — mã voucher sàn
+    },
+  ]),
+}).then((r) => r.json())
+
+// Response:
+// {
+//   paymentId: 123,
+//   orders: [
+//     {
+//       id: 1,
+//       discountAmount: 30000,  // Tổng tiền giảm từ voucher
+//       shippingFee: 0,
+//       status: 'PENDING_PAYMENT',
+//       ...
+//     }
+//   ]
+// }
+```
+
+**Quy tắc:**
+
+- `shopDiscountCode` và `platformDiscountCode` đều **optional**
+- Có thể truyền cả 2 code cùng lúc (1 Shop + 1 Platform)
+- Nếu mã không hợp lệ → API trả lỗi `400 Bad Request` kèm message mô tả lý do
+- Backend tự validate (kiểm tra hạn, lượt dùng, giá trị tối thiểu, sản phẩm áp dụng) trong cùng transaction
+- Khi thành công: tạo `DiscountUsage`, tăng `useCount`, đánh dấu `isUsed = true` cho voucher đã lưu
+
+### f. Luồng Hoàn Chỉnh (Recommended Flow)
+
+```
+1. GET /discount/available          → Hiển thị voucher có thể lưu
+2. POST /discount/:id/save          → User bấm "Lưu mã"
+3. GET /discount/my-vouchers        → Hiển thị kho voucher trong trang Checkout
+4. POST /discount/preview           → User chọn mã → preview số tiền giảm
+5. POST /order (kèm discountCode)   → Đặt hàng + áp dụng voucher
+6. PUT /order/:id (hủy đơn)         → Hệ thống tự hoàn voucher
+```
+
+### g. Hiển Thị Voucher
 
 - **Voucher giảm giá:** Hiển thị `discountAmount` và `finalPrice`
 - **Voucher freeship:** Hiển thị `shippingDiscount` và `finalShippingFee`
 - **`maxDiscountValue`:** Hiển thị dạng "Giảm {value}%, tối đa {maxDiscountValue}đ" hoặc "Freeship tối đa {maxDiscountValue}đ"
+- **`discountAmount` trên Order:** Hiển thị tổng tiền đã giảm trong trang chi tiết đơn hàng
 
-### e. Hoàn Voucher Khi Hủy Đơn
+### h. Hoàn Voucher Khi Hủy Đơn
 
 - Khi user hủy đơn hàng (`PUT /order/:orderId`), hệ thống **tự động hoàn voucher**
+- Giảm `useCount`, reset `isUsed = false`, xóa `DiscountUsage`
 - User có thể sử dụng lại voucher cho đơn hàng khác
 - Frontend không cần xử lý gì thêm — backend tự xử lý hoàn toàn

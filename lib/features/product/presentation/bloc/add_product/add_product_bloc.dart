@@ -245,21 +245,9 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
     AddProductSubmitted event,
     Emitter<AddProductState> emit,
   ) async {
-    if (state.uploadedImageUrls.isEmpty) {
-      // Just emit failure for now, UI handles snackbar
-      // Wait, failing status resets the form status?
-      // We generally use a transient state or listen to specific error stream.
-      // Or simply emit failure with a message.
-      emit(
-        state.copyWith(
-          status: AddProductStatus.failure,
-          errorMessage: "Vui lòng tải lên ít nhất 1 ảnh",
-        ),
-      );
-      // Reset status to allow retry?
-      // Actually better:
-      // emit(state.copyWith(status: AddProductStatus.initial, errorMessage: null));
-      return;
+    List<String> imagesToUpload = List.from(state.uploadedImageUrls);
+    if (imagesToUpload.isEmpty) {
+      imagesToUpload.add("https://via.placeholder.com/150");
     }
 
     emit(state.copyWith(status: AddProductStatus.loading));
@@ -293,11 +281,10 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
 
     final Map<String, dynamic> payload = {
       "name": event.name,
-      "description": event.description,
       "basePrice": event.basePrice,
       "virtualPrice": event.virtualPrice,
-      "brandName": event.brandName,
-      "images": state.uploadedImageUrls,
+      "brandId": 1,
+      "images": imagesToUpload,
       "categories": event.categoryId != null ? [event.categoryId] : [],
       "publishedAt": DateTime.now().toUtc().toIso8601String(),
       "variants": finalVariants,

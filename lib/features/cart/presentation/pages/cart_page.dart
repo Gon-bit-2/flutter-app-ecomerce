@@ -128,7 +128,7 @@ class _CartViewState extends State<CartView> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Áp dụng mã giảm thành công: -${_discountAmount}đ',
+                        'Áp dụng mã giảm thành công: -$_discountAmountđ',
                       ),
                       backgroundColor: AppColors.success,
                       duration: const Duration(seconds: 1),

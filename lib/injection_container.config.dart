@@ -101,6 +101,7 @@ import 'features/discount/domain/usecases/get_discount_detail_usecase.dart'
     as _i516;
 import 'features/discount/domain/usecases/get_my_vouchers.dart' as _i440;
 import 'features/discount/domain/usecases/preview_discount.dart' as _i855;
+import 'features/discount/domain/usecases/save_discount.dart' as _i21;
 import 'features/discount/domain/usecases/update_discount_usecase.dart'
     as _i258;
 import 'features/discount/presentation/bloc/discount/discount_bloc.dart'
@@ -289,6 +290,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i258.UpdateDiscountUseCase>(
       () => _i258.UpdateDiscountUseCase(gh<_i506.DiscountRepository>()),
     );
+    gh.factory<_i21.SaveDiscount>(
+      () => _i21.SaveDiscount(gh<_i506.DiscountRepository>()),
+    );
     gh.factory<_i584.CategoryBloc>(
       () => _i584.CategoryBloc(
         gh<_i351.GetCategoryUseCase>(),
@@ -348,15 +352,16 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i836.GetOrdersUseCase>(
       () => _i836.GetOrdersUseCase(gh<_i608.OrderRepository>()),
     );
+    gh.factory<_i947.MyProductsBloc>(
+      () => _i947.MyProductsBloc(gh<_i841.ProductRepository>()),
+    );
     gh.factory<_i1016.DiscountBloc>(
       () => _i1016.DiscountBloc(
         getMyVouchers: gh<_i440.GetMyVouchers>(),
         getAvailableDiscounts: gh<_i760.GetAvailableDiscounts>(),
         previewDiscount: gh<_i855.PreviewDiscount>(),
+        saveDiscount: gh<_i21.SaveDiscount>(),
       ),
-    );
-    gh.factory<_i947.MyProductsBloc>(
-      () => _i947.MyProductsBloc(gh<_i841.ProductRepository>()),
     );
     gh.lazySingleton<_i468.BrandRepository>(
       () => _i831.BrandRepositoryImpl(gh<_i1043.BrandRemoteDataSource>()),

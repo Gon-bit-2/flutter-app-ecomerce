@@ -11,6 +11,7 @@ part 'my_products_state.dart';
 @injectable
 class MyProductsBloc extends Bloc<MyProductsEvent, MyProductsState> {
   final ProductRepository _productRepository;
+  int _lastCreatedById = 0;
 
   MyProductsBloc(this._productRepository) : super(MyProductsInitial()) {
     on<MyProductsLoadRequested>(_onLoadRequested);
@@ -25,9 +26,12 @@ class MyProductsBloc extends Bloc<MyProductsEvent, MyProductsState> {
       emit(MyProductsLoading());
     }
 
+    _lastCreatedById = event.createdById;
+
     final result = await _productRepository.getManageProducts(
       page: event.page,
       limit: event.limit,
+      createdById: event.createdById,
     );
 
     result.fold((failure) => emit(MyProductsFailure(failure.message)), (
@@ -72,7 +76,7 @@ class MyProductsBloc extends Bloc<MyProductsEvent, MyProductsState> {
       (_) {
         emit(const MyProductsDeleteSuccess());
         // Reload products
-        add(const MyProductsLoadRequested());
+        add(MyProductsLoadRequested(createdById: _lastCreatedById));
       },
     );
   }

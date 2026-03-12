@@ -152,7 +152,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const Divider(height: 1),
           // --- Seller Section Logic ---
-          if (user.roleId == 3) ...[
+          if (user.roleId == 3 || user.roleId == 2 || user.roleId == 1) ...[
             _buildMenuItem(
               Icons.storefront_outlined,
               "Shop của tôi",
