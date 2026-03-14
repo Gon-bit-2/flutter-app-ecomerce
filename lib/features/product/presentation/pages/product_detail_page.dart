@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
+import '../../../review/presentation/widgets/review_list_widget.dart';
 import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart'
     as app_fe_ecomerce_cart;
 import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart'
@@ -1142,51 +1143,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildReviews() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Đánh giá sản phẩm",
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Xem tất cả",
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontSize: 14.sp,
-              ),
-            ),
-          ],
-        ),
-        // Mock review
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/100?img=1'),
-          ),
-          title: const Text("alexander_w"),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => Icon(Icons.star, size: 12.sp, color: Colors.amber),
-                ),
-              ),
-              Text(
-                "Phân loại: Graphite",
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-              ),
-              SizedBox(height: 4.h),
-              const Text("Chuột dùng rất thích! Click êm, không gây ồn."),
-            ],
-          ),
-        ),
-      ],
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: ReviewListWidget(productId: widget.product.id),
     );
   }
 

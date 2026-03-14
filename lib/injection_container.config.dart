@@ -138,6 +138,17 @@ import 'features/product/data/repositories/product_repository_impl.dart'
 import 'features/product/domain/repositories/product_repository.dart' as _i841;
 import 'features/product/presentation/bloc/my_products/my_products_bloc.dart'
     as _i947;
+import 'features/review/data/datasources/review_remote_data_source.dart'
+    as _i1033;
+import 'features/review/data/repositories/review_repository_impl.dart' as _i346;
+import 'features/review/domain/repositories/review_repository.dart' as _i306;
+import 'features/review/domain/usecases/create_review_use_case.dart' as _i618;
+import 'features/review/domain/usecases/get_product_reviews_use_case.dart'
+    as _i363;
+import 'features/review/presentation/bloc/create_review/create_review_bloc.dart'
+    as _i890;
+import 'features/review/presentation/bloc/review_list/review_list_bloc.dart'
+    as _i509;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -157,6 +168,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i429.HomeLocalDataSource>(
       () => _i429.HomeLocalDataSourceImpl(),
     );
+    gh.lazySingleton<_i1033.ReviewRemoteDataSource>(
+      () => _i1033.ReviewRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i1043.AuthLocalDataSource>(
       () => _i1043.AuthLocalDataSourceImpl(),
     );
@@ -166,8 +180,26 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i649.HomeRepository>(
       () => _i689.HomeRepositoryImpl(gh<_i429.HomeLocalDataSource>()),
     );
+    gh.lazySingleton<_i306.ReviewRepository>(
+      () => _i346.ReviewRepositoryImpl(gh<_i1033.ReviewRemoteDataSource>()),
+    );
     gh.factory<_i8.AuthInterceptor>(
       () => _i8.AuthInterceptor(gh<_i1043.AuthLocalDataSource>()),
+    );
+    gh.factory<_i618.CreateReviewUseCase>(
+      () => _i618.CreateReviewUseCase(gh<_i306.ReviewRepository>()),
+    );
+    gh.factory<_i363.GetProductReviewsUseCase>(
+      () => _i363.GetProductReviewsUseCase(gh<_i306.ReviewRepository>()),
+    );
+    gh.factory<_i509.ReviewListBloc>(
+      () => _i509.ReviewListBloc(gh<_i363.GetProductReviewsUseCase>()),
+    );
+    gh.factory<_i890.CreateReviewBloc>(
+      () => _i890.CreateReviewBloc(
+        gh<_i618.CreateReviewUseCase>(),
+        gh<_i1033.ReviewRemoteDataSource>(),
+      ),
     );
     gh.lazySingleton<_i45.DioClient>(
       () => _i45.DioClient(gh<_i361.Dio>(), gh<_i8.AuthInterceptor>()),
