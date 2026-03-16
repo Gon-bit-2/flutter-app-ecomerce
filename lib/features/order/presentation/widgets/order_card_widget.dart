@@ -17,22 +17,22 @@ class OrderCardWidget extends StatelessWidget {
     String text;
 
     switch (status) {
-      case 'PENDING_PAYMENT':
+      case 'UNPAID':
         bgColor = Colors.orange.shade50;
         textColor = Colors.orange.shade700;
         text = 'Chờ thanh toán';
         break;
-      case 'PENDING_PICKUP':
+      case 'READY_TO_SHIP':
         bgColor = Colors.blue.shade50;
         textColor = Colors.blue.shade700;
         text = 'Chờ lấy hàng';
         break;
-      case 'PENDING_DELIVERY':
+      case 'SHIPPED':
         bgColor = Colors.blue.shade50;
         textColor = Colors.blue.shade700;
         text = 'Đang giao hàng';
         break;
-      case 'DELIVERED':
+      case 'COMPLETED':
         bgColor = Colors.green.shade50;
         textColor = Colors.green.shade700;
         text = 'Đã giao';
@@ -42,7 +42,7 @@ class OrderCardWidget extends StatelessWidget {
         textColor = Colors.red.shade700;
         text = 'Đã hủy';
         break;
-      case 'RETURNED':
+      case 'TO_RETURN':
         bgColor = Colors.purple.shade50;
         textColor = Colors.purple.shade700;
         text = 'Trả hàng';
@@ -213,6 +213,73 @@ class OrderCardWidget extends StatelessWidget {
                 ],
               ),
             ),
+            
+            // Action Buttons
+            if (order.status == 'UNPAID' || order.status == 'READY_TO_SHIP' || order.status == 'SHIPPED' || order.status == 'COMPLETED') ...[
+              const Divider(height: 1),
+              Padding(
+                padding: EdgeInsets.all(12.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (order.status == 'UNPAID')
+                      OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OrderDetailPage(orderId: order.id),
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(color: AppColors.error),
+                          minimumSize: Size(100.w, 36.h),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        ),
+                        child: const Text('Hủy đơn'),
+                      ),
+                    if (order.status == 'SHIPPED')
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OrderDetailPage(orderId: order.id),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          minimumSize: Size(100.w, 36.h),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        ),
+                        child: const Text('Đã nhận được hàng', style: TextStyle(color: Colors.white)),
+                      ),
+                    // Nút đánh giá cho đơn đã giao thành công
+                    if (order.status == 'COMPLETED')
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OrderDetailPage(orderId: order.id),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber.shade600,
+                          minimumSize: Size(100.w, 36.h),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        ),
+                        icon: const Icon(Icons.star_border, color: Colors.white, size: 16),
+                        label: const Text('Đánh giá', style: TextStyle(color: Colors.white)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

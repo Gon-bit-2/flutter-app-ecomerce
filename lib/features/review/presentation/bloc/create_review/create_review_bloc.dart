@@ -65,6 +65,7 @@ class CreateReviewBloc extends Bloc<CreateReviewEvent, CreateReviewState> {
         "rating": state.rating,
         "productId": event.productId,
         "orderId": event.orderId,
+        "userId": event.userId,
         "medias": uploadedMedias,
       };
 

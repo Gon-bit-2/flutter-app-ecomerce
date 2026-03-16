@@ -23,8 +23,15 @@ class CreateOrderUseCase
       final isCod = params.orders.any((o) => o.paymentMethod == 'COD');
       
       if (isCod) {
+        // Với COD: tự động chuyển trạng thái sang READY_TO_SHIP
+        // Nếu BE từ chối thì seller sẽ xác nhận thủ công từ trang quản lý đơn hàng
         for (final order in orderResult.orders) {
-          await repository.updateOrderStatus(order.id, 'PENDING_PICKUP');
+          final updateResult = await repository.updateOrderStatus(order.id, 'READY_TO_SHIP');
+          // Bỏ qua lỗi - seller có thể update thủ công nếu cần
+          updateResult.fold(
+            (failure) => null, // ignore error, seller will update manually
+            (_) => null,
+          );
         }
       }
       return right(orderResult);

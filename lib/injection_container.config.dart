@@ -121,6 +121,8 @@ import 'features/order/domain/usecases/cancel_order_usecase.dart' as _i255;
 import 'features/order/domain/usecases/create_order_usecase.dart' as _i93;
 import 'features/order/domain/usecases/get_order_detail_usecase.dart' as _i1062;
 import 'features/order/domain/usecases/get_orders_usecase.dart' as _i836;
+import 'features/order/domain/usecases/update_order_status_usecase.dart'
+    as _i208;
 import 'features/order/presentation/bloc/order/order_bloc.dart' as _i289;
 import 'features/order/presentation/bloc/seller_order/seller_order_bloc.dart'
     as _i337;
@@ -384,6 +386,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i836.GetOrdersUseCase>(
       () => _i836.GetOrdersUseCase(gh<_i608.OrderRepository>()),
     );
+    gh.factory<_i208.UpdateOrderStatusUseCase>(
+      () => _i208.UpdateOrderStatusUseCase(gh<_i608.OrderRepository>()),
+    );
     gh.factory<_i947.MyProductsBloc>(
       () => _i947.MyProductsBloc(gh<_i841.ProductRepository>()),
     );
@@ -403,6 +408,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i259.GetDailyDiscoverUseCase>(
       () => _i259.GetDailyDiscoverUseCase(gh<_i841.ProductRepository>()),
+    );
+    gh.factory<_i289.OrderBloc>(
+      () => _i289.OrderBloc(
+        gh<_i93.CreateOrderUseCase>(),
+        gh<_i836.GetOrdersUseCase>(),
+        gh<_i1062.GetOrderDetailUseCase>(),
+        gh<_i255.CancelOrderUseCase>(),
+        gh<_i208.UpdateOrderStatusUseCase>(),
+      ),
     );
     gh.factory<_i685.AddCartUseCase>(
       () => _i685.AddCartUseCase(gh<_i303.CartRepository>()),
@@ -448,14 +462,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i293.VerifyOtpUseCase>(
       () => _i293.VerifyOtpUseCase(gh<_i1015.AuthRepository>()),
-    );
-    gh.factory<_i289.OrderBloc>(
-      () => _i289.OrderBloc(
-        gh<_i93.CreateOrderUseCase>(),
-        gh<_i836.GetOrdersUseCase>(),
-        gh<_i1062.GetOrderDetailUseCase>(),
-        gh<_i255.CancelOrderUseCase>(),
-      ),
     );
     gh.factory<_i123.HomeBloc>(
       () => _i123.HomeBloc(

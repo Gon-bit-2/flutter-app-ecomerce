@@ -31,8 +31,13 @@ class FormMediasChanged extends CreateReviewEvent {
 class SubmitReviewEvent extends CreateReviewEvent {
   final int productId;
   final int orderId;
-  const SubmitReviewEvent({required this.productId, required this.orderId});
+  final int userId;
+  const SubmitReviewEvent({
+    required this.productId,
+    required this.orderId,
+    required this.userId,
+  });
 
   @override
-  List<Object?> get props => [productId, orderId];
+  List<Object?> get props => [productId, orderId, userId];
 }

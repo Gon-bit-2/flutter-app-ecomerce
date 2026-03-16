@@ -71,11 +71,13 @@ class OrderItemModel extends OrderItemEntity {
   const OrderItemModel({
     required super.id,
     required super.skuId,
+    super.productId,
     super.productName,
     super.skuValue,
     super.image,
     required super.price,
     required super.quantity,
+    super.isReviewed = false,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -114,21 +116,25 @@ class OrderItemModel extends OrderItemEntity {
     return OrderItemModel(
       id: (json['id'] as num).toInt(),
       skuId: (json['skuId'] as num).toInt(),
+      productId: (json['productId'] as num?)?.toInt(),
       productName: json['productName'] as String?,
       skuValue: json['skuValue'] as String?,
       image: imageUrl,
       price: priceVal,
       quantity: (json['quantity'] as num).toInt(),
+      isReviewed: json['isReviewed'] as bool? ?? false,
     );
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'skuId': skuId,
+    'productId': productId,
     'productName': productName,
     'skuValue': skuValue,
     'image': image,
     'price': price,
     'quantity': quantity,
+    'isReviewed': isReviewed,
   };
 }

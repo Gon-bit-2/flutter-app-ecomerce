@@ -29,10 +29,10 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
 
   final List<Map<String, String?>> _tabs = [
     {'title': 'Tất cả', 'status': null},
-    {'title': 'Chờ TT', 'status': 'PENDING_PAYMENT'},
-    {'title': 'Chờ lấy', 'status': 'PENDING_PICKUP'},
-    {'title': 'Đang giao', 'status': 'PENDING_DELIVERY'},
-    {'title': 'Đã giao', 'status': 'DELIVERED'},
+    {'title': 'Chờ TT', 'status': 'UNPAID'},
+    {'title': 'Chờ lấy', 'status': 'READY_TO_SHIP'},
+    {'title': 'Đang giao', 'status': 'SHIPPED'},
+    {'title': 'Đã giao', 'status': 'COMPLETED'},
     {'title': 'Đã hủy', 'status': 'CANCELLED'},
   ];
 
@@ -371,18 +371,44 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
   }
 
   bool _canUpdateStatus(String? status) {
-    return status == 'PENDING_PICKUP' || status == 'PENDING_DELIVERY';
+    return status == 'UNPAID' ||
+        status == 'READY_TO_SHIP' ||
+        status == 'SHIPPED';
   }
 
   List<Widget> _buildActionButtons(OrderEntity order) {
     final buttons = <Widget>[];
 
-    if (order.status == 'PENDING_PICKUP') {
+    // Seller xác nhận đơn COD (chuyển từ UNPAID → READY_TO_SHIP)
+    if (order.status == 'UNPAID') {
       buttons.add(
         ElevatedButton.icon(
           onPressed: () => _confirmStatusUpdate(
             order.id,
-            'PENDING_DELIVERY',
+            'READY_TO_SHIP',
+            'Xác nhận đơn hàng COD và chuẩn bị hàng?',
+          ),
+          icon: Icon(Icons.inventory_2_outlined, size: 16.sp),
+          label: const Text('Xác nhận đơn'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+            textStyle: TextStyle(fontSize: 12.sp),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6.r),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (order.status == 'READY_TO_SHIP') {
+      buttons.add(
+        ElevatedButton.icon(
+          onPressed: () => _confirmStatusUpdate(
+            order.id,
+            'SHIPPED',
             'Xác nhận giao cho vận chuyển?',
           ),
           icon: Icon(Icons.local_shipping_outlined, size: 16.sp),
@@ -400,12 +426,12 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
       );
     }
 
-    if (order.status == 'PENDING_DELIVERY') {
+    if (order.status == 'SHIPPED') {
       buttons.add(
         ElevatedButton.icon(
           onPressed: () => _confirmStatusUpdate(
             order.id,
-            'DELIVERED',
+            'COMPLETED',
             'Xác nhận đơn hàng đã giao thành công?',
           ),
           icon: Icon(Icons.check_circle_outline, size: 16.sp),
@@ -475,22 +501,22 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
     String text;
 
     switch (status) {
-      case 'PENDING_PAYMENT':
+      case 'UNPAID':
         bgColor = Colors.orange.shade50;
         textColor = Colors.orange.shade700;
         text = 'Chờ thanh toán';
         break;
-      case 'PENDING_PICKUP':
+      case 'READY_TO_SHIP':
         bgColor = Colors.blue.shade50;
         textColor = Colors.blue.shade700;
         text = 'Chờ lấy hàng';
         break;
-      case 'PENDING_DELIVERY':
+      case 'SHIPPED':
         bgColor = Colors.indigo.shade50;
         textColor = Colors.indigo.shade700;
         text = 'Đang giao';
         break;
-      case 'DELIVERED':
+      case 'COMPLETED':
         bgColor = Colors.green.shade50;
         textColor = Colors.green.shade700;
         text = 'Đã giao';
@@ -500,7 +526,7 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
         textColor = Colors.red.shade700;
         text = 'Đã hủy';
         break;
-      case 'RETURNED':
+      case 'TO_RETURN':
         bgColor = Colors.purple.shade50;
         textColor = Colors.purple.shade700;
         text = 'Trả hàng';

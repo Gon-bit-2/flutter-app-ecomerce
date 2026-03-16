@@ -45,30 +45,36 @@ class OrderEntity extends Equatable {
 class OrderItemEntity extends Equatable {
   final int id;
   final int skuId;
+  final int? productId;
   final String? productName;
   final String? skuValue;
   final String? image;
   final num price;
   final int quantity;
+  final bool isReviewed;
 
   const OrderItemEntity({
     required this.id,
     required this.skuId,
+    this.productId,
     this.productName,
     this.skuValue,
     this.image,
     required this.price,
     required this.quantity,
+    this.isReviewed = false,
   });
 
   @override
   List<Object?> get props => [
     id,
     skuId,
+    productId,
     productName,
     skuValue,
     image,
     price,
     quantity,
+    isReviewed,
   ];
 }
