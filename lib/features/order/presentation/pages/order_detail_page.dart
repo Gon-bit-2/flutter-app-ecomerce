@@ -2,22 +2,34 @@ import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/order/domain/entities/order_entity.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/bloc/order/order_bloc.dart';
+import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
+import 'package:app_fe_ecomerce/features/product/presentation/pages/product_detail_page.dart';
+import 'package:app_fe_ecomerce/features/review/presentation/bloc/create_review/create_review_bloc.dart';
+import 'package:app_fe_ecomerce/features/review/presentation/widgets/create_review_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 
-class OrderDetailPage extends StatelessWidget {
+class OrderDetailPage extends StatefulWidget {
   final int orderId;
 
   const OrderDetailPage({super.key, required this.orderId});
 
   @override
+  State<OrderDetailPage> createState() => _OrderDetailPageState();
+}
+
+class _OrderDetailPageState extends State<OrderDetailPage> {
+  // Track reviewed items locally (by orderItemId)
+  final Set<int> _reviewedItemIds = {};
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          GetIt.I<OrderBloc>()..add(OrderDetailRequested(orderId: orderId)),
+          GetIt.I<OrderBloc>()..add(OrderDetailRequested(orderId: widget.orderId)),
       child: Scaffold(
         backgroundColor: AppColors.inputBackground,
         appBar: AppBar(
@@ -32,16 +44,17 @@ class OrderDetailPage extends StatelessWidget {
         ),
         body: BlocConsumer<OrderBloc, OrderState>(
           listener: (context, state) {
-            if (state is OrderCancelled) {
+            if (state is OrderCancelled || state is OrderStatusUpdated) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Hủy đơn hàng thành công'),
+                SnackBar(
+                  content: Text(state is OrderCancelled
+                      ? 'Hủy đơn hàng thành công'
+                      : 'Đã cập nhật trạng thái'),
                   backgroundColor: AppColors.success,
                 ),
               );
-              // Refresh order detail
               context.read<OrderBloc>().add(
-                OrderDetailRequested(orderId: orderId),
+                OrderDetailRequested(orderId: widget.orderId),
               );
             } else if (state is OrderFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -70,9 +83,16 @@ class OrderDetailPage extends StatelessWidget {
                     _buildOrderItems(order),
                     _buildOrderSummary(order),
 
-                    if (order.status == 'PENDING_PAYMENT' ||
-                        order.status == 'PENDING_PICKUP')
+                    if (order.status == 'UNPAID')
                       _buildCancelButton(context, order),
+
+                    // Nút xác nhận đã nhận hàng
+                    if (order.status == 'SHIPPED')
+                      _buildReceivedButton(context, order),
+
+                    // Section đánh giá sau khi đơn hoàn thành
+                    if (order.status == 'COMPLETED')
+                      _buildReviewSection(context, order),
                   ],
                 ),
               );
@@ -191,62 +211,92 @@ class OrderDetailPage extends StatelessWidget {
             separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               final item = order.items![index];
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 60.w,
-                    height: 60.w,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(4.r),
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          item.image ?? 'https://via.placeholder.com/60',
+              return GestureDetector(
+                onTap: () {
+                  if (item.productId == null) return;
+                  // Tạo Product minimal — ProductDetailPage tự fetch chi tiết đầy đủ
+                  final minimalProduct = Product(
+                    id: item.productId!,
+                    name: item.productName ?? 'Sản phẩm',
+                    basePrice: item.price.toDouble(),
+                    images: item.image != null ? [item.image!] : [],
+                    brandId: 0,
+                  );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailPage(product: minimalProduct),
+                    ),
+                  );
+                },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 60.w,
+                      height: 60.w,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4.r),
+                        image: DecorationImage(
+                          image: NetworkImage(
+                            item.image ?? 'https://via.placeholder.com/60',
+                          ),
+                          fit: BoxFit.cover,
                         ),
-                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.productName ?? 'Sản phẩm',
-                          style: AppTextStyles.bodyMedium,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (item.skuValue != null) ...[
-                          SizedBox(height: 4.h),
-                          Text(
-                            'Phân loại: ${item.skuValue}',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.grey,
-                              fontSize: 12.sp,
-                            ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.productName ?? 'Sản phẩm',
+                                  style: AppTextStyles.bodyMedium,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 16.sp,
+                                color: Colors.grey,
+                              ),
+                            ],
                           ),
-                        ],
-                        SizedBox(height: 8.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
+                          if (item.skuValue != null) ...[
+                            SizedBox(height: 4.h),
                             Text(
-                              '${item.price} đ',
-                              style: AppTextStyles.bodyMedium,
-                            ),
-                            Text(
-                              'x${item.quantity}',
-                              style: AppTextStyles.bodyMedium,
+                              'Phân loại: ${item.skuValue}',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: Colors.grey,
+                                fontSize: 12.sp,
+                              ),
                             ),
                           ],
-                        ),
-                      ],
+                          SizedBox(height: 8.h),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${item.price} đ',
+                                style: AppTextStyles.bodyMedium,
+                              ),
+                              Text(
+                                'x${item.quantity}',
+                                style: AppTextStyles.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),
@@ -282,7 +332,8 @@ class OrderDetailPage extends StatelessWidget {
               Text('Phương thức', style: AppTextStyles.bodyMedium),
               Text(
                 order.paymentMethod ?? 'Chuyển khoản / COD',
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                style:
+                    AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -367,20 +418,245 @@ class OrderDetailPage extends StatelessWidget {
 
   String _getFriendlyStatus(String? status) {
     switch (status) {
-      case 'PENDING_PAYMENT':
+      case 'UNPAID':
         return 'Chờ thanh toán';
-      case 'PENDING_PICKUP':
+      case 'READY_TO_SHIP':
         return 'Chờ lấy hàng';
-      case 'PENDING_DELIVERY':
+      case 'SHIPPED':
         return 'Đang giao hàng';
-      case 'DELIVERED':
+      case 'COMPLETED':
         return 'Đã giao thành công';
-      case 'RETURNED':
+      case 'TO_RETURN':
         return 'Trả hàng';
       case 'CANCELLED':
         return 'Đã hủy';
       default:
         return status ?? 'N/A';
     }
+  }
+
+  Widget _buildReceivedButton(BuildContext context, OrderEntity order) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      child: ElevatedButton(
+        onPressed: () {
+          context.read<OrderBloc>().add(
+            OrderUpdateStatusRequested(orderId: order.id, status: 'COMPLETED'),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryBlue,
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        child: Text(
+          'Đã nhận được hàng',
+          style: AppTextStyles.buttonText.copyWith(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  // Section đánh giá cho đơn hàng đã hoàn thành
+  Widget _buildReviewSection(BuildContext context, OrderEntity order) {
+    final items = order.items ?? [];
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      color: Colors.white,
+      margin: EdgeInsets.only(top: 8.h),
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.star_rate_rounded, size: 20.sp, color: Colors.amber),
+              SizedBox(width: 8.w),
+              Text(
+                'Đánh giá sản phẩm',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'Hãy chia sẻ cảm nhận của bạn về sản phẩm đã mua',
+            style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[600]),
+          ),
+          SizedBox(height: 12.h),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            separatorBuilder: (context, index) => SizedBox(height: 8.h),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              // Kiểm tra đã đánh giá chưa: từ backend (isReviewed) hoặc vừa đánh giá trong session này
+              final alreadyReviewed =
+                  item.isReviewed || _reviewedItemIds.contains(item.id);
+
+              return Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[200]!),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  children: [
+                    // Ảnh sản phẩm
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: Image.network(
+                        item.image ?? 'https://via.placeholder.com/48',
+                        width: 48.w,
+                        height: 48.w,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, e, s) => Container(
+                          width: 48.w,
+                          height: 48.w,
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image, size: 20.sp, color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    // Tên sản phẩm
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.productName ?? 'Sản phẩm',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (item.skuValue != null)
+                            Text(
+                              'Phân loại: ${item.skuValue}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    // Nút đánh giá hoặc badge đã đánh giá
+                    if (alreadyReviewed)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(20.r),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 14.sp,
+                              color: Colors.green.shade700,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Đã đánh giá',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      OutlinedButton(
+                        onPressed: () => _openReviewSheet(context, order, item),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryBlue,
+                          side: const BorderSide(color: AppColors.primaryBlue),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 6.h,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.star_border, size: 14.sp),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Đánh giá',
+                              style: TextStyle(fontSize: 12.sp),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openReviewSheet(
+    BuildContext context,
+    OrderEntity order,
+    OrderItemEntity item,
+  ) {
+    // ProductId cần thiết để gửi review
+    final productId = item.productId;
+    if (productId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể xác định sản phẩm để đánh giá'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BlocProvider(
+        create: (_) => GetIt.I<CreateReviewBloc>(),
+        child: CreateReviewBottomSheet(
+          productId: productId,
+          orderId: order.id,
+          productName: item.productName,
+          productImage: item.image,
+          onReviewCreated: () {
+            // Đánh dấu item này đã được review trong session hiện tại
+            setState(() {
+              _reviewedItemIds.add(item.id);
+            });
+          },
+        ),
+      ),
+    );
   }
 }

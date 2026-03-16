@@ -3,6 +3,7 @@ import 'package:app_fe_ecomerce/features/order/domain/usecases/cancel_order_usec
 import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/get_order_detail_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/get_orders_usecase.dart';
+import 'package:app_fe_ecomerce/features/order/domain/usecases/update_order_status_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/domain/entities/order_creation_result_entity.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,12 +18,14 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final GetOrdersUseCase _getOrdersUseCase;
   final GetOrderDetailUseCase _getOrderDetailUseCase;
   final CancelOrderUseCase _cancelOrderUseCase;
+  final UpdateOrderStatusUseCase _updateOrderStatusUseCase;
 
   OrderBloc(
     this._createOrderUseCase,
     this._getOrdersUseCase,
     this._getOrderDetailUseCase,
     this._cancelOrderUseCase,
+    this._updateOrderStatusUseCase,
   ) : super(OrderInitial()) {
     on<OrderCreateRequested>((event, emit) async {
       emit(OrderLoading());
@@ -81,6 +84,17 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       result.fold(
         (failure) => emit(OrderFailure(failure.message)),
         (_) => emit(OrderCancelled()),
+      );
+    });
+
+    on<OrderUpdateStatusRequested>((event, emit) async {
+      emit(OrderLoading());
+      final result = await _updateOrderStatusUseCase(
+        UpdateOrderStatusParams(orderId: event.orderId, status: event.status),
+      );
+      result.fold(
+        (failure) => emit(OrderFailure(failure.message)),
+        (_) => emit(OrderStatusUpdated()),
       );
     });
   }

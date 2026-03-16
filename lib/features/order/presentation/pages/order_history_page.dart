@@ -26,10 +26,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage>
 
   final List<Map<String, String?>> _tabs = [
     {'title': 'Tất cả', 'status': null},
-    {'title': 'Chờ TT', 'status': 'PENDING_PAYMENT'},
-    {'title': 'Chờ lấy', 'status': 'PENDING_PICKUP'},
-    {'title': 'Đang giao', 'status': 'PENDING_DELIVERY'},
-    {'title': 'Đã giao', 'status': 'DELIVERED'},
+    {'title': 'Chờ TT', 'status': 'UNPAID'},
+    {'title': 'Chờ lấy', 'status': 'READY_TO_SHIP'},
+    {'title': 'Đang giao', 'status': 'SHIPPED'},
+    {'title': 'Đã giao', 'status': 'COMPLETED'},
     {'title': 'Đã hủy', 'status': 'CANCELLED'},
   ];
 

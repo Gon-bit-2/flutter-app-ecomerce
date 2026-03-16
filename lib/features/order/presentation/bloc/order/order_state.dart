@@ -49,3 +49,5 @@ class OrderFailure extends OrderState {
   @override
   List<Object?> get props => [message];
 }
+
+class OrderStatusUpdated extends OrderState {}

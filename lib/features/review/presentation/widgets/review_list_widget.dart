@@ -14,7 +14,7 @@ import 'create_review_bottom_sheet.dart';
 class ReviewListWidget extends StatefulWidget {
   final int productId;
 
-  const ReviewListWidget({Key? key, required this.productId}) : super(key: key);
+  const ReviewListWidget({super.key, required this.productId});
 
   @override
   State<ReviewListWidget> createState() => _ReviewListWidgetState();

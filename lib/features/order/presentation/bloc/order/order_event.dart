@@ -44,3 +44,12 @@ class OrderCancelRequested extends OrderEvent {
   @override
   List<Object?> get props => [orderId];
 }
+class OrderUpdateStatusRequested extends OrderEvent {
+  final int orderId;
+  final String status;
+
+  const OrderUpdateStatusRequested({required this.orderId, required this.status});
+
+  @override
+  List<Object?> get props => [orderId, status];
+}
