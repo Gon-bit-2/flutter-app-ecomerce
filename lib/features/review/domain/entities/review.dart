@@ -4,7 +4,7 @@ import 'review_media.dart';
 
 class Review extends Equatable {
   final int id;
-  final String content;
+  final String? content;
   final int rating;
   final int? orderId;
   final int productId;
@@ -14,7 +14,7 @@ class Review extends Equatable {
 
   const Review({
     required this.id,
-    required this.content,
+    this.content,
     required this.rating,
     this.orderId,
     required this.productId,

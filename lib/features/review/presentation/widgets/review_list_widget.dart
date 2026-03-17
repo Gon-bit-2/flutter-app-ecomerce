@@ -13,8 +13,20 @@ import 'create_review_bottom_sheet.dart';
 
 class ReviewListWidget extends StatefulWidget {
   final int productId;
+  /// true nếu user đã mua sản phẩm này (có đơn hàng completed)
+  final bool canReview;
+  /// true nếu user đã đánh giá sản phẩm này rồi
+  final bool hasReviewed;
+  /// orderId liên quan (nếu có) để gửi review
+  final int? orderId;
 
-  const ReviewListWidget({super.key, required this.productId});
+  const ReviewListWidget({
+    super.key,
+    required this.productId,
+    this.canReview = false,
+    this.hasReviewed = false,
+    this.orderId,
+  });
 
   @override
   State<ReviewListWidget> createState() => _ReviewListWidgetState();
@@ -54,8 +66,8 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
         create: (_) => getIt<CreateReviewBloc>(),
         child: CreateReviewBottomSheet(
           productId: widget.productId,
+          orderId: widget.orderId,
           onReviewCreated: () {
-            // Reload reviews when a new one is successfully created
             _reviewListBloc.add(LoadProductReviewsEvent(productId: widget.productId, isRefresh: true));
           },
         ),
@@ -77,17 +89,44 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                 "Đánh giá sản phẩm",
                 style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
               ),
-              TextButton(
-                onPressed: _showCreateReviewSheet,
-                child: Text(
-                  "Viết đánh giá",
-                  style: TextStyle(
-                    color: Theme.of(context).primaryColor,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
+              // Hiện nút đánh giá chỉ khi user đã mua & chưa đánh giá
+              if (widget.hasReviewed)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 14.sp, color: Colors.green.shade700),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Đã đánh giá',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (widget.canReview)
+                TextButton(
+                  onPressed: _showCreateReviewSheet,
+                  child: Text(
+                    "Viết đánh giá",
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
+              // Nếu canReview=false và hasReviewed=false → không hiển thị gì
             ],
           ),
           BlocBuilder<ReviewListBloc, ReviewListState>(
@@ -204,7 +243,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           ),
           SizedBox(height: 8.h),
           Text(
-            review.content,
+            review.content ?? "",
             style: TextStyle(fontSize: 14.sp, height: 1.4),
           ),
           if (review.mediaUrls != null && review.mediaUrls!.isNotEmpty) ...[

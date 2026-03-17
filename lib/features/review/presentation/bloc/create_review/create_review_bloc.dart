@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
@@ -49,10 +50,7 @@ class CreateReviewBloc extends Bloc<CreateReviewEvent, CreateReviewState> {
       // Upload từng ảnh/video từ path local
       for (String path in state.mediaPaths) {
         final File file = File(path);
-        // Nhận diện kiểu dựa vào đuôi file. (Thực tế nên dùng mime or image_picker)
         final bool isVideo = path.toLowerCase().endsWith('.mp4') || path.toLowerCase().endsWith('.mov');
-        
-        // Gọi remoteDataSource upload
         final url = await remoteDataSource.uploadMedia(file);
         uploadedMedias.add({
           "url": url,
@@ -81,8 +79,20 @@ class CreateReviewBloc extends Bloc<CreateReviewEvent, CreateReviewState> {
           createdReview: review,
         )),
       );
+    } on DioException catch (e) {
+      // Xử lý lỗi Dio cụ thể (từ uploadMedia)
+      final statusCode = e.response?.statusCode;
+      String message;
+      if (statusCode == 409) {
+        message = 'Bạn đã đánh giá sản phẩm này rồi!';
+      } else if (statusCode == 403) {
+        message = 'Bạn cần mua sản phẩm này trước khi đánh giá.';
+      } else {
+        message = e.response?.data?['message'] ?? 'Lỗi kết nối, vui lòng thử lại.';
+      }
+      emit(state.copyWith(status: CreateReviewStatus.failure, errorMessage: message));
     } catch (e) {
-      emit(state.copyWith(status: CreateReviewStatus.failure, errorMessage: e.toString()));
+      emit(state.copyWith(status: CreateReviewStatus.failure, errorMessage: 'Đã có lỗi xảy ra. Vui lòng thử lại.'));
     }
   }
 }

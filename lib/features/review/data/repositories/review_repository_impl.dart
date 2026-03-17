@@ -22,11 +22,13 @@ class ReviewRepositoryImpl implements ReviewRepository {
       final reviews = await remoteDataSource.getProductReviews(productId, page, limit);
       return Right(reviews);
     } on DioException catch (e) {
-      if (e.response != null) {
-        return Left(ServerFailure(
-            e.response?.data['message'] ?? 'Failed to load reviews'));
+      final statusCode = e.response?.statusCode;
+      // Nếu server lỗi (500) hoặc không tìm thấy (404) → trả về list rỗng thay vì báo lỗi
+      if (statusCode == 500 || statusCode == 404) {
+        return const Right([]);
       }
-      return const Left(ServerFailure('Connection failed'));
+      final message = e.response?.data?['message'] ?? 'Không thể tải đánh giá';
+      return Left(ServerFailure(message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -38,11 +40,17 @@ class ReviewRepositoryImpl implements ReviewRepository {
       final review = await remoteDataSource.createReview(reviewData);
       return Right(review);
     } on DioException catch (e) {
-      if (e.response != null) {
-        return Left(ServerFailure(
-            e.response?.data['message'] ?? 'Failed to create review'));
+      final statusCode = e.response?.statusCode;
+      // 409 Conflict - đã đánh giá sản phẩm này rồi
+      if (statusCode == 409) {
+        return const Left(ServerFailure('Bạn đã đánh giá sản phẩm này rồi!'));
       }
-      return const Left(ServerFailure('Connection failed'));
+      // 403 Forbidden - chưa mua sản phẩm
+      if (statusCode == 403) {
+        return const Left(ServerFailure('Bạn cần mua sản phẩm này trước khi đánh giá.'));
+      }
+      final message = e.response?.data?['message'] ?? 'Không thể gửi đánh giá';
+      return Left(ServerFailure(message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
