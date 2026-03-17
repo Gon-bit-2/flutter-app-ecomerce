@@ -96,6 +96,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           userAddressId: _selectedAddress!.id,
           cartItemIds: e.value,
           paymentMethod: _paymentMethod,
+          discountCode: _appliedDiscount?.code,
         );
       }).toList();
 

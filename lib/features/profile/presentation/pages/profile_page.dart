@@ -7,6 +7,7 @@ import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/pages/order_history_page.dart'
     as app_fe_ecomerce_order;
 import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/pages/voucher_wallet_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final UserEntity user;
@@ -191,6 +192,20 @@ class ProfilePage extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) =>
                       const app_fe_ecomerce_order.OrderHistoryPage(),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          // --- Kho Voucher ---
+          _buildMenuItem(
+            Icons.local_activity_outlined,
+            "Kho Voucher",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VoucherWalletPage(),
                 ),
               );
             },

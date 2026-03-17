@@ -53,6 +53,7 @@ class ShopOrderParams {
   final int? userAddressId;
   final List<int> cartItemIds;
   final String? paymentMethod;
+  final String? discountCode;
 
   const ShopOrderParams({
     required this.shopId,
@@ -60,6 +61,7 @@ class ShopOrderParams {
     this.userAddressId,
     required this.cartItemIds,
     this.paymentMethod,
+    this.discountCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -80,6 +82,10 @@ class ShopOrderParams {
 
     if (paymentMethod != null) {
       data['paymentMethod'] = paymentMethod;
+    }
+
+    if (discountCode != null && discountCode!.isNotEmpty) {
+      data['discountCode'] = discountCode;
     }
 
     return data;
