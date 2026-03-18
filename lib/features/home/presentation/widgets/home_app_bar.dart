@@ -5,6 +5,7 @@ import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import '../../../shop/presentation/pages/my_shop_page.dart';
 import '../../../cart/presentation/pages/cart_page.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
+import '../../../search/presentation/pages/search_page.dart';
 
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
@@ -23,30 +24,38 @@ class HomeAppBar extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Container(
-                height: 45.h,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey, size: 20.sp),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        'Tìm kiếm Tai nghe không dây', // Placeholder
-                        style: TextStyle(color: Colors.grey, fontSize: 14.sp),
-                        overflow: TextOverflow.ellipsis,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchPage()),
+                  );
+                },
+                child: Container(
+                  height: 45.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search, color: Colors.grey, size: 20.sp),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          'Tìm kiếm sản phẩm...', // Placeholder
+                          style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.camera_alt_outlined,
-                      color: Colors.grey,
-                      size: 20.sp,
-                    ),
-                  ],
+                      Icon(
+                        Icons.camera_alt_outlined,
+                        color: Colors.grey,
+                        size: 20.sp,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

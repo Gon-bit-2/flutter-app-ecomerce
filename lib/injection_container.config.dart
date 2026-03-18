@@ -152,6 +152,12 @@ import 'features/review/presentation/bloc/create_review/create_review_bloc.dart'
     as _i890;
 import 'features/review/presentation/bloc/review_list/review_list_bloc.dart'
     as _i509;
+import 'features/search/data/datasources/search_remote_datasource.dart'
+    as _i647;
+import 'features/search/data/repositories/search_repository_impl.dart' as _i967;
+import 'features/search/domain/repositories/search_repository.dart' as _i246;
+import 'features/search/domain/usecases/search_products_usecase.dart' as _i453;
+import 'features/search/presentation/bloc/search_bloc.dart' as _i944;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -213,6 +219,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i979.CategoryRemoteDataSource>(
       () => _i979.CategoryRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i647.SearchRemoteDataSource>(
+      () => _i647.SearchRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i588.AuthRemoteDataSource>(
       () => _i588.AuthRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -242,11 +251,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i376.PaymentRepository>(
       () => _i210.PaymentRepositoryImpl(gh<_i983.PaymentRemoteDataSource>()),
     );
+    gh.lazySingleton<_i246.SearchRepository>(
+      () => _i967.SearchRepositoryImpl(gh<_i647.SearchRemoteDataSource>()),
+    );
     gh.lazySingleton<_i493.CommonRepository>(
       () => _i499.CommonRepositoryImpl(gh<_i74.CommonRemoteDataSource>()),
     );
     gh.factory<_i813.GetPaymentConfigUseCase>(
       () => _i813.GetPaymentConfigUseCase(gh<_i376.PaymentRepository>()),
+    );
+    gh.lazySingleton<_i453.SearchProductsUseCase>(
+      () => _i453.SearchProductsUseCase(gh<_i246.SearchRepository>()),
     );
     gh.lazySingleton<_i1043.BrandRemoteDataSource>(
       () => _i1043.BrandRemoteDataSourceImpl(gh<_i45.DioClient>()),
@@ -271,6 +286,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i803.UpdateAddressUseCase>(
       () => _i803.UpdateAddressUseCase(gh<_i535.AddressRepository>()),
+    );
+    gh.factory<_i944.SearchBloc>(
+      () => _i944.SearchBloc(gh<_i453.SearchProductsUseCase>()),
     );
     gh.lazySingleton<_i608.OrderRepository>(
       () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>()),

@@ -77,4 +77,7 @@ class AppConstants {
       '/discount'; // For Admin/Seller List, Create, Update, Delete
       
   static const String saveDiscountEndpoint = '/discount'; // Needs id and /save appended
+
+  // Search Endpoints
+  static const String searchProductsEndpoint = '/product/search';
 }
