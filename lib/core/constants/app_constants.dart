@@ -50,6 +50,7 @@ class AppConstants {
   static const String googleCallbackEndpoint = '/auth/google/callback';
   static const String forgotPasswordEndpoint = '/auth/forgot-password';
   static const String setup2faEndpoint = '/auth/2fa/setup';
+  static const String verify2faEndpoint = '/auth/2fa/verify';
   static const String disable2faEndpoint = '/auth/2fa/disable';
 
   // Product & Category Endpoints

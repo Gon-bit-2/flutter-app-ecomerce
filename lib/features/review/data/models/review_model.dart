@@ -15,7 +15,7 @@ class ReviewModel extends Review {
 
   const ReviewModel({
     required super.id,
-    required super.content,
+    super.content,
     required super.rating,
     super.orderId,
     required super.productId,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/review/presentation/bloc/create_review/create_review_bloc.dart';
 import 'package:flutter/material.dart';
@@ -30,14 +31,14 @@ class CreateReviewBottomSheet extends StatefulWidget {
 class _CreateReviewBottomSheetState extends State<CreateReviewBottomSheet> {
   final _contentController = TextEditingController();
   int _rating = 5;
-  final List<File> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
     final pickedFiles = await _picker.pickMultiImage();
     if (pickedFiles.isNotEmpty) {
       setState(() {
-        _selectedImages.addAll(pickedFiles.map((e) => File(e.path)));
+        _selectedImages.addAll(pickedFiles);
       });
     }
   }
@@ -302,12 +303,19 @@ class _CreateReviewBottomSheetState extends State<CreateReviewBottomSheet> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.r),
-                              child: Image.file(
-                                _selectedImages[index],
-                                width: 80.h,
-                                height: 80.h,
-                                fit: BoxFit.cover,
-                              ),
+                              child: kIsWeb 
+                                  ? Image.network(
+                                      _selectedImages[index].path,
+                                      width: 80.h,
+                                      height: 80.h,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File(_selectedImages[index].path),
+                                      width: 80.h,
+                                      height: 80.h,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                             Positioned(
                               top: 2,

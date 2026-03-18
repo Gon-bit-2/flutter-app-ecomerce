@@ -11,6 +11,7 @@ import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/process_socia
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/logout_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/setup_2fa_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/disable_2fa_usecase.dart';
+import 'package:app_fe_ecomerce/features/auth/domain/usecases/auth/verify_2fa_usecase.dart';
 import 'package:app_fe_ecomerce/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -32,6 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LogoutUseCase _logoutUseCase;
   final Setup2FAUseCase _setup2FAUseCase;
   final Disable2FAUseCase _disable2FAUseCase;
+  final Verify2FAUseCase _verify2FAUseCase;
   final AuthLocalDataSource _localDataSource;
 
   // Constructor: Khởi tạo với trạng thái Initial
@@ -47,6 +49,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._logoutUseCase,
     this._setup2FAUseCase,
     this._disable2FAUseCase,
+    this._verify2FAUseCase,
     this._localDataSource,
   ) : super(AuthInitial()) {
     // 1. Xử lý Đăng Nhập
@@ -64,9 +67,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final msg = failure.message.toLowerCase();
         if (msg.contains('2fa') ||
             msg.contains('otp') ||
+            msg.contains('two-factor') ||
+            msg.contains('two factor') ||
+            msg.contains('totp') ||
             msg.contains('verification code') ||
             msg.contains('mã xác thực') ||
-            msg.contains('mã otp')) {
+            msg.contains('mã otp') ||
+            msg.contains('forbidden')) {
           emit(
             AuthLoginRequiresTwoFactor(
               email: event.email,
@@ -270,7 +277,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
-    // 12. Check Authentication Status
+    // 12. Verify 2FA (xác nhận bật 2FA bằng mã TOTP)
+    on<AuthVerify2FAStarted>((event, emit) async {
+      emit(AuthLoading());
+      final result = await _verify2FAUseCase(
+        Verify2FAParams(totpCode: event.totpCode),
+      );
+      result.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (_) => emit(AuthVerify2FASuccess()),
+      );
+    });
+
+    // 13. Check Authentication Status
     on<AuthCheckStatus>((event, emit) async {
       final token = await _localDataSource.getAccessToken();
       if (token != null && token.isNotEmpty) {

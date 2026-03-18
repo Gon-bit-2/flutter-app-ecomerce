@@ -547,6 +547,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Stack(
       children: [
         PageView.builder(
+          physics: const ClampingScrollPhysics(),
           onPageChanged: (index) {
             setState(() {
               _currentImageIndex = index;
@@ -580,44 +581,44 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             final url = rawUrl.startsWith('url: ')
                 ? rawUrl.replaceFirst('url: ', '').trim()
                 : rawUrl;
-            return Stack(
-              children: [
-                CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.broken_image,
-                            size: 50,
-                            color: Colors.red,
-                          ),
-                          SizedBox(height: 8.h),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w),
-                            child: Text(
-                              "Lỗi tải ảnh: $error\nURL: $url",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: Colors.black,
-                              ),
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
+            return SizedBox.expand(
+              child: CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.broken_image,
+                          size: 50,
+                          color: Colors.red,
+                        ),
+                        SizedBox(height: 8.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          child: Text(
+                            "Lỗi tải ảnh: $error\nURL: $url",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.black,
                             ),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  placeholder: (_, __) =>
-                      const Center(child: CircularProgressIndicator()),
                 ),
-              ],
+                placeholder: (_, __) =>
+                    const Center(child: CircularProgressIndicator()),
+              ),
             );
           },
         ),

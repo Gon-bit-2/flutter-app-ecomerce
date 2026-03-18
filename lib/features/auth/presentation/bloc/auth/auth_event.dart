@@ -114,6 +114,16 @@ class AuthDisable2FAStarted extends AuthEvent {
   ];
 }
 
+// Sự kiện: Verify 2FA (xác nhận bật 2FA bằng mã TOTP)
+class AuthVerify2FAStarted extends AuthEvent {
+  final String totpCode;
+
+  const AuthVerify2FAStarted({required this.totpCode});
+
+  @override
+  List<Object> get props => [totpCode];
+}
+
 // Sự kiện: Check authentication status khi app khởi động
 class AuthCheckStatus extends AuthEvent {}
 
