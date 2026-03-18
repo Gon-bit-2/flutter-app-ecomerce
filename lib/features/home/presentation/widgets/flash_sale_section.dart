@@ -63,7 +63,7 @@ class FlashSaleSection extends StatelessWidget {
           SizedBox(height: 10.h),
           // Product List
           SizedBox(
-            height: 220.h,
+            height: 240.h,
             child: ListView.separated(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
               scrollDirection: Axis.horizontal,

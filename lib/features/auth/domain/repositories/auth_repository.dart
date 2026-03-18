@@ -61,6 +61,9 @@ abstract class AuthRepository {
   // Setup 2FA
   Future<Either<Failure, Map<String, dynamic>>> setup2FA();
 
+  // Verify 2FA (xác nhận bật 2FA sau khi setup)
+  Future<Either<Failure, void>> verify2FA({required String totpCode});
+
   // Disable 2FA
   Future<Either<Failure, void>> disable2FA({String? totpCode, String? code});
 

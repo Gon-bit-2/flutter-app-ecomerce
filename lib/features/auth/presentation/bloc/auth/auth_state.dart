@@ -83,6 +83,9 @@ class AuthDisable2FASuccess extends AuthState {
   List<Object> get props => [if (user != null) user!];
 }
 
+// 12. Verify 2FA thành công (xác nhận bật 2FA)
+class AuthVerify2FASuccess extends AuthState {}
+
 // 12. Unauthenticated (không có token hoặc token hết hạn)
 class AuthUnauthenticated extends AuthState {}
 

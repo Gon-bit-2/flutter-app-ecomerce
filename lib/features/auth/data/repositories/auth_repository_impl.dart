@@ -225,6 +225,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> verify2FA({required String totpCode}) async {
+    try {
+      await remoteDataSource.verify2FA(totpCode: totpCode);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_handleError(e));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> disable2FA({
     String? totpCode,
     String? code,

@@ -139,7 +139,29 @@ _No Auth Headers_
 }
 ```
 
-**Note:** The `secret` is only returned once during setup. Store it securely. Use the `url` to generate QR code for authenticator apps.
+**Note:** Setup chỉ tạo secret tạm thời. 2FA chỉ được bật sau khi gọi endpoint verify bên dưới với mã TOTP hợp lệ.
+
+### Verify 2FA
+
+**POST** `/auth/2fa/verify`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+```json
+{
+  "totpCode": "123456"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Bật 2FA Thành Công"
+}
+```
 
 ### Disable 2FA
 

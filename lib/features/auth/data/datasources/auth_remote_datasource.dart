@@ -52,6 +52,7 @@ abstract class AuthRemoteDataSource {
     required String confirmNewPassword,
   }); // New
   Future<Map<String, dynamic>> setup2FA(); // Returns QR code data
+  Future<void> verify2FA({required String totpCode}); // Confirm 2FA setup
   Future<void> disable2FA({String? totpCode, String? code});
   Future<UserModel> getProfile();
 }
@@ -238,6 +239,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       data: {},
     );
     return Map<String, dynamic>.from(response.data);
+  }
+
+  @override
+  Future<void> verify2FA({required String totpCode}) async {
+    await _dioClient.post(
+      AppConstants.verify2faEndpoint,
+      data: {'totpCode': totpCode},
+    );
   }
 
   @override

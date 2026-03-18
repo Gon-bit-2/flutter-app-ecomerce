@@ -51,6 +51,7 @@ import 'features/auth/domain/usecases/auth/reset_password_usecase.dart'
     as _i944;
 import 'features/auth/domain/usecases/auth/send_otp_usecase.dart' as _i1024;
 import 'features/auth/domain/usecases/auth/setup_2fa_usecase.dart' as _i225;
+import 'features/auth/domain/usecases/auth/verify_2fa_usecase.dart' as _i766;
 import 'features/auth/domain/usecases/auth/verify_otp_usecase.dart' as _i293;
 import 'features/auth/presentation/bloc/auth/auth_bloc.dart' as _i339;
 import 'features/brand/data/datasources/brand_remote_datasource.dart' as _i1043;
@@ -357,6 +358,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i225.Setup2FAUseCase>(
       () => _i225.Setup2FAUseCase(gh<_i1015.AuthRepository>()),
     );
+    gh.factory<_i766.Verify2FAUseCase>(
+      () => _i766.Verify2FAUseCase(gh<_i1015.AuthRepository>()),
+    );
     gh.factory<_i406.SellerDiscountBloc>(
       () => _i406.SellerDiscountBloc(
         gh<_i361.GetAdminDiscountsUseCase>(),
@@ -482,6 +486,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i639.LogoutUseCase>(),
         gh<_i225.Setup2FAUseCase>(),
         gh<_i493.Disable2FAUseCase>(),
+        gh<_i766.Verify2FAUseCase>(),
         gh<_i1043.AuthLocalDataSource>(),
       ),
     );

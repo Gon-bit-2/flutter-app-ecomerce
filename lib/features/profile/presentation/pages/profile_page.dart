@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:app_fe_ecomerce/features/shop/presentation/pages/my_shop_page.dart';
@@ -25,6 +27,12 @@ class ProfilePage extends StatelessWidget {
           // Navigator logic removed to keep user on HomePage (Guest mode) or let HomePage handle it.
         } else if (state is AuthSetup2FASuccess) {
           _show2FASetupDialog(context, state.data);
+        } else if (state is AuthVerify2FASuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Bật xác thực 2 lớp thành công!')),
+          );
+          // Reload user profile
+          context.read<AuthBloc>().add(AuthCheckStatus());
         } else if (state is AuthDisable2FASuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Đã tắt xác thực 2 lớp thành công')),
@@ -350,6 +358,11 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _show2FASetupDialog(BuildContext context, Map<String, dynamic> data) {
+    // Lấy URL để tạo QR code (ưu tiên url > qrCode > secret)
+    final String? qrData = data['url'] ?? data['qrCode'];
+    final String? secret = data['secret'];
+    final totpController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -359,20 +372,107 @@ class ProfilePage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Quét mã QR bằng ứng dụng xác thực:',
+                'Quét mã QR bằng ứng dụng xác thực\n(Google Authenticator, Authy...):',
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 16.h),
-              // Display QR code or secret based on API response
-              if (data['qrCode'] != null) Text('Mã QR: ${data['qrCode']}'),
-              if (data['secret'] != null)
-                SelectableText('Secret: ${data['secret']}'),
-              if (data['url'] != null) SelectableText('URL: ${data['url']}'),
+              // Hiển thị mã QR thực
+              if (qrData != null)
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: SizedBox(
+                    width: 200.w,
+                    height: 200.w,
+                    child: QrImageView(
+                      data: qrData,
+                      version: QrVersions.auto,
+                      size: 200.w,
+                      backgroundColor: Colors.white,
+                      errorStateBuilder: (ctx, err) => Center(
+                        child: Text(
+                          'Không thể tạo mã QR',
+                          style: TextStyle(fontSize: 12.sp, color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: 200.w,
+                  height: 200.w,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: Text('Không có dữ liệu QR'),
+                  ),
+                ),
+              SizedBox(height: 16.h),
+              // Hiển thị secret key có thể copy
+              if (secret != null) ...[
+                const Text(
+                  'Hoặc nhập mã thủ công:',
+                  style: TextStyle(fontSize: 12),
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(4.r),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SelectableText(
+                          secret,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.copy, size: 18.sp),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: secret));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã sao chép mã secret'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        tooltip: 'Sao chép',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(height: 16.h),
               const Text(
-                'Sau khi quét, sử dụng ứng dụng để lấy mã đăng nhập.',
+                'Nhập mã 6 chữ số từ ứng dụng xác thực để xác nhận:',
                 style: TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: totpController,
+                decoration: const InputDecoration(
+                  labelText: 'Mã TOTP (6 chữ số)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                maxLength: 6,
               ),
             ],
           ),
@@ -380,7 +480,25 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Đóng'),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final totpCode = totpController.text.trim();
+              if (totpCode.isEmpty || totpCode.length != 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vui lòng nhập đúng 6 chữ số mã TOTP'),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(dialogContext);
+              context.read<AuthBloc>().add(
+                AuthVerify2FAStarted(totpCode: totpCode),
+              );
+            },
+            child: const Text('Xác nhận'),
           ),
         ],
       ),
