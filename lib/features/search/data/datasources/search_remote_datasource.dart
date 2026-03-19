@@ -1,7 +1,6 @@
 import 'package:injectable/injectable.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../product/data/models/product_model.dart';
 
 import '../models/search_response_model.dart';
 
