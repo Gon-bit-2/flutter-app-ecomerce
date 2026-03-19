@@ -12,6 +12,7 @@ abstract class DiscountRemoteDataSource {
   Future<Map<String, dynamic>> previewDiscount({
     required String code,
     required double orderValue,
+    double shippingFee = 0,
     required int userId,
     required int shopId,
     required List<Map<String, dynamic>> items,
@@ -91,6 +92,7 @@ class DiscountRemoteDataSourceImpl implements DiscountRemoteDataSource {
   Future<Map<String, dynamic>> previewDiscount({
     required String code,
     required double orderValue,
+    double shippingFee = 0,
     required int userId,
     required int shopId,
     required List<Map<String, dynamic>> items,
@@ -100,6 +102,7 @@ class DiscountRemoteDataSourceImpl implements DiscountRemoteDataSource {
       data: {
         "code": code,
         "orderValue": orderValue,
+        "shippingFee": shippingFee,
         "userId": userId,
         "shopId": shopId,
         "items": items,

@@ -30,6 +30,7 @@ class FetchAvailableDiscounts extends DiscountEvent {
 class DoPreviewDiscount extends DiscountEvent {
   final String code;
   final double orderValue;
+  final double shippingFee;
   final int userId;
   final int shopId;
   final List<Map<String, dynamic>> items;
@@ -37,13 +38,14 @@ class DoPreviewDiscount extends DiscountEvent {
   const DoPreviewDiscount({
     required this.code,
     required this.orderValue,
+    this.shippingFee = 0,
     required this.userId,
     required this.shopId,
     required this.items,
   });
 
   @override
-  List<Object?> get props => [code, orderValue, userId, shopId, items];
+  List<Object?> get props => [code, orderValue, shippingFee, userId, shopId, items];
 }
 
 class SaveVoucherRequested extends DiscountEvent {

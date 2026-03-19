@@ -53,7 +53,9 @@ class ShopOrderParams {
   final int? userAddressId;
   final List<int> cartItemIds;
   final String? paymentMethod;
-  final String? discountCode;
+  final String? shopDiscountCode;
+  final String? platformDiscountCode;
+  final double? shippingFee;
 
   const ShopOrderParams({
     required this.shopId,
@@ -61,7 +63,9 @@ class ShopOrderParams {
     this.userAddressId,
     required this.cartItemIds,
     this.paymentMethod,
-    this.discountCode,
+    this.shopDiscountCode,
+    this.platformDiscountCode,
+    this.shippingFee,
   });
 
   Map<String, dynamic> toJson() {
@@ -84,8 +88,16 @@ class ShopOrderParams {
       data['paymentMethod'] = paymentMethod;
     }
 
-    if (discountCode != null && discountCode!.isNotEmpty) {
-      data['discountCode'] = discountCode;
+    if (shopDiscountCode != null && shopDiscountCode!.isNotEmpty) {
+      data['shopDiscountCode'] = shopDiscountCode;
+    }
+
+    if (platformDiscountCode != null && platformDiscountCode!.isNotEmpty) {
+      data['platformDiscountCode'] = platformDiscountCode;
+    }
+
+    if (shippingFee != null) {
+      data['shippingFee'] = shippingFee;
     }
 
     return data;
