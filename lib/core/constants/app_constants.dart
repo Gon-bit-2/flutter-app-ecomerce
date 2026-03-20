@@ -41,6 +41,8 @@ class AppConstants {
   // API Endpoints
   static const String loginEndpoint = '/auth/login';
   static const String profileEndpoint = '/profile';
+  static const String updateProfileEndpoint = '/profile';
+  static const String changePasswordEndpoint = '/profile/change-password';
   static const String otpEndpoint = '/auth/otp';
   static const String verifyOtpEndpoint = '/auth/verify-otp';
   static const String registerEndpoint = '/auth/register';

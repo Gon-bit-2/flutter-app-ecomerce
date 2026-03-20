@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/address_entity.dart';
 import '../bloc/address_bloc.dart';
 import '../bloc/address_event.dart';
 import '../bloc/address_state.dart';
@@ -21,6 +22,53 @@ class _AddressListPageState extends State<AddressListPage> {
     context.read<AddressBloc>().add(GetAddressesEvent());
   }
 
+  void _navigateToAddressForm({AddressEntity? address}) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddressFormPage(address: address),
+      ),
+    );
+    // Reload danh sách sau khi thêm/sửa
+    if (mounted) {
+      context.read<AddressBloc>().add(GetAddressesEvent());
+    }
+  }
+
+  void _showDeleteConfirmDialog(AddressEntity address) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa địa chỉ'),
+        content: Text(
+          'Bạn có chắc muốn xóa địa chỉ của "${address.name}"?\n\n${address.address}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AddressBloc>().add(
+                    DeleteAddressEvent(addressId: address.id.toString()),
+                  );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Xóa', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _setDefaultAddress(AddressEntity address) {
+    context.read<AddressBloc>().add(
+          SetDefaultAddressEvent(addressId: address.id.toString()),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,9 +77,7 @@ class _AddressListPageState extends State<AddressListPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              // TODO: Navigate to AddressFormPage
-            },
+            onPressed: () => _navigateToAddressForm(),
           ),
         ],
       ),
@@ -103,29 +149,47 @@ class _AddressListPageState extends State<AddressListPage> {
                                         ),
                                       ),
                                     ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => AddressFormPage(
-                                              address: address,
+                                    // Nút Sửa + Xóa
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              _navigateToAddressForm(
+                                                  address: address),
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(0, 0),
+                                            tapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          ),
+                                          child: const Text(
+                                            'Sửa',
+                                            style: TextStyle(
+                                              color: Color(0xFF1A94FF),
                                             ),
                                           ),
-                                        );
-                                      },
-                                      style: TextButton.styleFrom(
-                                        padding: EdgeInsets.zero,
-                                        minimumSize: const Size(0, 0),
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                      ),
-                                      child: const Text(
-                                        'Sửa',
-                                        style: TextStyle(
-                                          color: Color(0xFF1A94FF),
                                         ),
-                                      ),
+                                        const SizedBox(width: 8),
+                                        TextButton(
+                                          onPressed: () =>
+                                              _showDeleteConfirmDialog(address),
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: const Size(0, 0),
+                                            tapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          ),
+                                          child: const Text(
+                                            'Xóa',
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -134,8 +198,9 @@ class _AddressListPageState extends State<AddressListPage> {
                                   address.address,
                                   style: TextStyle(color: Colors.grey.shade700),
                                 ),
-                                if (address.isDefault) ...[
-                                  const SizedBox(height: 12),
+                                const SizedBox(height: 12),
+                                // Badge mặc định hoặc nút đặt mặc định
+                                if (address.isDefault)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -154,8 +219,32 @@ class _AddressListPageState extends State<AddressListPage> {
                                         fontSize: 12,
                                       ),
                                     ),
+                                  )
+                                else
+                                  OutlinedButton.icon(
+                                    onPressed: () =>
+                                        _setDefaultAddress(address),
+                                    icon: const Icon(
+                                      Icons.check_circle_outline,
+                                      size: 16,
+                                    ),
+                                    label: const Text(
+                                      'Đặt mặc định',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.grey.shade600,
+                                      side: BorderSide(
+                                          color: Colors.grey.shade300),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      minimumSize: const Size(0, 0),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
                                   ),
-                                ],
                               ],
                             ),
                           ),
@@ -175,14 +264,7 @@ class _AddressListPageState extends State<AddressListPage> {
                       ),
                     ),
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AddressFormPage(),
-                          ),
-                        );
-                      },
+                      onPressed: () => _navigateToAddressForm(),
                       icon: const Icon(
                         Icons.add_circle_outline,
                         color: Colors.white,
