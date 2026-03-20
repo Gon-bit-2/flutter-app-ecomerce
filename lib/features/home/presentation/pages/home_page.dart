@@ -10,6 +10,7 @@ import '../widgets/category_section.dart';
 import '../widgets/daily_discover_section.dart';
 import '../widgets/flash_sale_section.dart';
 import '../widgets/home_app_bar.dart';
+import 'package:app_fe_ecomerce/features/auth/domain/entities/user_entity.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/profile_page.dart';
@@ -63,6 +64,16 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
+  /// Helper: trích xuất user từ các AuthState khác nhau
+  UserEntity? _getUserFromState(AuthState state) {
+    if (state is AuthSuccess) return state.user;
+    if (state is AuthSetup2FASuccess) return state.user;
+    if (state is AuthDisable2FASuccess) return state.user;
+    if (state is AuthLoading) return state.user;
+    if (state is AuthFailure) return state.user;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,85 +81,74 @@ class _HomeViewState extends State<HomeView> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // Index 0: Home
-          CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              const HomeAppBar(),
-              BlocBuilder<HomeBloc, HomeState>(
-                builder: (context, state) {
-                  if (state is HomeLoading) {
-                    return const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (state is HomeError) {
-                    return SliverFillRemaining(
-                      child: Center(child: Text('Error: ${state.message}')),
-                    );
-                  }
-                  if (state is HomeLoaded) {
-                    return SliverList(
-                      delegate: SliverChildListDelegate([
-                        BannerSection(banners: state.banners),
-                        SizedBox(height: 10.h),
-                        CategorySection(categories: state.categories),
-                        SizedBox(height: 10.h),
-                        FlashSaleSection(flashSale: state.flashSale),
-                        SizedBox(height: 10.h),
-                      ]),
-                    );
-                  }
-                  return const SliverToBoxAdapter(child: SizedBox.shrink());
-                },
-              ),
-              const DailyDiscoverHeader(),
-              BlocBuilder<HomeBloc, HomeState>(
-                builder: (context, state) {
-                  if (state is HomeLoaded) {
-                    return DailyDiscoverSection(
-                      products: state.dailyDiscoverProducts,
-                    );
-                  }
-                  return const SliverToBoxAdapter(child: SizedBox.shrink());
-                },
-              ),
-              BlocBuilder<HomeBloc, HomeState>(
-                builder: (context, state) {
-                  if (state is HomeLoaded && state.hasMoreDailyDiscover) {
-                    return const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
+          // Index 0: Home — với pull-to-refresh
+          RefreshIndicator(
+            onRefresh: () async {
+              context.read<HomeBloc>().add(HomeRefreshed());
+            },
+            color: const Color(0xFF1A94FF),
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                const HomeAppBar(),
+                BlocBuilder<HomeBloc, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeLoading) {
+                      return const SliverFillRemaining(
                         child: Center(child: CircularProgressIndicator()),
-                      ),
-                    );
-                  }
-                  return const SliverToBoxAdapter(child: SizedBox.shrink());
-                },
-              ),
-            ],
+                      );
+                    }
+                    if (state is HomeError) {
+                      return SliverFillRemaining(
+                        child: Center(child: Text('Error: ${state.message}')),
+                      );
+                    }
+                    if (state is HomeLoaded) {
+                      return SliverList(
+                        delegate: SliverChildListDelegate([
+                          BannerSection(banners: state.banners),
+                          SizedBox(height: 10.h),
+                          CategorySection(categories: state.categories),
+                          SizedBox(height: 10.h),
+                          FlashSaleSection(flashSale: state.flashSale),
+                          SizedBox(height: 10.h),
+                        ]),
+                      );
+                    }
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  },
+                ),
+                const DailyDiscoverHeader(),
+                BlocBuilder<HomeBloc, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeLoaded) {
+                      return DailyDiscoverSection(
+                        products: state.dailyDiscoverProducts,
+                      );
+                    }
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  },
+                ),
+                BlocBuilder<HomeBloc, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeLoaded && state.hasMoreDailyDiscover) {
+                      return const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      );
+                    }
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  },
+                ),
+              ],
+            ),
           ),
-          // Index 1: Mall
-          const Center(child: Text("Tab Mall - Sắp ra mắt")),
-          // Index 2: Live
-          const Center(child: Text("Tab Live - Sắp ra mắt")),
-          // Index 3: Notify
-          const Center(child: Text("Tab Thông báo - Sắp ra mắt")),
-          // Index 4: Me / Profile
+          // Index 1: Tôi / Profile
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
-              // Determine if we have a user to display
-              final user = (state is AuthSuccess)
-                  ? state.user
-                  : (state is AuthSetup2FASuccess)
-                  ? state.user
-                  : (state is AuthDisable2FASuccess)
-                  ? state.user
-                  : (state is AuthLoading)
-                  ? state.user
-                  : (state is AuthFailure)
-                  ? state.user
-                  : null;
+              final user = _getUserFromState(state);
 
               if (user != null) {
                 final content = ProfilePage(user: user);
@@ -181,15 +181,6 @@ class _HomeViewState extends State<HomeView> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag_outlined),
-            label: 'Mall',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.live_tv), label: 'Live'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_none),
-            label: 'Thông báo',
-          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Tôi',

@@ -152,10 +152,13 @@ import 'features/review/presentation/bloc/create_review/create_review_bloc.dart'
     as _i890;
 import 'features/review/presentation/bloc/review_list/review_list_bloc.dart'
     as _i509;
+import 'features/search/data/datasources/search_history_local_datasource.dart'
+    as _i99;
 import 'features/search/data/datasources/search_remote_datasource.dart'
     as _i647;
 import 'features/search/data/repositories/search_repository_impl.dart' as _i967;
 import 'features/search/domain/repositories/search_repository.dart' as _i246;
+import 'features/search/domain/usecases/search_history_usecases.dart' as _i949;
 import 'features/search/domain/usecases/search_products_usecase.dart' as _i453;
 import 'features/search/presentation/bloc/search_bloc.dart' as _i944;
 
@@ -188,6 +191,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i649.HomeRepository>(
       () => _i689.HomeRepositoryImpl(gh<_i429.HomeLocalDataSource>()),
+    );
+    gh.lazySingleton<_i99.SearchHistoryLocalDataSource>(
+      () =>
+          _i99.SearchHistoryLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i306.ReviewRepository>(
       () => _i346.ReviewRepositoryImpl(gh<_i1033.ReviewRemoteDataSource>()),
@@ -228,6 +235,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i176.OrderRemoteDataSource>(
       () => _i176.OrderRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i246.SearchRepository>(
+      () => _i967.SearchRepositoryImpl(
+        gh<_i647.SearchRemoteDataSource>(),
+        gh<_i99.SearchHistoryLocalDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i772.DiscountRemoteDataSource>(
       () => _i772.DiscountRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -251,14 +264,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i376.PaymentRepository>(
       () => _i210.PaymentRepositoryImpl(gh<_i983.PaymentRemoteDataSource>()),
     );
-    gh.lazySingleton<_i246.SearchRepository>(
-      () => _i967.SearchRepositoryImpl(gh<_i647.SearchRemoteDataSource>()),
-    );
     gh.lazySingleton<_i493.CommonRepository>(
       () => _i499.CommonRepositoryImpl(gh<_i74.CommonRemoteDataSource>()),
     );
     gh.factory<_i813.GetPaymentConfigUseCase>(
       () => _i813.GetPaymentConfigUseCase(gh<_i376.PaymentRepository>()),
+    );
+    gh.lazySingleton<_i949.GetSearchHistoryUseCase>(
+      () => _i949.GetSearchHistoryUseCase(gh<_i246.SearchRepository>()),
+    );
+    gh.lazySingleton<_i949.SaveSearchQueryUseCase>(
+      () => _i949.SaveSearchQueryUseCase(gh<_i246.SearchRepository>()),
+    );
+    gh.lazySingleton<_i949.DeleteSearchQueryUseCase>(
+      () => _i949.DeleteSearchQueryUseCase(gh<_i246.SearchRepository>()),
+    );
+    gh.lazySingleton<_i949.ClearSearchHistoryUseCase>(
+      () => _i949.ClearSearchHistoryUseCase(gh<_i246.SearchRepository>()),
     );
     gh.lazySingleton<_i453.SearchProductsUseCase>(
       () => _i453.SearchProductsUseCase(gh<_i246.SearchRepository>()),
@@ -287,9 +309,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i803.UpdateAddressUseCase>(
       () => _i803.UpdateAddressUseCase(gh<_i535.AddressRepository>()),
     );
-    gh.factory<_i944.SearchBloc>(
-      () => _i944.SearchBloc(gh<_i453.SearchProductsUseCase>()),
-    );
     gh.lazySingleton<_i608.OrderRepository>(
       () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>()),
     );
@@ -302,6 +321,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i506.DiscountRepository>(
       () => _i732.DiscountRepositoryImpl(
         remoteDataSource: gh<_i772.DiscountRemoteDataSource>(),
+      ),
+    );
+    gh.factory<_i944.SearchBloc>(
+      () => _i944.SearchBloc(
+        gh<_i453.SearchProductsUseCase>(),
+        gh<_i949.GetSearchHistoryUseCase>(),
+        gh<_i949.SaveSearchQueryUseCase>(),
+        gh<_i949.DeleteSearchQueryUseCase>(),
+        gh<_i949.ClearSearchHistoryUseCase>(),
       ),
     );
     gh.factory<_i944.CreateCategoryUseCase>(

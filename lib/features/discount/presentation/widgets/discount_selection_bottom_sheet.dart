@@ -11,17 +11,20 @@ class DiscountSelectionBottomSheet extends StatefulWidget {
   final Discount? currentSelectedDiscount;
   final Function(Discount discount) onDiscountSelected;
   final VoidCallback onClearDiscount;
+  final DiscountScope? filterScope;
 
   const DiscountSelectionBottomSheet({
     super.key,
     this.currentSelectedDiscount,
     required this.onDiscountSelected,
     required this.onClearDiscount,
+    this.filterScope,
   });
 
   static Future<void> show(
     BuildContext context, {
     Discount? currentSelectedDiscount,
+    DiscountScope? filterScope,
     required Function(Discount discount) onDiscountSelected,
     required VoidCallback onClearDiscount,
   }) {
@@ -31,6 +34,7 @@ class DiscountSelectionBottomSheet extends StatefulWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => DiscountSelectionBottomSheet(
         currentSelectedDiscount: currentSelectedDiscount,
+        filterScope: filterScope,
         onDiscountSelected: onDiscountSelected,
         onClearDiscount: onClearDiscount,
       ),
@@ -102,9 +106,13 @@ class _DiscountSelectionBottomSheetState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Chọn Voucher',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  widget.filterScope == DiscountScope.SHOP
+                      ? 'Chọn Voucher Shop'
+                      : widget.filterScope == DiscountScope.PLATFORM
+                          ? 'Chọn Voucher Sàn'
+                          : 'Chọn Voucher',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -270,10 +278,21 @@ class _DiscountSelectionBottomSheetState
                 if (state is DiscountLoading || state is SaveVoucherLoading) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (state is MyVouchersLoaded && !_showAvailable) {
-                  final vouchers = state.vouchers;
+                  // Lọc voucher theo scope nếu có
+                  final vouchers = widget.filterScope != null
+                      ? state.vouchers
+                            .where((v) => v.scope == widget.filterScope)
+                            .toList()
+                      : state.vouchers;
                   if (vouchers.isEmpty) {
-                    return const Center(
-                      child: Text('Bạn chưa có voucher nào.'),
+                    return Center(
+                      child: Text(
+                        widget.filterScope == DiscountScope.SHOP
+                            ? 'Bạn chưa có voucher shop nào.'
+                            : widget.filterScope == DiscountScope.PLATFORM
+                                ? 'Bạn chưa có voucher sàn nào.'
+                                : 'Bạn chưa có voucher nào.',
+                      ),
                     );
                   }
                   return ListView.builder(
@@ -290,9 +309,9 @@ class _DiscountSelectionBottomSheetState
                         onTap: () {
                           setState(() {
                             if (isSelected) {
-                              _tempSelectedDiscount = null; // Unselect
+                              _tempSelectedDiscount = null;
                             } else {
-                              _tempSelectedDiscount = discount; // Select
+                              _tempSelectedDiscount = discount;
                             }
                           });
                         },

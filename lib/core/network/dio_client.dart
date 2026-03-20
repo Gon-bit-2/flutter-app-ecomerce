@@ -130,4 +130,26 @@ class DioClient {
       rethrow;
     }
   }
+
+  // Hàm PATCH
+  Future<Response> patch(
+    String url, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      final response = await _dio.patch(
+        url,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

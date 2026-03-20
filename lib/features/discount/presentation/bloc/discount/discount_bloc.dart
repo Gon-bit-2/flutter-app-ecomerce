@@ -65,6 +65,7 @@ class DiscountBloc extends Bloc<DiscountEvent, DiscountState> {
     final failureOrResult = await previewDiscount.call(
       code: event.code,
       orderValue: event.orderValue,
+      shippingFee: event.shippingFee,
       userId: event.userId,
       shopId: event.shopId,
       items: event.items,

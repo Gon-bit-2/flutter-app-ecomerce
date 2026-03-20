@@ -14,6 +14,7 @@ abstract class DiscountRepository {
   Future<Either<Failure, Map<String, dynamic>>> previewDiscount({
     required String code,
     required double orderValue,
+    double shippingFee = 0,
     required int userId, // Có thể bỏ qua nếu có thể lấy từ Token/Auth
     required int shopId,
     required List<Map<String, dynamic>> items,

@@ -1,13 +1,18 @@
 import 'package:injectable/injectable.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../product/data/models/product_model.dart';
+
+import '../models/search_response_model.dart';
 
 abstract class SearchRemoteDataSource {
-  Future<List<ProductModel>> searchProducts({
+  Future<SearchResponseModel> searchProducts({
     required String query,
     int page = 1,
     int limit = 10,
+    double? minPrice,
+    double? maxPrice,
+    String? sortBy,
+    String? categoryId,
   });
 }
 
@@ -18,31 +23,31 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
   SearchRemoteDataSourceImpl(this._dioClient);
 
   @override
-  Future<List<ProductModel>> searchProducts({
+  Future<SearchResponseModel> searchProducts({
     required String query,
     int page = 1,
     int limit = 10,
+    double? minPrice,
+    double? maxPrice,
+    String? sortBy,
+    String? categoryId,
   }) async {
+    final Map<String, dynamic> queryParams = {
+      'q': query,
+      'page': page,
+      'limit': limit,
+    };
+
+    if (minPrice != null) queryParams['minPrice'] = minPrice;
+    if (maxPrice != null) queryParams['maxPrice'] = maxPrice;
+    if (sortBy != null) queryParams['sortBy'] = sortBy;
+    if (categoryId != null) queryParams['categoryId'] = categoryId;
+
     final response = await _dioClient.get(
       AppConstants.searchProductsEndpoint,
-      queryParameters: {
-        'q': query,
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: queryParams,
     );
 
-    if (response.data is List) {
-      return (response.data as List)
-          .map((e) => ProductModel.fromJson(e))
-          .toList();
-    } else if (response.data is Map &&
-        (response.data as Map).containsKey('data')) {
-      return ((response.data['data']) as List)
-          .map((e) => ProductModel.fromJson(e))
-          .toList();
-    } else {
-      return [];
-    }
+    return SearchResponseModel.fromJson(response.data);
   }
 }

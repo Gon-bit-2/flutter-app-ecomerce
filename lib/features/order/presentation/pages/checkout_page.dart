@@ -41,15 +41,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _noteController = TextEditingController();
   String _paymentMethod = 'COD';
 
-  Discount? _appliedDiscount;
-  double _checkoutDiscountAmount = 0.0;
+  // --- Discount State mới: tách Shop + Platform ---
+  Discount? _shopDiscount;
+  Discount? _platformDiscount;
+  double _productDiscountAmount = 0.0;
+  double _shippingDiscountAmount = 0.0;
+
+  // Phí ship mock
+  final double _shippingFee = 30000;
+
+  double get _totalDiscountAmount =>
+      _productDiscountAmount + _shippingDiscountAmount;
 
   @override
   void initState() {
     super.initState();
-    _checkoutDiscountAmount = widget.discountAmount.toDouble();
-    // TODO: Ideally context.read<AddressBloc>().add(GetAddressesEvent()) and listen to State to set default address.
-    // For now we assume user will pick or we load default if possible.
   }
 
   @override
@@ -70,38 +76,165 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
 
     if (_formKey.currentState!.validate()) {
-      // Logic gom nhóm sản phẩm theo shopId
-      final Map<int, List<int>> shopItems = {};
-
-      for (var item in widget.selectedItems) {
-        // Use the actual shopId from cart item
-        int? shopId = item.shopId;
-
-        // Fallback to shopId = 1 if not available (shouldn't happen with updated cart API)
-        if (shopId == null) {
-          print('WARNING: Cart item ${item.id} has no shopId, defaulting to 1');
-          shopId = 1;
-        }
-
-        if (shopItems.containsKey(shopId)) {
-          shopItems[shopId]!.add(item.id);
-        } else {
-          shopItems[shopId] = [item.id];
-        }
-      }
-
-      final List<ShopOrderParams> orders = shopItems.entries.map((e) {
-        return ShopOrderParams(
-          shopId: e.key,
-          userAddressId: _selectedAddress!.id,
-          cartItemIds: e.value,
-          paymentMethod: _paymentMethod,
-          discountCode: _appliedDiscount?.code,
-        );
-      }).toList();
-
-      context.read<OrderBloc>().add(OrderCreateRequested(orders: orders));
+      // Show confirm dialog before submitting order
+      _showConfirmOrderDialog();
     }
+  }
+
+  void _showConfirmOrderDialog() {
+    num totalAmount = widget.totalPrice + _shippingFee - _totalDiscountAmount;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Text('Xác nhận đặt hàng', style: AppTextStyles.h3),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Items count
+              Text(
+                'Số lượng sản phẩm: ${widget.selectedItems.length}',
+                style: AppTextStyles.bodyMedium,
+              ),
+              SizedBox(height: 12.h),
+
+              // Delivery address
+              Text(
+                'Địa chỉ giao hàng:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                '${_selectedAddress!.name} - ${_selectedAddress!.phone}\n${_selectedAddress!.address}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 12.h),
+
+              // Price breakdown
+              Divider(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Tổng tiền hàng:', style: AppTextStyles.bodyMedium),
+                  Text(
+                    '${widget.totalPrice} đ',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Phí vận chuyển:', style: AppTextStyles.bodyMedium),
+                  Text('$_shippingFee đ', style: AppTextStyles.bodyMedium),
+                ],
+              ),
+              if (_totalDiscountAmount > 0) ...[
+                SizedBox(height: 8.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Giảm giá:', style: AppTextStyles.bodyMedium),
+                    Text(
+                      '- $_totalDiscountAmount đ',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              Divider(height: 16.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tổng thanh toán:',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '$totalAmount đ',
+                    style: AppTextStyles.h3.copyWith(color: AppColors.error),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+
+              // Payment method info
+              Text(
+                'Phương thức thanh toán: ${_paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản (SePay)'}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Hủy',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performCreateOrder();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+            ),
+            child: Text('Xác nhận đặt hàng', style: AppTextStyles.buttonText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performCreateOrder() {
+    // Logic gom nhóm sản phẩm theo shopId
+    final Map<int, List<int>> shopItems = {};
+
+    for (var item in widget.selectedItems) {
+      int? shopId = item.shopId;
+      shopId ??= 1;
+      if (shopItems.containsKey(shopId)) {
+        shopItems[shopId]!.add(item.id);
+      } else {
+        shopItems[shopId] = [item.id];
+      }
+    }
+
+    final List<ShopOrderParams> orders = shopItems.entries.map((e) {
+      return ShopOrderParams(
+        shopId: e.key,
+        userAddressId: _selectedAddress!.id,
+        cartItemIds: e.value,
+        paymentMethod: _paymentMethod,
+        shopDiscountCode: _shopDiscount?.code,
+        platformDiscountCode: _platformDiscount?.code,
+        shippingFee: _shippingFee,
+      );
+    }).toList();
+
+    context.read<OrderBloc>().add(OrderCreateRequested(orders: orders));
   }
 
   @override
@@ -130,12 +263,43 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 BlocListener<OrderBloc, OrderState>(
                   listener: (context, state) {
                     if (state is OrderFailure) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: AppColors.error,
-                        ),
-                      );
+                      String errorMessage = state.message;
+                      String errorTitle = 'Lỗi';
+
+                      // Phân loại lỗi dựa trên message
+                      if (state.message.toLowerCase().contains('stock') ||
+                          state.message.toLowerCase().contains('hết hàng')) {
+                        errorTitle = 'Sản phẩm hết hàng';
+                        errorMessage =
+                            'Một hoặc nhiều sản phẩm trong đơn hàng của bạn đã hết hàng.\nVui lòng quay lại giỏ hàng và kiểm tra lại.';
+                      } else if (state.message.toLowerCase().contains(
+                            'network',
+                          ) ||
+                          state.message.toLowerCase().contains('timeout') ||
+                          state.message.toLowerCase().contains('connection')) {
+                        errorTitle = 'Lỗi kết nối';
+                        errorMessage =
+                            'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet và thử lại.';
+                      } else if (state.message.toLowerCase().contains(
+                            'payment',
+                          ) ||
+                          state.message.toLowerCase().contains('thanh toán')) {
+                        errorTitle = 'Lỗi thanh toán';
+                        errorMessage =
+                            '${state.message}\nVui lòng chọn phương thức thanh toán khác hoặc thử lại.';
+                      } else if (state.message.toLowerCase().contains(
+                            'address',
+                          ) ||
+                          state.message.toLowerCase().contains('địa chỉ')) {
+                        errorTitle = 'Lỗi địa chỉ giao hàng';
+                        errorMessage = state.message;
+                      } else {
+                        errorMessage = state.message.isEmpty
+                            ? 'Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.'
+                            : state.message;
+                      }
+
+                      _showErrorDialog(errorTitle, errorMessage);
                     } else if (state is OrderCreated) {
                       if (_paymentMethod == 'SEPAY') {
                         Navigator.pushReplacement(
@@ -145,8 +309,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               paymentId: state.result.paymentId ?? 0,
                               totalAmount:
                                   widget.totalPrice +
-                                  30000 -
-                                  _checkoutDiscountAmount,
+                                  _shippingFee -
+                                  _totalDiscountAmount,
                             ),
                           ),
                         );
@@ -166,18 +330,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                       );
                       setState(() {
-                        _checkoutDiscountAmount = 0.0;
+                        _productDiscountAmount = 0.0;
+                        _shippingDiscountAmount = 0.0;
                       });
                     }
                     if (state is DiscountPreviewLoaded) {
                       setState(() {
-                        _checkoutDiscountAmount =
-                            (state.previewData['discountValue'] ?? 0.0)
+                        _productDiscountAmount =
+                            (state.previewData['productDiscount'] ??
+                                    state.previewData['discountValue'] ??
+                                    0.0)
                                 .toDouble();
+                        _shippingDiscountAmount =
+                            (state.previewData['shippingDiscount'] ?? 0.0)
+                                .toDouble();
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Áp dụng mã giảm thành công: -$_checkoutDiscountAmountđ',
+                              'Áp dụng mã giảm thành công: -$_totalDiscountAmountđ',
                             ),
                             backgroundColor: AppColors.success,
                             duration: const Duration(seconds: 1),
@@ -247,7 +418,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    // Navigate to Address list to pick
                     final selected = await Navigator.push<AddressEntity>(
                       context,
                       MaterialPageRoute(
@@ -318,6 +488,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildProductsSection() {
+    // Check stock availability for all items
+    final invalidStockItems = widget.selectedItems.where((item) {
+      // Nếu availableStock được cung cấp, kiểm tra xem quantity có vượt quá không
+      if (item.availableStock != null && item.quantity > item.availableStock!) {
+        return true;
+      }
+      return false;
+    }).toList();
+
     return Container(
       margin: EdgeInsets.only(top: 8.h),
       padding: EdgeInsets.all(16.w),
@@ -341,13 +520,89 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ],
           ),
+
+          // Stock warning if any item exceeds available quantity
+          if (invalidStockItems.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                border: Border.all(color: Colors.orange),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 20.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      '${invalidStockItems.length} sản phẩm không đủ hàng. Vui lòng điều chỉnh số lượng.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           SizedBox(height: 16.h),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: widget.selectedItems.length,
             itemBuilder: (context, index) {
-              return CheckoutItemWidget(item: widget.selectedItems[index]);
+              final item = widget.selectedItems[index];
+              final isOutOfStock =
+                  item.availableStock != null &&
+                  item.quantity > item.availableStock!;
+
+              return Column(
+                children: [
+                  Stack(
+                    children: [
+                      CheckoutItemWidget(item: item),
+                      if (isOutOfStock)
+                        Positioned(
+                          right: 8.w,
+                          top: 8.w,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              'Vượt quá hàng',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (isOutOfStock) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Chỉ còn ${item.availableStock} sản phẩm, bạn đang chọn ${item.quantity}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ],
+              );
             },
           ),
         ],
@@ -355,63 +610,98 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  // Khối Voucher UI
+  // ============ DISCOUNT SECTION — hiển thị 2 dòng Shop + Platform ============
   Widget _buildDiscountSection(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        DiscountSelectionBottomSheet.show(
-          context,
-          currentSelectedDiscount: _appliedDiscount,
-          onDiscountSelected: (discount) {
-            setState(() {
-              _appliedDiscount = discount;
-            });
-            _previewDiscount(widget.selectedItems);
-          },
-          onClearDiscount: () {
-            setState(() {
-              _appliedDiscount = null;
-              _checkoutDiscountAmount = 0.0;
-            });
-          },
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(top: 8.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(
-              color: AppColors.border.withOpacity(0.5),
-              width: 1,
-            ),
-            top: BorderSide(color: AppColors.border.withOpacity(0.5), width: 1),
+    return Container(
+      margin: EdgeInsets.only(top: 8.h),
+      color: Colors.white,
+      child: Column(
+        children: [
+          // --- Voucher Shop ---
+          _buildVoucherRow(
+            context,
+            icon: Icons.storefront,
+            iconColor: Colors.orange,
+            label: 'Voucher Shop',
+            discount: _shopDiscount,
+            onTap: () => _openDiscountSheet(context, DiscountScope.SHOP),
+            onClear: () {
+              setState(() {
+                _shopDiscount = null;
+              });
+              _previewAllDiscounts();
+            },
           ),
-        ),
+          Divider(height: 1, indent: 16.w, endIndent: 16.w),
+          // --- Voucher Sàn (Platform) ---
+          _buildVoucherRow(
+            context,
+            icon: Icons.local_activity,
+            iconColor: AppColors.primaryBlue,
+            label: 'Voucher Sàn',
+            discount: _platformDiscount,
+            onTap: () => _openDiscountSheet(context, DiscountScope.PLATFORM),
+            onClear: () {
+              setState(() {
+                _platformDiscount = null;
+              });
+              _previewAllDiscounts();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoucherRow(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required Discount? discount,
+    required VoidCallback onTap,
+    required VoidCallback onClear,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         child: Row(
           children: [
-            Icon(
-              Icons.local_activity,
-              color: Theme.of(context).primaryColor,
-              size: 24.sp,
-            ),
+            Icon(icon, color: iconColor, size: 24.sp),
             SizedBox(width: 12.w),
             Expanded(
-              child: Text(
-                _appliedDiscount != null
-                    ? 'Đã áp dụng mã: ${_appliedDiscount!.code}'
-                    : 'Shopee Voucher / Chọn hoặc Nhập Mã',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: _appliedDiscount != null
-                      ? Colors.green
-                      : AppColors.textPrimary,
-                  fontWeight: _appliedDiscount != null
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
+              child: discount != null
+                  ? Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Đã áp dụng: ${discount.code}',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: onClear,
+                          child: Icon(
+                            Icons.close,
+                            size: 18.sp,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(
+                      '$label / Chọn hoặc Nhập Mã',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
             ),
+            SizedBox(width: 4.w),
             Icon(
               Icons.chevron_right,
               color: AppColors.textSecondary,
@@ -423,11 +713,55 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  // Helper trigger preview
-  void _previewDiscount(List<CartEntity> items) {
-    if (_appliedDiscount == null || items.isEmpty) {
+  // Mở bottom sheet lọc theo scope
+  void _openDiscountSheet(BuildContext context, DiscountScope scope) {
+    final currentDiscount = scope == DiscountScope.SHOP
+        ? _shopDiscount
+        : _platformDiscount;
+
+    DiscountSelectionBottomSheet.show(
+      context,
+      currentSelectedDiscount: currentDiscount,
+      filterScope: scope,
+      onDiscountSelected: (discount) {
+        setState(() {
+          if (scope == DiscountScope.SHOP) {
+            _shopDiscount = discount;
+          } else {
+            _platformDiscount = discount;
+          }
+        });
+        _previewAllDiscounts();
+      },
+      onClearDiscount: () {
+        setState(() {
+          if (scope == DiscountScope.SHOP) {
+            _shopDiscount = null;
+          } else {
+            _platformDiscount = null;
+          }
+        });
+        _previewAllDiscounts();
+      },
+    );
+  }
+
+  // Preview tổng: gửi cả shop + platform discount code
+  void _previewAllDiscounts() {
+    final items = widget.selectedItems;
+    if (items.isEmpty) {
       setState(() {
-        _checkoutDiscountAmount = 0.0;
+        _productDiscountAmount = 0.0;
+        _shippingDiscountAmount = 0.0;
+      });
+      return;
+    }
+
+    // Nếu không có discount nào thì reset
+    if (_shopDiscount == null && _platformDiscount == null) {
+      setState(() {
+        _productDiscountAmount = 0.0;
+        _shippingDiscountAmount = 0.0;
       });
       return;
     }
@@ -437,23 +771,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
       subTotal += (item.price ?? 0) * item.quantity;
     }
 
-    context.read<DiscountBloc>().add(
-      DoPreviewDiscount(
-        code: _appliedDiscount!.code,
-        orderValue: subTotal.toDouble(),
-        userId: 1, // Optional: backend handle from token
-        shopId: _appliedDiscount!.shopId ?? 0,
-        items: items
-            .map(
-              (e) => {
-                "productId": e.productId,
-                "price": e.price,
-                "quantity": e.quantity,
-              },
-            )
-            .toList(),
-      ),
-    );
+    // Preview cho shop discount
+    if (_shopDiscount != null) {
+      context.read<DiscountBloc>().add(
+        DoPreviewDiscount(
+          code: _shopDiscount!.code,
+          orderValue: subTotal.toDouble(),
+          shippingFee: _shippingFee,
+          userId: 1,
+          shopId: _shopDiscount!.shopId ?? 0,
+          items: items
+              .map(
+                (e) => {
+                  "productId": e.productId,
+                  "price": e.price,
+                  "quantity": e.quantity,
+                },
+              )
+              .toList(),
+        ),
+      );
+    }
+
+    // Preview cho platform discount
+    if (_platformDiscount != null) {
+      context.read<DiscountBloc>().add(
+        DoPreviewDiscount(
+          code: _platformDiscount!.code,
+          orderValue: subTotal.toDouble(),
+          shippingFee: _shippingFee,
+          userId: 1,
+          shopId: 0,
+          items: items
+              .map(
+                (e) => {
+                  "productId": e.productId,
+                  "price": e.price,
+                  "quantity": e.quantity,
+                },
+              )
+              .toList(),
+        ),
+      );
+    }
   }
 
   Widget _buildPaymentMethodSection() {
@@ -519,9 +879,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildOrderSummarySection() {
-    // Phí ship mock
-    num shippingFee = 30000;
-    num total = widget.totalPrice + shippingFee;
+    num total = widget.totalPrice + _shippingFee;
 
     return Container(
       margin: EdgeInsets.only(top: 8.h, bottom: 20.h),
@@ -559,18 +917,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Phí vận chuyển', style: AppTextStyles.bodyMedium),
-              Text('$shippingFee đ', style: AppTextStyles.bodyMedium),
+              Text('$_shippingFee đ', style: AppTextStyles.bodyMedium),
             ],
           ),
-          if (_checkoutDiscountAmount > 0) ...[
+          if (_productDiscountAmount > 0) ...[
             SizedBox(height: 8.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Voucher giảm giá', style: AppTextStyles.bodyMedium),
+                Text('Giảm giá sản phẩm', style: AppTextStyles.bodyMedium),
                 Text(
-                  '- $_checkoutDiscountAmount đ',
+                  '- $_productDiscountAmount đ',
                   style: AppTextStyles.bodyMedium.copyWith(color: Colors.green),
+                ),
+              ],
+            ),
+          ],
+          if (_shippingDiscountAmount > 0) ...[
+            SizedBox(height: 8.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Giảm phí vận chuyển', style: AppTextStyles.bodyMedium),
+                Text(
+                  '- $_shippingDiscountAmount đ',
+                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.blue),
                 ),
               ],
             ),
@@ -586,7 +957,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
               Text(
-                '${total - _checkoutDiscountAmount} đ',
+                '${total - _totalDiscountAmount} đ',
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],
@@ -597,6 +968,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildBottomBar(bool isLoading) {
+    // Check if any item has invalid stock
+    final hasInvalidStock = widget.selectedItems.any((item) {
+      return item.availableStock != null &&
+          item.quantity > item.availableStock!;
+    });
+
+    final isButtonDisabled = isLoading || hasInvalidStock;
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -621,15 +1000,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text('Tổng cộng', style: AppTextStyles.bodyMedium),
                   Text(
-                    '${widget.totalPrice + 30000 - _checkoutDiscountAmount} đ',
+                    '${widget.totalPrice + _shippingFee - _totalDiscountAmount} đ',
                     style: AppTextStyles.h3.copyWith(color: AppColors.error),
                   ),
                 ],
               ),
               ElevatedButton(
-                onPressed: isLoading ? null : _submitOrder,
+                onPressed: isButtonDisabled ? null : _submitOrder,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
+                  disabledBackgroundColor: Colors.grey.withOpacity(0.5),
                   padding: EdgeInsets.symmetric(
                     horizontal: 32.w,
                     vertical: 12.h,
@@ -647,7 +1027,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           strokeWidth: 2,
                         ),
                       )
-                    : Text('Đặt hàng', style: AppTextStyles.buttonText),
+                    : Text(
+                        hasInvalidStock ? 'Kiểm tra lại' : 'Đặt hàng',
+                        style: AppTextStyles.buttonText,
+                      ),
               ),
             ],
           ),
@@ -685,11 +1068,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Đóng dialog
                   Navigator.pop(context);
-                  // Trở về trang chủ
                   Navigator.of(context).popUntil((route) => route.isFirst);
-                  // TODO: Bật sang tab lịch sử đơn hàng nếu đã có Bottom Navigation (Tùy chọn)
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
@@ -706,6 +1086,40 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Text(
+          title,
+          style: AppTextStyles.h3.copyWith(color: AppColors.error),
+        ),
+        content: Text(message, style: AppTextStyles.bodyMedium),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.primaryBlue)),
+          ),
+          if (title.toLowerCase().contains('hết hàng'))
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context); // Quay lại giỏ hàng
+              },
+              child: Text(
+                'Quay lại giỏ hàng',
+                style: TextStyle(color: AppColors.primaryBlue),
+              ),
+            ),
+        ],
       ),
     );
   }

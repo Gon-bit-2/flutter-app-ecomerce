@@ -172,6 +172,7 @@ class _AddProductPageState extends State<AddProductPage> {
                                   "Giá cơ bản",
                                   _basePriceController,
                                   isNumber: true,
+                                  isPrice: true,
                                 ),
                               ),
                               SizedBox(width: 12.w),
@@ -425,6 +426,8 @@ class _AddProductPageState extends State<AddProductPage> {
     bool isNumber = false,
     bool isRequired = true,
     int maxLines = 1,
+    bool isPrice = false,
+    bool isStock = false,
   }) {
     return TextFormField(
       controller: controller,
@@ -434,27 +437,242 @@ class _AddProductPageState extends State<AddProductPage> {
         labelText: label,
         border: const OutlineInputBorder(),
       ),
-      validator: isRequired
-          ? (v) => (v == null || v.isEmpty) ? "Vui lòng nhập $label" : null
-          : null,
+      validator: (v) {
+        if (isRequired && (v == null || v.isEmpty)) {
+          return "Vui lòng nhập $label";
+        }
+        if (isPrice && v != null && v.isNotEmpty) {
+          final price = double.tryParse(v);
+          if (price == null || price <= 0) {
+            return "Giá phải lớn hơn 0";
+          }
+        }
+        if (isStock && v != null && v.isNotEmpty) {
+          final stock = int.tryParse(v);
+          if (stock == null || stock < 0) {
+            return "Số lượng tồn kho phải >= 0";
+          }
+        }
+        return null;
+      },
     );
   }
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
-      // Validations for Brand/Category/Images are handled in Bloc or simple Check
-      // Dispatch event
-      _bloc.add(
-        AddProductSubmitted(
-          name: _nameController.text,
-          description: _descController.text,
-          basePrice: double.tryParse(_basePriceController.text) ?? 0,
-          virtualPrice: double.tryParse(_virtualPriceController.text) ?? 0,
-          brandName: _brandController.text,
-          categoryId: _selectedCategoryId,
-        ),
-      );
+      // Validate ít nhất 1 ảnh
+      if (_bloc.state.uploadedImageUrls.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng tải lên ít nhất 1 ảnh sản phẩm'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Validate giá cơ bản > 0
+      final basePrice = double.tryParse(_basePriceController.text) ?? 0;
+      if (basePrice <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Giá cơ bản phải lớn hơn 0'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Validate SKUs: mỗi SKU phải có giá > 0
+      final skus = _bloc.state.skus;
+      if (skus.isNotEmpty) {
+        final invalidSkus = skus.where((s) => s.price <= 0).toList();
+        if (invalidSkus.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${invalidSkus.length} SKU chưa có giá hoặc giá <= 0. Vui lòng kiểm tra lại.',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
+      // Hiện preview dialog trước khi submit
+      _showPreviewDialog(basePrice);
     }
+  }
+
+  void _showPreviewDialog(double basePrice) {
+    final state = _bloc.state;
+    final virtualPrice = double.tryParse(_virtualPriceController.text);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        title: Text(
+          'Xem trước sản phẩm',
+          style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ảnh
+              if (state.uploadedImageUrls.isNotEmpty)
+                SizedBox(
+                  height: 80.h,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.uploadedImageUrls.length,
+                    itemBuilder: (_, i) => Container(
+                      width: 80.h,
+                      height: 80.h,
+                      margin: EdgeInsets.only(right: 8.w),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.r),
+                        image: DecorationImage(
+                          image: NetworkImage(state.uploadedImageUrls[i]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              SizedBox(height: 12.h),
+
+              // Tên
+              Text(
+                _nameController.text,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8.h),
+
+              // Giá
+              Row(
+                children: [
+                  Text(
+                    '${basePrice.toInt()} đ',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (virtualPrice != null && virtualPrice > 0) ...[
+                    SizedBox(width: 8.w),
+                    Text(
+                      '${virtualPrice.toInt()} đ',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              SizedBox(height: 8.h),
+
+              // Thương hiệu + Danh mục
+              if (_brandController.text.isNotEmpty)
+                Text('Thương hiệu: ${_brandController.text}',
+                    style: TextStyle(fontSize: 13.sp)),
+
+              // Mô tả
+              if (_descController.text.isNotEmpty) ...[
+                SizedBox(height: 8.h),
+                Text('Mô tả:',
+                    style: TextStyle(
+                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                Text(_descController.text,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[700]),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis),
+              ],
+
+              // Variants
+              if (state.variants.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                Text('Biến thể:',
+                    style: TextStyle(
+                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                ...state.variants.map((v) => Padding(
+                      padding: EdgeInsets.only(top: 4.h),
+                      child: Text('  ${v.name}: ${v.options.join(", ")}',
+                          style: TextStyle(fontSize: 12.sp)),
+                    )),
+              ],
+
+              // SKUs summary
+              if (state.skus.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                Text('SKU (${state.skus.length}):',
+                    style: TextStyle(
+                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                ...state.skus.take(5).map((s) => Padding(
+                      padding: EdgeInsets.only(top: 2.h),
+                      child: Text(
+                          '  ${s.value}: ${s.price.toInt()}đ / Kho: ${s.stock}',
+                          style: TextStyle(fontSize: 12.sp)),
+                    )),
+                if (state.skus.length > 5)
+                  Text('  ... và ${state.skus.length - 5} SKU khác',
+                      style: TextStyle(
+                          fontSize: 12.sp, fontStyle: FontStyle.italic)),
+              ],
+
+              // Ảnh count
+              SizedBox(height: 8.h),
+              Text('Ảnh: ${state.uploadedImageUrls.length} ảnh',
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Chỉnh sửa'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _performSubmit(basePrice);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+            ),
+            child: Text(
+              widget.product == null ? 'Đăng sản phẩm' : 'Cập nhật',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performSubmit(double basePrice) {
+    _bloc.add(
+      AddProductSubmitted(
+        name: _nameController.text,
+        description: _descController.text,
+        basePrice: basePrice,
+        virtualPrice: double.tryParse(_virtualPriceController.text) ?? 0,
+        brandName: _brandController.text,
+        categoryId: _selectedCategoryId,
+      ),
+    );
   }
 }
 

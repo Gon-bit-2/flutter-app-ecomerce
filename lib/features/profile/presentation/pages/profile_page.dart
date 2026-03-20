@@ -10,6 +10,7 @@ import 'package:app_fe_ecomerce/features/order/presentation/pages/order_history_
     as app_fe_ecomerce_order;
 import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/pages/voucher_wallet_page.dart';
+import 'package:app_fe_ecomerce/features/profile/presentation/pages/edit_profile_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final UserEntity user;
@@ -117,7 +118,14 @@ class ProfilePage extends StatelessWidget {
           _buildMenuItem(
             Icons.person_outline,
             "Thiết lập tài khoản",
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfilePage(user: user),
+                ),
+              );
+            },
           ),
           const Divider(height: 1),
           _buildMenuItem(

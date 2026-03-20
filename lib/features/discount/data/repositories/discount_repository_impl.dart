@@ -65,6 +65,7 @@ class DiscountRepositoryImpl implements DiscountRepository {
   Future<Either<Failure, Map<String, dynamic>>> previewDiscount({
     required String code,
     required double orderValue,
+    double shippingFee = 0,
     required int userId,
     required int shopId,
     required List<Map<String, dynamic>> items,
@@ -73,6 +74,7 @@ class DiscountRepositoryImpl implements DiscountRepository {
       final result = await remoteDataSource.previewDiscount(
         code: code,
         orderValue: orderValue,
+        shippingFee: shippingFee,
         userId: userId,
         shopId: shopId,
         items: items,

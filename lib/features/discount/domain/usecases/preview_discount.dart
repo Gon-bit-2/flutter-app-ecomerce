@@ -13,6 +13,7 @@ class PreviewDiscount {
   Future<Either<Failure, Map<String, dynamic>>> call({
     required String code,
     required double orderValue,
+    double shippingFee = 0,
     required int userId,
     required int shopId,
     required List<Map<String, dynamic>> items,
@@ -20,6 +21,7 @@ class PreviewDiscount {
     return await repository.previewDiscount(
       code: code,
       orderValue: orderValue,
+      shippingFee: shippingFee,
       userId: userId,
       shopId: shopId,
       items: items,
