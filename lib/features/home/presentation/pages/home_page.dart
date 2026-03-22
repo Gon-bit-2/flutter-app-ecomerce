@@ -14,6 +14,7 @@ import 'package:app_fe_ecomerce/features/auth/domain/entities/user_entity.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/profile_page.dart';
+import 'package:app_fe_ecomerce/features/shop_video/presentation/pages/video_feed_page.dart' as app_fe_ecomerce_shop_video;
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -145,7 +146,11 @@ class _HomeViewState extends State<HomeView> {
               ],
             ),
           ),
-          // Index 1: Tôi / Profile
+          
+          // Index 1: Video Feed
+          const app_fe_ecomerce_shop_video.VideoFeedPage(),
+
+          // Index 2: Tôi / Profile
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final user = _getUserFromState(state);
@@ -181,6 +186,7 @@ class _HomeViewState extends State<HomeView> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+          BottomNavigationBarItem(icon: Icon(Icons.ondemand_video_outlined), label: 'Video'),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             label: 'Tôi',
