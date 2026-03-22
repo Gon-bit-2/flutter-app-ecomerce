@@ -161,6 +161,33 @@ import 'features/search/domain/repositories/search_repository.dart' as _i246;
 import 'features/search/domain/usecases/search_history_usecases.dart' as _i949;
 import 'features/search/domain/usecases/search_products_usecase.dart' as _i453;
 import 'features/search/presentation/bloc/search_bloc.dart' as _i944;
+import 'features/shop_video/data/datasources/shop_video_remote_datasource.dart'
+    as _i861;
+import 'features/shop_video/data/repositories/shop_video_repository_impl.dart'
+    as _i820;
+import 'features/shop_video/domain/repositories/shop_video_repository.dart'
+    as _i461;
+import 'features/shop_video/domain/usecases/add_video_comment_use_case.dart'
+    as _i981;
+import 'features/shop_video/domain/usecases/create_shop_video_use_case.dart'
+    as _i734;
+import 'features/shop_video/domain/usecases/delete_shop_video_use_case.dart'
+    as _i1069;
+import 'features/shop_video/domain/usecases/get_shop_video_detail_use_case.dart'
+    as _i777;
+import 'features/shop_video/domain/usecases/get_shop_videos_use_case.dart'
+    as _i119;
+import 'features/shop_video/domain/usecases/get_video_comments_use_case.dart'
+    as _i455;
+import 'features/shop_video/domain/usecases/toggle_like_use_case.dart' as _i920;
+import 'features/shop_video/domain/usecases/update_shop_video_use_case.dart'
+    as _i536;
+import 'features/shop_video/presentation/bloc/seller_video/seller_video_bloc.dart'
+    as _i639;
+import 'features/shop_video/presentation/bloc/video_comments/video_comments_bloc.dart'
+    as _i737;
+import 'features/shop_video/presentation/bloc/video_feed/video_feed_bloc.dart'
+    as _i742;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -177,6 +204,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i361.Dio>(() => registerModule.dio);
     gh.lazySingleton<_i895.Connectivity>(() => registerModule.connectivity);
     gh.lazySingleton<_i872.DeepLinkService>(() => _i872.DeepLinkService());
+    gh.lazySingleton<_i861.ShopVideoRemoteDataSource>(
+      () => _i861.ShopVideoRemoteDataSourceImpl(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i461.ShopVideoRepository>(
+      () =>
+          _i820.ShopVideoRepositoryImpl(gh<_i861.ShopVideoRemoteDataSource>()),
+    );
     gh.lazySingleton<_i429.HomeLocalDataSource>(
       () => _i429.HomeLocalDataSourceImpl(),
     );
@@ -192,12 +226,50 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i649.HomeRepository>(
       () => _i689.HomeRepositoryImpl(gh<_i429.HomeLocalDataSource>()),
     );
+    gh.factory<_i981.AddVideoCommentUseCase>(
+      () => _i981.AddVideoCommentUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i734.CreateShopVideoUseCase>(
+      () => _i734.CreateShopVideoUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i1069.DeleteShopVideoUseCase>(
+      () => _i1069.DeleteShopVideoUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i777.GetShopVideoDetailUseCase>(
+      () => _i777.GetShopVideoDetailUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i119.GetShopVideosUseCase>(
+      () => _i119.GetShopVideosUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i455.GetVideoCommentsUseCase>(
+      () => _i455.GetVideoCommentsUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i920.ToggleLikeUseCase>(
+      () => _i920.ToggleLikeUseCase(gh<_i461.ShopVideoRepository>()),
+    );
+    gh.factory<_i536.UpdateShopVideoUseCase>(
+      () => _i536.UpdateShopVideoUseCase(gh<_i461.ShopVideoRepository>()),
+    );
     gh.lazySingleton<_i99.SearchHistoryLocalDataSource>(
       () =>
           _i99.SearchHistoryLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i306.ReviewRepository>(
       () => _i346.ReviewRepositoryImpl(gh<_i1033.ReviewRemoteDataSource>()),
+    );
+    gh.factory<_i639.SellerVideoBloc>(
+      () => _i639.SellerVideoBloc(
+        gh<_i119.GetShopVideosUseCase>(),
+        gh<_i734.CreateShopVideoUseCase>(),
+        gh<_i536.UpdateShopVideoUseCase>(),
+        gh<_i1069.DeleteShopVideoUseCase>(),
+      ),
+    );
+    gh.factory<_i737.VideoCommentsBloc>(
+      () => _i737.VideoCommentsBloc(
+        gh<_i455.GetVideoCommentsUseCase>(),
+        gh<_i981.AddVideoCommentUseCase>(),
+      ),
     );
     gh.factory<_i8.AuthInterceptor>(
       () => _i8.AuthInterceptor(gh<_i1043.AuthLocalDataSource>()),
@@ -210,6 +282,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i509.ReviewListBloc>(
       () => _i509.ReviewListBloc(gh<_i363.GetProductReviewsUseCase>()),
+    );
+    gh.factory<_i742.VideoFeedBloc>(
+      () => _i742.VideoFeedBloc(
+        gh<_i119.GetShopVideosUseCase>(),
+        gh<_i920.ToggleLikeUseCase>(),
+      ),
     );
     gh.factory<_i890.CreateReviewBloc>(
       () => _i890.CreateReviewBloc(
