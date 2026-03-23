@@ -19,6 +19,7 @@ import 'core/di/register_module.dart' as _i854;
 import 'core/network/auth_interceptor.dart' as _i8;
 import 'core/network/dio_client.dart' as _i45;
 import 'core/network/network_info.dart' as _i75;
+import 'core/services/chat_socket_service.dart' as _i916;
 import 'core/services/deep_link_service.dart' as _i872;
 import 'features/address/data/datasources/address_remote_data_source.dart'
     as _i315;
@@ -81,6 +82,13 @@ import 'features/category/domain/usecases/update_category_usecase.dart'
     as _i1032;
 import 'features/category/presentation/bloc/category/category_bloc.dart'
     as _i584;
+import 'features/chat/data/datasources/chat_remote_datasource.dart' as _i343;
+import 'features/chat/data/repositories/chat_repository_impl.dart' as _i382;
+import 'features/chat/domain/repositories/chat_repository.dart' as _i453;
+import 'features/chat/domain/usecases/get_conversations_usecase.dart' as _i949;
+import 'features/chat/domain/usecases/get_messages_usecase.dart' as _i350;
+import 'features/chat/domain/usecases/send_message_usecase.dart' as _i72;
+import 'features/chat/presentation/bloc/chat/chat_bloc.dart' as _i561;
 import 'features/common/data/datasources/common_remote_datasource.dart' as _i74;
 import 'features/common/data/repositories/common_repository_impl.dart' as _i499;
 import 'features/common/domain/repositories/common_repository.dart' as _i493;
@@ -274,6 +282,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i8.AuthInterceptor>(
       () => _i8.AuthInterceptor(gh<_i1043.AuthLocalDataSource>()),
     );
+    gh.lazySingleton<_i916.ChatSocketService>(
+      () => _i916.ChatSocketService(gh<_i1043.AuthLocalDataSource>()),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i618.CreateReviewUseCase>(
       () => _i618.CreateReviewUseCase(gh<_i306.ReviewRepository>()),
     );
@@ -301,6 +313,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i315.AddressRemoteDataSource>(
       () => _i315.AddressRemoteDataSourceImpl(apiClient: gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i343.ChatRemoteDataSource>(
+      () => _i343.ChatRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i979.CategoryRemoteDataSource>(
       () => _i979.CategoryRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -324,6 +339,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i143.ProductRemoteDataSource>(
       () => _i143.ProductRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
+    gh.lazySingleton<_i453.ChatRepository>(
+      () => _i382.ChatRepositoryImpl(gh<_i343.ChatRemoteDataSource>()),
     );
     gh.lazySingleton<_i535.AddressRepository>(
       () => _i423.AddressRepositoryImpl(
@@ -410,6 +428,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i949.ClearSearchHistoryUseCase>(),
       ),
     );
+    gh.factory<_i949.GetConversationsUseCase>(
+      () => _i949.GetConversationsUseCase(gh<_i453.ChatRepository>()),
+    );
+    gh.factory<_i350.GetMessagesUseCase>(
+      () => _i350.GetMessagesUseCase(gh<_i453.ChatRepository>()),
+    );
+    gh.factory<_i72.SendMessageUseCase>(
+      () => _i72.SendMessageUseCase(gh<_i453.ChatRepository>()),
+    );
     gh.factory<_i944.CreateCategoryUseCase>(
       () => _i944.CreateCategoryUseCase(gh<_i5.CategoryRepository>()),
     );
@@ -424,6 +451,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i1032.UpdateCategoryUseCase>(
       () => _i1032.UpdateCategoryUseCase(gh<_i5.CategoryRepository>()),
+    );
+    gh.factory<_i561.ChatBloc>(
+      () => _i561.ChatBloc(
+        gh<_i949.GetConversationsUseCase>(),
+        gh<_i350.GetMessagesUseCase>(),
+        gh<_i72.SendMessageUseCase>(),
+        gh<_i916.ChatSocketService>(),
+      ),
     );
     gh.lazySingleton<_i791.CreateDiscountUseCase>(
       () => _i791.CreateDiscountUseCase(gh<_i506.DiscountRepository>()),
