@@ -8,6 +8,7 @@ import '../bloc/video_feed/video_feed_state.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/video_action_buttons.dart';
 import '../widgets/video_product_card.dart';
+import 'create_video_page.dart';
 
 class VideoFeedPage extends StatelessWidget {
   const VideoFeedPage({super.key});
@@ -47,149 +48,166 @@ class _VideoFeedViewState extends State<VideoFeedView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: BlocBuilder<VideoFeedBloc, VideoFeedState>(
-        builder: (context, state) {
-          if (state is VideoFeedLoading && state.isFirstFetch) {
-            return const Center(child: CircularProgressIndicator(color: Colors.white));
-          }
-
-          if (state is VideoFeedError && (state.oldVideos == null || state.oldVideos!.isEmpty)) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(state.message, style: const TextStyle(color: Colors.white)),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<VideoFeedBloc>().add(const LoadVideoFeedEvent(isRefresh: true));
-                    },
-                    child: const Text('Thử lại'),
-                  )
-                ],
-              ),
-            );
-          }
-
-          List videos = [];
-          if (state is VideoFeedLoaded) {
-            videos = state.videos;
-          } else if (state is VideoFeedLoading) {
-            videos = state.oldVideos;
-          } else if (state is VideoFeedError) {
-            videos = state.oldVideos ?? [];
-          }
-
-          if (videos.isEmpty) {
-            return const Center(
-              child: Text('Chưa có video nào.', style: TextStyle(color: Colors.white)),
-            );
-          }
-
-          return PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            itemCount: videos.length,
-            onPageChanged: (index) {
-              if (index >= videos.length - 2) {
-                context.read<VideoFeedBloc>().add(LoadMoreVideoFeedEvent());
+      body: Stack(
+        children: [
+          BlocBuilder<VideoFeedBloc, VideoFeedState>(
+            builder: (context, state) {
+              if (state is VideoFeedLoading && state.isFirstFetch) {
+                return const Center(child: CircularProgressIndicator(color: Colors.white));
               }
-            },
-            itemBuilder: (context, index) {
-              final video = videos[index];
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Video Player
-                  VideoPlayerWidget(
-                    videoUrl: video.videoUrl,
-                    thumbnailUrl: video.thumbnailUrl,
+
+              if (state is VideoFeedError && (state.oldVideos == null || state.oldVideos!.isEmpty)) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(state.message, style: const TextStyle(color: Colors.white)),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<VideoFeedBloc>().add(const LoadVideoFeedEvent(isRefresh: true));
+                        },
+                        child: const Text('Thử lại'),
+                      )
+                    ],
                   ),
-                  
-                  // Gradient Overlay for texts and buttons
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.6),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: const [0.6, 1.0],
+                );
+              }
+
+              List videos = [];
+              if (state is VideoFeedLoaded) {
+                videos = state.videos;
+              } else if (state is VideoFeedLoading) {
+                videos = state.oldVideos;
+              } else if (state is VideoFeedError) {
+                videos = state.oldVideos ?? [];
+              }
+
+              if (videos.isEmpty) {
+                return const Center(
+                  child: Text('Chưa có video nào.', style: TextStyle(color: Colors.white)),
+                );
+              }
+
+              return PageView.builder(
+                controller: _pageController,
+                scrollDirection: Axis.vertical,
+                itemCount: videos.length,
+                onPageChanged: (index) {
+                  if (index >= videos.length - 2) {
+                    context.read<VideoFeedBloc>().add(LoadMoreVideoFeedEvent());
+                  }
+                },
+                itemBuilder: (context, index) {
+                  final video = videos[index];
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Video Player
+                      VideoPlayerWidget(
+                        videoUrl: video.videoUrl,
+                        thumbnailUrl: video.thumbnailUrl,
+                      ),
+                      
+                      // Gradient Overlay for texts and buttons
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.6),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              stops: const [0.6, 1.0],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
 
-                  // User Info & Caption (Bottom Left)
-                  Positioned(
-                    left: 16,
-                    bottom: 80, // Leave some space for product card if exists
-                    right: 80, // Prevent overlapping with action buttons
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '@${video.shop?.name ?? 'Người dùng'}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (video.caption != null && video.caption!.isNotEmpty)
-                          Text(
-                            video.caption!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                      // User Info & Caption (Bottom Left)
+                      Positioned(
+                        left: 16,
+                        bottom: 80, // Leave some space for product card if exists
+                        right: 80, // Prevent overlapping with action buttons
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '@${video.shop?.name ?? 'Người dùng'}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                              ),
                             ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
-                    ),
-                  ),
+                            const SizedBox(height: 8),
+                            if (video.caption != null && video.caption!.isNotEmpty)
+                              Text(
+                                video.caption!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
 
-                  // Product tag (Bottom)
-                  if (video.products.isNotEmpty)
-                    Positioned(
-                      left: 16,
-                      bottom: 16,
-                      right: 80,
-                      child: VideoProductCard(product: video.products.first),
-                    ),
+                      // Product tag (Bottom)
+                      if (video.products.isNotEmpty)
+                        Positioned(
+                          left: 16,
+                          bottom: 16,
+                          right: 80,
+                          child: VideoProductCard(product: video.products.first),
+                        ),
 
-                  // Action Buttons (Right)
-                  Positioned(
-                    right: 8,
-                    bottom: 32,
-                    child: VideoActionButtons(
-                      video: video,
-                      onLikeToggle: () {
-                        context.read<VideoFeedBloc>().add(ToggleLikeVideoEvent(video.id));
-                      },
-                    ),
-                  ),
-                  
-                  // Back button
-                  Positioned(
-                    top: 48,
-                    left: 16,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  )
-                ],
+                      // Action Buttons (Right)
+                      Positioned(
+                        right: 8,
+                        bottom: 32,
+                        child: VideoActionButtons(
+                          video: video,
+                          onLikeToggle: () {
+                            context.read<VideoFeedBloc>().add(ToggleLikeVideoEvent(video.id));
+                          },
+                        ),
+                      ),
+                      
+                      // Back button
+                      Positioned(
+                        top: 48,
+                        left: 16,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      )
+                    ],
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(Icons.camera_alt, color: Colors.white, size: 30, shadows: [Shadow(color: Colors.black54, blurRadius: 4)]),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateVideoPage()),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
