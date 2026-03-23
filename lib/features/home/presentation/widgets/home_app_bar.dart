@@ -6,6 +6,7 @@ import '../../../shop/presentation/pages/my_shop_page.dart';
 import '../../../cart/presentation/pages/cart_page.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
 import '../../../search/presentation/pages/search_page.dart';
+import '../../../chat/presentation/pages/conversations_page.dart';
 
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key});
@@ -79,7 +80,16 @@ class HomeAppBar extends StatelessWidget {
               },
             ),
             SizedBox(width: 15.w),
-            _buildIconAction(Icons.chat_bubble_outline, badgeCount: 9),
+            _buildIconAction(
+              Icons.chat_bubble_outline,
+              badgeCount: 0,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ConversationsPage()),
+                );
+              },
+            ),
             SizedBox(width: 15.w),
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {

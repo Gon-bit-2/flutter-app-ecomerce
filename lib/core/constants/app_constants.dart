@@ -82,4 +82,11 @@ class AppConstants {
 
   // Search Endpoints
   static const String searchProductsEndpoint = '/product/search';
+
+  // Message Endpoints
+  static const String messagesEndpoint = '/messages';
+  static const String conversationsEndpoint = '/messages/conversations';
+
+  // WebSocket Chat
+  static const String chatSocketEvent = 'receiveMessage';
 }

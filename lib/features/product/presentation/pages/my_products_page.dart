@@ -11,7 +11,8 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 
 class MyProductsPage extends StatefulWidget {
-  const MyProductsPage({super.key});
+  final bool isSelectionMode;
+  const MyProductsPage({super.key, this.isSelectionMode = false});
 
   @override
   State<MyProductsPage> createState() => _MyProductsPageState();
@@ -162,11 +163,13 @@ class _MyProductsPageState extends State<MyProductsPage> {
           ),
           centerTitle: true,
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _navigateToAdd,
-          backgroundColor: AppColors.primaryBlue,
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
+        floatingActionButton: widget.isSelectionMode
+            ? null
+            : FloatingActionButton(
+                onPressed: _navigateToAdd,
+                backgroundColor: AppColors.primaryBlue,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
         body: BlocConsumer<MyProductsBloc, MyProductsState>(
           listener: (context, state) {
             if (state is MyProductsFailure) {
@@ -277,7 +280,7 @@ class _MyProductsPageState extends State<MyProductsPage> {
     final formatter = NumberFormat('#,###', 'vi_VN');
     final firstImage = product.images.isNotEmpty ? product.images.first : null;
 
-    return Container(
+    final card = Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -376,71 +379,80 @@ class _MyProductsPageState extends State<MyProductsPage> {
             ),
           ),
           // Action buttons
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.border)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _navigateToEdit(product),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 18.sp,
-                            color: AppColors.primaryBlue,
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Sửa',
-                            style: AppTextStyles.bodyMedium.copyWith(
+          if (!widget.isSelectionMode)
+            Container(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _navigateToEdit(product),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 18.sp,
                               color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 6.w),
+                            Text(
+                              'Sửa',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Container(width: 1, height: 36.h, color: AppColors.border),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _confirmDelete(product),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.delete_outline,
-                            size: 18.sp,
-                            color: AppColors.error,
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Xóa',
-                            style: AppTextStyles.bodyMedium.copyWith(
+                  Container(width: 1, height: 36.h, color: AppColors.border),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _confirmDelete(product),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 18.sp,
                               color: AppColors.error,
-                              fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 6.w),
+                            Text(
+                              'Xóa',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
+
+    if (widget.isSelectionMode) {
+      return InkWell(
+        onTap: () => Navigator.pop(context, product),
+        child: card,
+      );
+    }
+    return card;
   }
 
   Widget _imagePlaceholder() {
