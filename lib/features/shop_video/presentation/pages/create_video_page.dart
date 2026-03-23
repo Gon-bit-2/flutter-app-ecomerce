@@ -7,6 +7,8 @@ import 'package:get_it/get_it.dart';
 import '../bloc/seller_video/seller_video_bloc.dart';
 import '../bloc/seller_video/seller_video_event.dart';
 import '../bloc/seller_video/seller_video_state.dart';
+import '../../../product/domain/entities/product.dart';
+import '../../../product/presentation/pages/my_products_page.dart';
 
 class CreateVideoPage extends StatelessWidget {
   const CreateVideoPage({super.key});
@@ -31,6 +33,7 @@ class _CreateVideoViewState extends State<CreateVideoView> {
   File? _videoFile;
   final TextEditingController _captionController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
+  Product? _selectedProduct;
 
   Future<void> _pickVideo() async {
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
@@ -44,11 +47,11 @@ class _CreateVideoViewState extends State<CreateVideoView> {
   void _submit() {
     if (_videoFile == null) return;
     
-    // In a real app we might also let them select products here (productIds)
     context.read<SellerVideoBloc>().add(
       CreateSellerVideoEvent(
         video: _videoFile!,
         caption: _captionController.text,
+        productIds: _selectedProduct != null ? [_selectedProduct!.id] : null,
       ),
     );
   }
@@ -135,10 +138,18 @@ class _CreateVideoViewState extends State<CreateVideoView> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.shopping_bag_outlined),
-                  title: const Text('Gắn tag sản phẩm'),
+                  title: Text(_selectedProduct != null ? 'Sản phẩm: ${_selectedProduct!.name}' : 'Gắn tag sản phẩm'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                     // TODO: Mở bottom sheet hoặc screen chọn sản phẩm của shop
+                  onTap: () async {
+                     final Product? selected = await Navigator.push<Product?>(
+                       context,
+                       MaterialPageRoute(builder: (_) => const MyProductsPage(isSelectionMode: true)),
+                     );
+                     if (selected != null) {
+                       setState(() {
+                         _selectedProduct = selected;
+                       });
+                     }
                   },
                 )
               ],
