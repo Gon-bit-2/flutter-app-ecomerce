@@ -1,3 +1,5 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
+import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -10,6 +12,7 @@ import '../widgets/category_section.dart';
 import '../widgets/daily_discover_section.dart';
 import '../widgets/flash_sale_section.dart';
 import '../widgets/home_app_bar.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/shimmer_loading.dart';
 import 'package:app_fe_ecomerce/features/auth/domain/entities/user_entity.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
@@ -78,7 +81,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -87,7 +90,7 @@ class _HomeViewState extends State<HomeView> {
             onRefresh: () async {
               context.read<HomeBloc>().add(HomeRefreshed());
             },
-            color: const Color(0xFF1A94FF),
+            color: AppColors.primaryBlue,
             child: CustomScrollView(
               controller: _scrollController,
               slivers: [
@@ -96,12 +99,40 @@ class _HomeViewState extends State<HomeView> {
                   builder: (context, state) {
                     if (state is HomeLoading) {
                       return const SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()),
+                        child: HomePageSkeleton(),
                       );
                     }
                     if (state is HomeError) {
                       return SliverFillRemaining(
-                        child: Center(child: Text('Error: ${state.message}')),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_off, size: 64, color: AppColors.textSecondary),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Đã có lỗi xảy ra',
+                                style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                state.message,
+                                style: AppTextStyles.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: () => context.read<HomeBloc>().add(HomeRefreshed()),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Thử lại'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     }
                     if (state is HomeLoaded) {
@@ -133,10 +164,19 @@ class _HomeViewState extends State<HomeView> {
                 BlocBuilder<HomeBloc, HomeState>(
                   builder: (context, state) {
                     if (state is HomeLoaded && state.hasMoreDailyDiscover) {
-                      return const SliverToBoxAdapter(
+                      return SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
+                          padding: const EdgeInsets.all(16.0),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     }
@@ -182,22 +222,36 @@ class _HomeViewState extends State<HomeView> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-          BottomNavigationBarItem(icon: Icon(Icons.ondemand_video_outlined), label: 'Video'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Tôi',
-          ),
-        ],
-        selectedItemColor: const Color(0xFF1A94FF),
-        unselectedItemColor: Colors.grey,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() => _currentIndex = index);
-        },
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              offset: const Offset(0, -1),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+            BottomNavigationBarItem(icon: Icon(Icons.ondemand_video_outlined), label: 'Video'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: 'Tôi',
+            ),
+          ],
+          selectedItemColor: AppColors.primaryBlue,
+          unselectedItemColor: AppColors.textSecondary,
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() => _currentIndex = index);
+          },
+        ),
       ),
     );
   }
@@ -205,20 +259,20 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildGuestProfile(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.grey[50],
+      color: AppColors.surface,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_circle, size: 80.sp, color: Colors.grey[400]),
+          Icon(Icons.account_circle, size: 80.sp, color: AppColors.textSecondary),
           SizedBox(height: 16.h),
           Text(
             "Chào mừng đến với E-Commerce",
-            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            style: AppTextStyles.h3,
           ),
           SizedBox(height: 8.h),
           Text(
             "Đăng nhập để quản lý tài khoản",
-            style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
+            style: AppTextStyles.bodyMedium,
           ),
           SizedBox(height: 32.h),
           Padding(
@@ -231,14 +285,14 @@ class _HomeViewState extends State<HomeView> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1A94FF),
+                backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
                 minimumSize: Size(double.infinity, 48.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24.r),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
-              child: const Text("Đăng nhập / Đăng ký"),
+              child: Text("Đăng nhập / Đăng ký", style: AppTextStyles.buttonText),
             ),
           ),
         ],

@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,12 +11,6 @@ class CategorySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine how many rows/cols. ScreenUtil helps.
-    // Basic Shoppee has 2 rows of 5 items scrollable horizontally.
-    // For now, let's do a simple horizontal list or wrap.
-    // If categories < 10, Wrap is fine.
-
-    // Using a horizontal scroll view for flexibility
     return SizedBox(
       height: 100.h,
       child: ListView.separated(
@@ -31,28 +26,32 @@ class CategorySection extends StatelessWidget {
               Container(
                 width: 50.w,
                 height: 50.w,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(15.r),
+                decoration: const BoxDecoration(
+                  color: AppColors.secondary,
+                  shape: BoxShape.circle,
                 ),
                 padding: EdgeInsets.all(10.w),
-                // If cat.logo is null, use Icon
                 child: cat.logo != null
                     ? CachedNetworkImage(
                         imageUrl: cat.logo!,
                         errorWidget: (context, url, error) => Icon(
                           Icons.category,
-                          color: Colors.blue,
+                          color: AppColors.primaryBlue,
                           size: 24.sp,
                         ),
                         placeholder: (context, url) => Padding(
                           padding: EdgeInsets.all(10.w),
                           child: const CircularProgressIndicator(
                             strokeWidth: 2,
+                            color: AppColors.primaryBlue,
                           ),
                         ),
                       )
-                    : Icon(Icons.category, color: Colors.blue, size: 24.sp),
+                    : Icon(
+                        Icons.category,
+                        color: AppColors.primaryBlue,
+                        size: 24.sp,
+                      ),
               ),
               SizedBox(height: 5.h),
               SizedBox(
@@ -62,7 +61,10 @@ class CategorySection extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.sp, color: Colors.black87),
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],

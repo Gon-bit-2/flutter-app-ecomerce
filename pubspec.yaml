@@ -61,6 +61,7 @@ dependencies:
   video_player: ^2.11.1
   chewie: ^1.13.0
   visibility_detector: ^0.4.0+2
+  shimmer: ^3.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

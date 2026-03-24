@@ -61,14 +61,33 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       );
     });
 
-    // 3. Xử lý Cập nhật số lượng
+    // 3. Xử lý Cập nhật số lượng — Optimistic UI Update
     on<CartItemUpdated>((event, emit) async {
-      emit(CartLoading());
+      // Lưu lại state cũ để rollback nếu API thất bại
+      final previousState = state;
+
+      // Optimistic: cập nhật UI ngay lập tức mà không cần chờ API
+      if (state is CartLoaded) {
+        final currentItems = (state as CartLoaded).items;
+        final updatedItems = currentItems.map((item) {
+          if (item.id == event.id) {
+            return item.copyWith(quantity: event.quantity);
+          }
+          return item;
+        }).toList();
+        emit(CartLoaded(updatedItems));
+      }
+
+      // Gọi API ẩn phía sau (silent)
       final result = await _updateCartUseCase(
         UpdateCartParams(id: event.id, quantity: event.quantity),
       );
       result.fold(
         (failure) {
+          // Rollback nếu API thất bại
+          if (previousState is CartLoaded) {
+            emit(CartLoaded((previousState).items));
+          }
           if (failure is ServerFailure && failure.statusCode == 401) {
             emit(CartUnauthenticated(failure.message));
           } else {
@@ -76,20 +95,35 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           }
         },
         (_) {
-          // Sau khi cập nhật thành công, tải lại giỏ hàng
+          // API thành công - tải lại từ server để đồng bộ chính xác
           add(const CartLoadRequested(page: 1, limit: 100));
         },
       );
     });
 
-    // 4. Xử lý Xóa sản phẩm
+    // 4. Xử lý Xóa sản phẩm — Optimistic UI Update
     on<CartItemsRemoved>((event, emit) async {
-      emit(CartLoading());
+      // Lưu state cũ để rollback
+      final previousState = state;
+
+      // Optimistic: xóa ngay khỏi UI
+      if (state is CartLoaded) {
+        final currentItems = (state as CartLoaded).items;
+        final updatedItems = currentItems
+            .where((item) => !event.cartItemIds.contains(item.id))
+            .toList();
+        emit(CartLoaded(updatedItems));
+      }
+
       final result = await _removeCartItemUseCase(
         RemoveCartItemParams(cartItemIds: event.cartItemIds),
       );
       result.fold(
         (failure) {
+          // Rollback nếu API thất bại
+          if (previousState is CartLoaded) {
+            emit(CartLoaded((previousState).items));
+          }
           if (failure is ServerFailure && failure.statusCode == 401) {
             emit(CartUnauthenticated(failure.message));
           } else {
@@ -98,7 +132,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         },
         (_) {
           emit(const CartOperationSuccess(message: 'Đã xóa sản phẩm'));
-          // Sau khi xóa thành công, tải lại giỏ hàng
+          // Tải lại để đồng bộ
           add(const CartLoadRequested(page: 1, limit: 100));
         },
       );

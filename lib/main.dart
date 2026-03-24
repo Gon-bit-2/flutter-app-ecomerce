@@ -4,6 +4,7 @@ import 'package:app_fe_ecomerce/features/home/presentation/pages/home_page.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Để UI co giãn
 import 'injection_container.dart'; // Import file cấu hình DI
+import 'core/styles/app_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'features/auth/presentation/bloc/auth/auth_bloc.dart';
@@ -56,17 +57,7 @@ class MyApp extends StatelessWidget {
           child: MaterialApp(
             title: 'Ứng dụng TMĐT',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: const Color(0xFF1A94FF),
-              ),
-              primaryColor: const Color(0xFF1A94FF),
-              useMaterial3: true,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Color(0xFF1A94FF),
-                foregroundColor: Colors.white,
-              ),
-            ),
+            theme: AppTheme.lightTheme,
             home: const HomePage(),
           ),
         );

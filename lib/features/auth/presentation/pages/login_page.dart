@@ -38,6 +38,7 @@ class _LoginViewState extends State<LoginView> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
+  bool _autoValidate = false;
   StreamSubscription? _sub;
 
   @override
@@ -116,7 +117,8 @@ class _LoginViewState extends State<LoginView> {
                   backgroundColor: AppColors.success,
                 ),
               );
-              Navigator.pop(context);
+              // Quay về Home và xoá sạch stack để không quay lại được Login
+              Navigator.of(context).popUntil((route) => route.isFirst);
             }
             if (state is AuthGoogleUrlSuccess) {
               final uri = Uri.parse(state.url);
@@ -138,6 +140,9 @@ class _LoginViewState extends State<LoginView> {
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Form(
                 key: _formKey,
+                autovalidateMode: _autoValidate
+                    ? AutovalidateMode.onUserInteraction
+                    : AutovalidateMode.disabled,
                 child: Column(
                   children: [
                     SizedBox(height: 40.h),
@@ -169,8 +174,14 @@ class _LoginViewState extends State<LoginView> {
                     CustomTextField(
                       controller: _emailController,
                       hintText: "Email",
-                      prefixIcon: Icons.person_outline,
-                      validator: (val) => val!.isEmpty ? "Bắt buộc" : null,
+                      prefixIcon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return "Vui lòng nhập email";
+                        final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                        if (!emailRegex.hasMatch(val)) return "Email không đúng định dạng";
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16.h),
 
@@ -191,8 +202,11 @@ class _LoginViewState extends State<LoginView> {
                           () => _isPasswordVisible = !_isPasswordVisible,
                         ),
                       ),
-                      validator: (val) =>
-                          val!.length < 6 ? "Tối thiểu 6 ký tự" : null,
+                      validator: (val) {
+                        if (val == null || val.isEmpty) return "Vui lòng nhập mật khẩu";
+                        if (val.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự";
+                        return null;
+                      },
                     ),
                     SizedBox(height: 24.h),
 
@@ -201,10 +215,12 @@ class _LoginViewState extends State<LoginView> {
                       text: "Đăng nhập",
                       isLoading: state is AuthLoading,
                       onPressed: () {
+                        setState(() => _autoValidate = true);
                         if (_formKey.currentState!.validate()) {
+                          FocusScope.of(context).unfocus();
                           context.read<AuthBloc>().add(
                             AuthLoginStarted(
-                              email: _emailController.text,
+                              email: _emailController.text.trim(),
                               password: _passwordController.text,
                             ),
                           );

@@ -140,9 +140,14 @@ class _CartViewState extends State<CartView> {
           ),
         ],
         child: BlocBuilder<CartBloc, CartState>(
+          buildWhen: (previous, current) {
+            // Không rebuild khi đang ở CartOperationSuccess (snackbar xử lý riêng)
+            if (current is CartOperationSuccess) return false;
+            return true;
+          },
           builder: (context, state) {
-            // Đang tải
-            if (state is CartLoading) {
+            // Chỉ hiện loading lần đầu khi chưa có data
+            if (state is CartLoading || state is CartInitial) {
               return const Center(
                 child: CircularProgressIndicator(color: AppColors.primaryBlue),
               );

@@ -1,3 +1,5 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
+import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -45,7 +47,7 @@ class ProfilePage extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: AppColors.surface,
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -61,7 +63,7 @@ class ProfilePage extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      color: const Color(0xFF1A94FF),
+      color: AppColors.primaryBlue,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 20.h,
         bottom: 30.h,
@@ -72,13 +74,17 @@ class ProfilePage extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 35.r,
-            backgroundImage: user.avatar != null
-                ? NetworkImage(user.avatar!)
-                : null,
             backgroundColor: Colors.white,
-            child: user.avatar == null
-                ? Icon(Icons.person, size: 40.sp, color: Colors.grey)
-                : null,
+            child: CircleAvatar(
+              radius: 32.r,
+              backgroundImage: user.avatar != null
+                  ? NetworkImage(user.avatar!)
+                  : null,
+              backgroundColor: AppColors.surface,
+              child: user.avatar == null
+                  ? Icon(Icons.person, size: 36.sp, color: AppColors.textSecondary)
+                  : null,
+            ),
           ),
           SizedBox(width: 16.w),
           Expanded(
@@ -87,16 +93,14 @@ class ProfilePage extends StatelessWidget {
               children: [
                 Text(
                   user.name,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                  style: AppTextStyles.h3.copyWith(color: Colors.white),
                 ),
                 SizedBox(height: 4.h),
                 Text(
                   user.email,
-                  style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+                  style: AppTextStyles.caption.copyWith(
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),
@@ -145,16 +149,16 @@ class ProfilePage extends StatelessWidget {
             secondary: Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: AppColors.secondary,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.security_outlined,
-                color: Colors.blue,
+                color: AppColors.primaryBlue,
                 size: 20.sp,
               ),
             ),
-            title: Text("Xác thực 2 lớp", style: TextStyle(fontSize: 14.sp)),
+            title: Text("Xác thực 2 lớp", style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
             value: user.isTwoFactorEnabled,
             onChanged: (value) {
               if (value) {
@@ -165,7 +169,7 @@ class ProfilePage extends StatelessWidget {
                 _showDisable2FADialog(context);
               }
             },
-            activeThumbColor: const Color(0xFF1A94FF),
+            activeThumbColor: AppColors.primaryBlue,
           ),
           const Divider(height: 1),
           // --- Seller Section Logic ---
@@ -194,7 +198,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 );
               },
-              textColor: Colors.blue,
+              textColor: AppColors.primaryBlue,
             ),
             const Divider(height: 1),
           ],
@@ -264,9 +268,11 @@ class ProfilePage extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: TextStyle(fontSize: 14.sp, color: textColor),
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: textColor ?? AppColors.textPrimary,
+        ),
       ),
-      trailing: Icon(Icons.chevron_right, size: 20.sp, color: Colors.grey),
+      trailing: Icon(Icons.chevron_right, size: 20.sp, color: AppColors.textSecondary),
       onTap: onTap,
     );
   }

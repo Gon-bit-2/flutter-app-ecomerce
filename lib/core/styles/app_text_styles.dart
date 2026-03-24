@@ -11,13 +11,13 @@ class AppTextStyles {
   );
 
   static TextStyle get h2 => GoogleFonts.inter(
-    fontSize: 24.sp,
-    fontWeight: FontWeight.w700,
+    fontSize: 20.sp,
+    fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
   static TextStyle get h3 => GoogleFonts.inter(
-    fontSize: 20.sp,
+    fontSize: 18.sp,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
@@ -40,9 +40,15 @@ class AppTextStyles {
     color: AppColors.textSecondary,
   );
 
+  static TextStyle get caption => GoogleFonts.inter(
+    fontSize: 12.sp,
+    fontWeight: FontWeight.normal,
+    color: AppColors.textSecondary,
+  );
+
   static TextStyle get buttonText => GoogleFonts.inter(
     fontSize: 16.sp,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     color: AppColors.textLight,
   );
 

@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,10 +17,21 @@ class HomeAppBar extends StatelessWidget {
     return SliverAppBar(
       pinned: true,
       floating: true,
-      backgroundColor: const Color(0xFF1A94FF), // Blue like the image
       elevation: 0,
-      titleSpacing: 0,
       toolbarHeight: 60.h,
+      titleSpacing: 0,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primaryBlue,
+              AppColors.primaryLight,
+            ],
+          ),
+        ),
+      ),
       title: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w),
         child: Row(
@@ -33,26 +45,29 @@ class HomeAppBar extends StatelessWidget {
                   );
                 },
                 child: Container(
-                  height: 45.h,
+                  height: 40.h,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(4.r),
+                    borderRadius: BorderRadius.circular(20.r),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  padding: EdgeInsets.symmetric(horizontal: 12.w),
                   child: Row(
                     children: [
-                      Icon(Icons.search, color: Colors.grey, size: 20.sp),
+                      Icon(Icons.search, color: AppColors.textSecondary, size: 20.sp),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(
-                          'Tìm kiếm sản phẩm...', // Placeholder
-                          style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                          'Tìm kiếm sản phẩm...',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14.sp,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Icon(
                         Icons.camera_alt_outlined,
-                        color: Colors.grey,
+                        color: AppColors.textSecondary,
                         size: 20.sp,
                       ),
                     ],
@@ -60,7 +75,7 @@ class HomeAppBar extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: 15.w),
+            SizedBox(width: 12.w),
             BlocBuilder<CartBloc, CartState>(
               builder: (context, state) {
                 int cartCount = 0;
@@ -79,7 +94,7 @@ class HomeAppBar extends StatelessWidget {
                 );
               },
             ),
-            SizedBox(width: 15.w),
+            SizedBox(width: 12.w),
             _buildIconAction(
               Icons.chat_bubble_outline,
               badgeCount: 0,
@@ -90,7 +105,7 @@ class HomeAppBar extends StatelessWidget {
                 );
               },
             ),
-            SizedBox(width: 15.w),
+            SizedBox(width: 12.w),
             BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 if (state is AuthSuccess) {
@@ -107,7 +122,7 @@ class HomeAppBar extends StatelessWidget {
                 return const SizedBox.shrink();
               },
             ),
-            SizedBox(width: 10.w),
+            SizedBox(width: 8.w),
           ],
         ),
       ),
@@ -132,7 +147,7 @@ class HomeAppBar extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.all(4.w),
                 decoration: const BoxDecoration(
-                  color: Colors.red,
+                  color: AppColors.error,
                   shape: BoxShape.circle,
                 ),
                 constraints: BoxConstraints(minWidth: 16.w, minHeight: 16.w),
