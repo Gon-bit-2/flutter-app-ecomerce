@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -83,7 +84,7 @@ class FlashSaleSection extends StatelessWidget {
                             height: 130.w,
                             width: 130.w,
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(4.r),
                             ),
                             child: CachedNetworkImage(

@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -62,7 +63,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A94FF),
+        backgroundColor: AppColors.primaryBlue,
         elevation: 0,
         titleSpacing: 0,
         leading: IconButton(
@@ -74,7 +75,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
           margin: EdgeInsets.only(right: 12.w),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(4.r),
+            borderRadius: BorderRadius.circular(20.r),
           ),
           child: TextField(
             controller: _searchController,
@@ -228,10 +229,10 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
         margin: EdgeInsets.only(right: 8.w, top: 8.h, bottom: 8.h),
         padding: EdgeInsets.symmetric(horizontal: 12.w),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE5F2FF) : Colors.grey[100],
+          color: isSelected ? AppColors.secondary : Colors.grey[100],
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isSelected ? const Color(0xFF1A94FF) : Colors.transparent,
+            color: isSelected ? AppColors.primaryBlue : Colors.transparent,
           ),
         ),
         child: Row(
@@ -240,7 +241,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
               label,
               style: TextStyle(
                 fontSize: 13.sp,
-                color: isSelected ? const Color(0xFF1A94FF) : Colors.black87,
+                color: isSelected ? AppColors.primaryBlue : Colors.black87,
                 fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
               ),
             ),
@@ -249,7 +250,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
               Icon(
                 icon,
                 size: 16.sp,
-                color: isSelected ? const Color(0xFF1A94FF) : Colors.grey[600],
+                color: isSelected ? AppColors.primaryBlue : Colors.grey[600],
               ),
             ],
           ],
@@ -296,7 +297,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
                 },
                 child: Text(
                   'Xóa tất cả',
-                  style: TextStyle(color: Colors.blue, fontSize: 13.sp),
+                  style: TextStyle(color: AppColors.primaryBlue, fontSize: 13.sp),
                 ),
               ),
             ],
@@ -307,9 +308,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
             children: history.map((query) => InputChip(
               label: Text(query, style: TextStyle(fontSize: 13.sp)),
               backgroundColor: Colors.grey[100],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              shape: const StadiumBorder(),
               side: BorderSide.none,
               onPressed: () {
                 context.read<SearchBloc>().add(SearchHistorySelected(query));
@@ -512,7 +511,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A94FF),
+                  backgroundColor: AppColors.primaryBlue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -564,11 +563,11 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
       title: Text(
         label,
         style: TextStyle(
-          color: isSelected ? const Color(0xFF1A94FF) : Colors.black87,
+          color: isSelected ? AppColors.primaryBlue : Colors.black87,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
-      trailing: isSelected ? const Icon(Icons.check, color: Color(0xFF1A94FF)) : null,
+      trailing: isSelected ? const Icon(Icons.check, color: AppColors.primaryBlue) : null,
       onTap: () {
         bloc.add(SearchFilterChanged(
           sortBy: value,

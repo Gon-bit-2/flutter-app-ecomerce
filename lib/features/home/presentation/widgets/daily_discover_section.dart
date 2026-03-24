@@ -1,6 +1,7 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
+import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart'; // Ensure dependency is added
 import '../../../product/domain/entities/product.dart';
 import 'product_card.dart';
 
@@ -13,14 +14,17 @@ class DailyDiscoverSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
-      sliver: SliverMasonryGrid.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 8.h,
-        crossAxisSpacing: 8.w,
-        childCount: products.length,
-        itemBuilder: (context, index) {
-          return ProductCard(product: products[index]);
-        },
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 8.h,
+          crossAxisSpacing: 8.w,
+          childAspectRatio: 0.65,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => ProductCard(product: products[index]),
+          childCount: products.length,
+        ),
       ),
     );
   }
@@ -34,13 +38,13 @@ class DailyDiscoverHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Container(
-        color: Colors.grey[50],
+        color: AppColors.surface,
         padding: EdgeInsets.symmetric(vertical: 15.h),
         child: Center(
           child: Text(
             'GỢI Ý HÔM NAY',
-            style: TextStyle(
-              color: Colors.red,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.primaryBlue,
               fontWeight: FontWeight.bold,
               fontSize: 14.sp,
               letterSpacing: 1.2,

@@ -90,7 +90,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
     final currentUserId = _getCurrentUserId(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       appBar: _buildAppBar(context),
       body: Column(
         children: [

@@ -3,7 +3,6 @@ import 'package:app_fe_ecomerce/core/common/widgets/custom_text_field.dart';
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
-import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -131,9 +130,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       backgroundColor: AppColors.success,
                     ),
                   );
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
-                  );
+                  // Quay về trang trước đó sạch sẽ
+                  Navigator.of(context).popUntil((route) => route.isFirst);
                 }
                 if (state is AuthVerifyOtpSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -198,13 +196,15 @@ class _RegisterPageState extends State<RegisterPage> {
           CustomTextField(
             controller: _emailController,
             hintText: "example@email.com",
+            keyboardType: TextInputType.emailAddress,
             suffixIcon: const Icon(
               Icons.email_outlined,
               color: AppColors.textSecondary,
             ),
             validator: (v) {
-              if (v == null || v.isEmpty) return "Bắt buộc";
-              if (!v.contains('@')) return "Email không hợp lệ";
+              if (v == null || v.isEmpty) return "Vui lòng nhập email";
+              final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+              if (!emailRegex.hasMatch(v)) return "Email không đúng định dạng";
               return null;
             },
           ),
@@ -233,11 +233,9 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               Text("Đã có tài khoản? ", style: AppTextStyles.bodyMedium),
               GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
-                  );
-                },
+              onTap: () {
+                Navigator.of(context).pop();
+              },
                 child: Text(
                   "Đăng nhập",
                   style: AppTextStyles.bodyMedium.copyWith(
@@ -380,7 +378,12 @@ class _RegisterPageState extends State<RegisterPage> {
               hintText: "Số điện thoại",
               prefixIcon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
-              validator: (v) => v!.isEmpty ? "Bắt buộc" : null,
+              validator: (v) {
+                if (v == null || v.isEmpty) return "Vui lòng nhập số điện thoại";
+                final phoneRegex = RegExp(r'^(0|\+84)[3-9]\d{8}$');
+                if (!phoneRegex.hasMatch(v)) return "Số điện thoại không hợp lệ";
+                return null;
+              },
             ),
             SizedBox(height: 16.h),
 
@@ -397,7 +400,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 onPressed: () =>
                     setState(() => _isPasswordVisible = !_isPasswordVisible),
               ),
-              validator: (v) => v!.length < 6 ? "Tối thiểu 6 ký tự" : null,
+              validator: (v) {
+                if (v == null || v.isEmpty) return "Vui lòng nhập mật khẩu";
+                if (v.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự";
+                return null;
+              },
             ),
             SizedBox(height: 16.h),
 

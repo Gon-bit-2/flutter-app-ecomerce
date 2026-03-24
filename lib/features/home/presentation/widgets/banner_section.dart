@@ -1,6 +1,8 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/banner_entity.dart';
 
 class BannerSection extends StatefulWidget {
@@ -35,15 +37,21 @@ class _BannerSectionState extends State<BannerSection> {
           items: widget.banners.map((banner) {
             return Builder(
               builder: (BuildContext context) {
-                return CachedNetworkImage(
-                  imageUrl: banner.imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  placeholder: (context, url) =>
-                      Container(color: Colors.grey[200]),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.error),
+                return Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: CachedNetworkImage(
+                      imageUrl: banner.imageUrl,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      placeholder: (context, url) =>
+                          Container(color: AppColors.surface),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.surface,
+                        child: const Icon(Icons.error),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -66,7 +74,7 @@ class _BannerSectionState extends State<BannerSection> {
                 color:
                     (Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
-                            : Colors.blue)
+                            : AppColors.primaryBlue)
                         .withOpacity(_current == entry.key ? 0.9 : 0.4),
               ),
             );

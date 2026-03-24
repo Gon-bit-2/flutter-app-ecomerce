@@ -1,3 +1,5 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
+import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,13 +28,12 @@ class ProductCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(4.r), // Standard Shopee corner
-          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(12.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.06),
               offset: const Offset(0, 2),
-              blurRadius: 2,
+              blurRadius: 8,
             ),
           ],
         ),
@@ -40,65 +41,73 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
-            AspectRatio(
-              aspectRatio: 1,
-              child: Stack(
-                children: [
-                  (product.images.isNotEmpty && product.images.first.isNotEmpty)
-                      ? CachedNetworkImage(
-                          imageUrl: product.images.first.startsWith('url: ')
-                              ? product.images.first
-                                    .replaceFirst('url: ', '')
-                                    .trim()
-                              : product.images.first,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => Container(
-                            color: Colors.grey[100],
-                            child: const Icon(
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  children: [
+                    (product.images.isNotEmpty && product.images.first.isNotEmpty)
+                        ? CachedNetworkImage(
+                            imageUrl: product.images.first.startsWith('url: ')
+                                ? product.images.first
+                                      .replaceFirst('url: ', '')
+                                      .trim()
+                                : product.images.first,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => Container(
+                              color: AppColors.surface,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: AppColors.textSecondary,
+                                size: 32.sp,
+                              ),
+                            ),
+                            placeholder: (_, __) => Container(
+                              color: AppColors.surface,
+                            ),
+                          )
+                        : Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            color: AppColors.surface,
+                            child: Icon(
                               Icons.image_not_supported,
-                              color: Colors.grey,
+                              color: AppColors.textSecondary,
+                              size: 32.sp,
                             ),
                           ),
-                          placeholder: (_, __) => Container(
-                            color: Colors.grey[100],
-                            child: const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                    // Mall Tag
+                    if (product.isMall)
+                      Positioned(
+                        top: 4.h,
+                        left: 0,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(4.r),
+                              bottomRight: Radius.circular(4.r),
                             ),
                           ),
-                        )
-                      : Container(
-                          width: double.infinity,
-                          height: double.infinity,
-                          color: Colors.grey[100],
-                          child: const Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey,
-                          ),
-                        ),
-                  // Mall Tag
-                  if (product.isMall)
-                    Positioned(
-                      top: 4.h,
-                      left: 0,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 2.h,
-                        ),
-                        color: const Color(0xFFD0011B),
-                        child: Text(
-                          "Mall",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.bold,
+                          child: Text(
+                            "Mall",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
             // Info
@@ -109,26 +118,27 @@ class ProductCard extends StatelessWidget {
                 children: [
                   Text(
                     product.name,
-                    maxLines: 1, // Reduce to 1 line if needed, or check height
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   SizedBox(height: 4.h),
                   Row(
                     children: [
-                      // If virtual price exists, show discount tag? Or old price?
-                      // Let's just show Price
                       Text(
                         'đ',
                         style: TextStyle(
-                          color: Theme.of(context).primaryColor,
+                          color: AppColors.primaryBlue,
                           fontSize: 10.sp,
                         ),
                       ),
                       Text(
                         formatCurrency.format(product.basePrice),
                         style: TextStyle(
-                          color: Theme.of(context).primaryColor,
+                          color: AppColors.primaryBlue,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.bold,
                         ),
@@ -139,12 +149,12 @@ class ProductCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Sold count
                       Text(
-                        '${product.sold ?? 0} sold',
-                        style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                        '${product.sold ?? 0} đã bán',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10.sp,
+                        ),
                       ),
-                      // Icon(Icons.favorite_border, size: 14.sp, color: Colors.grey),
                     ],
                   ),
                 ],
