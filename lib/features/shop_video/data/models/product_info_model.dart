@@ -3,7 +3,7 @@ import '../../domain/entities/product_info.dart';
 
 part 'product_info_model.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class ProductInfoModel extends ProductInfo {
   const ProductInfoModel({
     required super.id,
@@ -11,6 +11,8 @@ class ProductInfoModel extends ProductInfo {
     required super.basePrice,
     super.virtualPrice,
     super.images = const [],
+    super.defaultSkuId,
+    super.hasVariants = false,
   });
 
   factory ProductInfoModel.fromJson(Map<String, dynamic> json) =>
