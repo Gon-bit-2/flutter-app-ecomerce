@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/shop_video.dart';
 import 'video_comments_bottom_sheet.dart';
+import 'video_products_bottom_sheet.dart';
 
 class VideoActionButtons extends StatelessWidget {
   final ShopVideo video;
@@ -44,7 +45,7 @@ class VideoActionButtons extends StatelessWidget {
         // Like Button
         _buildActionButton(
           icon: video.isLiked ? Icons.favorite : Icons.favorite_border,
-          color: video.isLiked ? Colors.red : Colors.white,
+          color: video.isLiked ? const Color(0xFFF44336) : Colors.white, // DS Lỗi/Đỏ cho like
           label: _formatCount(video.likeCount),
           onTap: onLikeToggle,
         ),
@@ -55,11 +56,22 @@ class VideoActionButtons extends StatelessWidget {
           color: Colors.white,
           label: _formatCount(video.commentCount),
           onTap: () {
-            // Show bottom sheet
             VideoCommentsBottomSheet.show(context, video.id);
           },
         ),
         SizedBox(height: 20.h),
+        // Nút Giỏ hàng / Sản phẩm - chỉ hiện khi video có sản phẩm
+        if (video.products.isNotEmpty)
+          _buildActionButton(
+            icon: Icons.shopping_bag_outlined,
+            color: const Color(0xFF00A8E8), // DS Primary - nổi bật hơn
+            label: 'Mua sắm',
+            onTap: () {
+              VideoProductsBottomSheet.show(context, video.products);
+            },
+          ),
+        if (video.products.isNotEmpty)
+          SizedBox(height: 20.h),
         // Share Button
         _buildActionButton(
           icon: Icons.share_rounded,
