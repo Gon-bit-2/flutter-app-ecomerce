@@ -18,6 +18,8 @@ import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.d
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/profile_page.dart';
 import 'package:app_fe_ecomerce/features/shop_video/presentation/pages/video_feed_page.dart' as app_fe_ecomerce_shop_video;
+import 'package:app_fe_ecomerce/features/notification/presentation/bloc/notification_bloc.dart';
+import 'package:app_fe_ecomerce/features/notification/presentation/pages/notification_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -190,7 +192,10 @@ class _HomeViewState extends State<HomeView> {
           // Index 1: Video Feed
           const app_fe_ecomerce_shop_video.VideoFeedPage(),
 
-          // Index 2: Tôi / Profile
+          // Index 2: Thông báo
+          const NotificationPage(),
+
+          // Index 3: Tôi / Profile
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               final user = _getUserFromState(state);
@@ -233,23 +238,38 @@ class _HomeViewState extends State<HomeView> {
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          backgroundColor: Colors.white,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-            BottomNavigationBarItem(icon: Icon(Icons.ondemand_video_outlined), label: 'Video'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: 'Tôi',
-            ),
-          ],
-          selectedItemColor: AppColors.primaryBlue,
-          unselectedItemColor: AppColors.textSecondary,
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() => _currentIndex = index);
+        child: BlocBuilder<NotificationBloc, NotificationState>(
+          builder: (context, notifState) {
+            return BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              elevation: 0,
+              backgroundColor: Colors.white,
+              items: [
+                const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+                const BottomNavigationBarItem(icon: Icon(Icons.ondemand_video_outlined), label: 'Video'),
+                BottomNavigationBarItem(
+                  icon: Badge(
+                    isLabelVisible: notifState.unreadCount > 0,
+                    label: Text(
+                      notifState.unreadCount > 99 ? '99+' : '${notifState.unreadCount}',
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                    ),
+                    child: const Icon(Icons.notifications_outlined),
+                  ),
+                  label: 'Thông báo',
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  label: 'Tôi',
+                ),
+              ],
+              selectedItemColor: AppColors.primaryBlue,
+              unselectedItemColor: AppColors.textSecondary,
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() => _currentIndex = index);
+              },
+            );
           },
         ),
       ),

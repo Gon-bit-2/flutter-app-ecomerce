@@ -643,3 +643,45 @@ Kể từ giờ, thông tin Shop (cửa hàng kinh doanh) đã được tách b�
   - Nếu `status === 'APPROVED'`: Cửa hàng đã hoạt động. ➡ *Chuyển hướng vào trang Dashboard quản lý (Seller Center).*
 
 > **Lưu ý:** Hiện tại `shopId` của một Shop luôn bằng với `userId` (1-1 relationship) nên logic thao tác với đơn hàng, mã giảm giá và video trước đó không bị ảnh hưởng.
+
+## 12. Tích Hợp WebSockets & Thông Báo (Notifications)
+
+### a. WebSockets Connection
+- **Trường hợp sử dụng:** Thông báo hệ thống realtime (in-app notification), trạng thái thanh toán, chat.
+- **Kết nối:** Cần gửi `accessToken` khi init Socket.
+
+```javascript
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:9999', {
+  extraHeaders: {
+    Authorization: `Bearer ${accessToken}`,
+  }
+});
+```
+
+### b. Lắng nghe sự kiện thông báo (In-App Notifications)
+- **Event Name:** `new-notification`
+- Payload nhận được sẽ tự động lưu vào DB. Dùng payload này để hiện popup (Toast, Snack bar).
+
+```javascript
+socket.on('new-notification', (data) => {
+  console.log('New notification:', data);
+  // Cấu trúc Data:
+  // {
+  //   id: 1,
+  //   title: "Tạo đơn hàng thành công",
+  //   body: "Bạn đã thanh toán đơn hàng #12345",
+  //   type: "ORDER",
+  //   data: { url: "/orders/12345" }
+  //   isRead: false,
+  //   createdAt: "2023-10-27T10:00:00Z",
+  // }
+  toast.success(data.title);
+});
+```
+
+### c. Quy trình UI Notification List (Quả chuông)
+1. Gọi **API GET /notifications** ở lần load trang đầu tiên hoặc khi mở danh sách (kèm `isRead=false` để lấy số lượng chuông thông báo chưa đọc).
+2. Khi người dùng click vào một dòng thông báo, gọi **API PATCH /notifications/:notificationId/read** để đánh dấu đã xem, sau đó redirect bằng URL trong `data.url`.
+3. Nếu người dùng chọn 'Đánh dấu tất cả đã đọc', gọi **API PATCH /notifications/read-all**.
