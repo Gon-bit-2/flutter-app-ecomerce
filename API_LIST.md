@@ -1831,3 +1831,38 @@ _No Body_
 - `Authorization`: `Bearer <accessToken>`
 
 _No Body_
+
+---
+
+## Shop Module (Multi-vendor)
+
+### Register Shop
+
+**POST** `/shop/register`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+```json
+{
+  "name": "My Awesome Shop",
+  "description": "Chuyên bán đồ công nghệ", // Optional
+  "phoneNumber": "0987654321", // Optional
+  "address": "123 Đường Công Nghệ, Quận 1, TP.HCM", // Optional
+  "email": "shop@example.com" // Optional
+}
+```
+
+### Get My Shop Info
+
+**GET** `/shop/my-shop`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+_No Body_
+
+**Response:**
+Trả về thông tin cửa hàng hiện tại của user đang đăng nhập. Nếu chưa tạo, trả về `null`. Nếu đã tạo, kèm theo field `status` (`PENDING`, `APPROVED`, `REJECTED`) để frontend render giao diện tương ứng.

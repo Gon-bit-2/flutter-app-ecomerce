@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class ShopSettingsPage extends StatefulWidget {
   final String shopName;
@@ -81,7 +82,7 @@ class _ShopSettingsPageState extends State<ShopSettingsPage> {
                     radius: 50.r,
                     backgroundColor: Colors.blue.shade50,
                     child: widget.shopAvatar != null
-                        ? Image.network(widget.shopAvatar!, fit: BoxFit.cover)
+                        ? AppNetworkImage(imageUrl: widget.shopAvatar!,  fit: BoxFit.cover)
                         : Icon(
                             Icons.storefront,
                             size: 50.r,

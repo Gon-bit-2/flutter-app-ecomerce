@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -10,14 +9,16 @@ import '../../domain/repositories/product_repository.dart';
 import '../../../cart/presentation/pages/cart_page.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import '../../../review/presentation/widgets/review_list_widget.dart';
 import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart'
     as app_fe_ecomerce_cart;
-import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart'
-    as app_fe_ecomerce_order;
+import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart' as app_fe_ecomerce_order;
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -669,42 +670,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ? rawUrl.replaceFirst('url: ', '').trim()
                 : rawUrl;
             return SizedBox.expand(
-              child: CachedNetworkImage(
+              child: AppNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.contain,
                 width: double.infinity,
                 height: double.infinity,
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.broken_image,
-                          size: 50,
-                          color: Colors.red,
-                        ),
-                        SizedBox(height: 8.h),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          child: Text(
-                            "Lỗi tải ảnh: $error\nURL: $url",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              color: Colors.black,
-                            ),
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                placeholder: (_, __) =>
-                    const Center(child: CircularProgressIndicator()),
               ),
             );
           },
@@ -958,7 +928,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.r),
-                        child: CachedNetworkImage(
+                        child: AppNetworkImage(
                           imageUrl: _currentProduct.images.isNotEmpty
                               ? _currentProduct.images[0]
                                     .replaceFirst('url: ', '')
@@ -967,10 +937,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           width: 80.w,
                           height: 80.w,
                           fit: BoxFit.cover,
-                          errorWidget: (context, url, err) => Container(
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image),
-                          ),
                         ),
                       ),
                       SizedBox(width: 12.w),
@@ -1437,25 +1403,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             top: Radius.circular(8.r),
                           ),
                           child: imageUrl.isNotEmpty
-                              ? CachedNetworkImage(
+                              ? AppNetworkImage(
                                   imageUrl: imageUrl,
                                   height: 130.h,
                                   width: double.infinity,
                                   fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => Container(
-                                    height: 130.h,
-                                    color: Colors.grey[200],
-                                    child: const Center(
-                                      child: Icon(Icons.image, color: Colors.grey),
-                                    ),
-                                  ),
-                                  placeholder: (_, __) => Container(
-                                    height: 130.h,
-                                    color: Colors.grey[100],
-                                    child: const Center(
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  ),
                                 )
                               : Container(
                                   height: 130.h,

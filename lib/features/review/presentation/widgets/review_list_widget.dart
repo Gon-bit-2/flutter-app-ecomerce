@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../injection_container.dart';
 import '../bloc/review_list/review_list_bloc.dart';
@@ -10,13 +9,17 @@ import '../bloc/create_review/create_review_bloc.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import 'create_review_bottom_sheet.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class ReviewListWidget extends StatefulWidget {
   final int productId;
+
   /// true nếu user đã mua sản phẩm này (có đơn hàng completed)
   final bool canReview;
+
   /// true nếu user đã đánh giá sản phẩm này rồi
   final bool hasReviewed;
+
   /// orderId liên quan (nếu có) để gửi review
   final int? orderId;
 
@@ -39,7 +42,9 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   void initState() {
     super.initState();
     _reviewListBloc = getIt<ReviewListBloc>()
-      ..add(LoadProductReviewsEvent(productId: widget.productId, isRefresh: true));
+      ..add(
+        LoadProductReviewsEvent(productId: widget.productId, isRefresh: true),
+      );
   }
 
   @override
@@ -68,7 +73,12 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           productId: widget.productId,
           orderId: widget.orderId,
           onReviewCreated: () {
-            _reviewListBloc.add(LoadProductReviewsEvent(productId: widget.productId, isRefresh: true));
+            _reviewListBloc.add(
+              LoadProductReviewsEvent(
+                productId: widget.productId,
+                isRefresh: true,
+              ),
+            );
           },
         ),
       ),
@@ -92,7 +102,10 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               // Hiện nút đánh giá chỉ khi user đã mua & chưa đánh giá
               if (widget.hasReviewed)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 5.h,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(16.r),
@@ -101,7 +114,11 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle_outline, size: 14.sp, color: Colors.green.shade700),
+                      Icon(
+                        Icons.check_circle_outline,
+                        size: 14.sp,
+                        color: Colors.green.shade700,
+                      ),
                       SizedBox(width: 4.w),
                       Text(
                         'Đã đánh giá',
@@ -147,7 +164,10 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                     child: Center(
                       child: Text(
                         "Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14.sp,
+                        ),
                       ),
                     ),
                   );
@@ -156,8 +176,11 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: state.reviews.length >= 3 ? 3 : state.reviews.length, // Preview max 3
-                  separatorBuilder: (context, index) => Divider(color: Colors.grey[200]),
+                  itemCount: state.reviews.length >= 3
+                      ? 3
+                      : state.reviews.length, // Preview max 3
+                  separatorBuilder: (context, index) =>
+                      Divider(color: Colors.grey[200]),
                   itemBuilder: (context, index) {
                     final review = state.reviews[index];
                     return _buildReviewItem(review);
@@ -188,7 +211,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               }
               return const SizedBox.shrink();
             },
-          )
+          ),
         ],
       ),
     );
@@ -206,10 +229,14 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               CircleAvatar(
                 radius: 16.r,
                 backgroundColor: Colors.grey[300],
-                backgroundImage: review.userId != null 
-                  ? const NetworkImage('https://i.pravatar.cc/100') // Placeholder for user avatar
-                  : null,
-                child: review.userId == null ? Icon(Icons.person, size: 20.sp, color: Colors.white) : null,
+                backgroundImage: review.userId != null
+                    ? const NetworkImage(
+                        'https://i.pravatar.cc/100',
+                      ) // Placeholder for user avatar
+                    : null,
+                child: review.userId == null
+                    ? Icon(Icons.person, size: 20.sp, color: Colors.white)
+                    : null,
               ),
               SizedBox(width: 8.w),
               Expanded(
@@ -218,7 +245,10 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                   children: [
                     Text(
                       "User ${review.userId}", // Replace with real username if available
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Row(
                       children: List.generate(
@@ -226,7 +256,9 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                         (index) => Icon(
                           Icons.star,
                           size: 14.sp,
-                          color: index < review.rating ? Colors.amber : Colors.grey[300],
+                          color: index < review.rating
+                              ? Colors.amber
+                              : Colors.grey[300],
                         ),
                       ),
                     ),
@@ -234,9 +266,9 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                 ),
               ),
               Text(
-                review.createdAt != null 
-                  ? DateFormat('dd/MM/yyyy').format(review.createdAt!) 
-                  : DateFormat('dd/MM/yyyy').format(DateTime.now()),
+                review.createdAt != null
+                    ? DateFormat('dd/MM/yyyy').format(review.createdAt!)
+                    : DateFormat('dd/MM/yyyy').format(DateTime.now()),
                 style: TextStyle(fontSize: 12.sp, color: Colors.grey),
               ),
             ],
@@ -259,25 +291,17 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                   final url = media.url;
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(4.r),
-                    child: CachedNetworkImage(
+                    child: AppNetworkImage(
                       imageUrl: url,
                       width: 70.h,
                       height: 70.h,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.grey[200],
-                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.broken_image, color: Colors.grey),
-                      ),
                     ),
                   );
                 },
               ),
-            )
-          ]
+            ),
+          ],
         ],
       ),
     );

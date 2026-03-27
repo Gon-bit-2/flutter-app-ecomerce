@@ -3,7 +3,7 @@ import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class CheckoutItemWidget extends StatelessWidget {
   final CartEntity item;
@@ -26,19 +26,11 @@ class CheckoutItemWidget extends StatelessWidget {
           // Hình ảnh sản phẩm
           ClipRRect(
             borderRadius: BorderRadius.circular(4.r),
-            child: CachedNetworkImage(
+            child: AppNetworkImage(
               imageUrl: item.image ?? 'https://via.placeholder.com/80',
               width: 60.w,
               height: 60.w,
               fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  Container(width: 60.w, height: 60.w, color: Colors.grey[200]),
-              errorWidget: (context, url, error) => Container(
-                width: 60.w,
-                height: 60.w,
-                color: Colors.grey[200],
-                child: const Icon(Icons.error, color: Colors.grey),
-              ),
             ),
           ),
           SizedBox(width: 12.w),

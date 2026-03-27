@@ -1,5 +1,8 @@
 // lib/main.dart
 
+import 'dart:async';
+
+import 'package:app_fe_ecomerce/core/services/deep_link_service.dart';
 import 'package:app_fe_ecomerce/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // Để UI co giãn
@@ -17,16 +20,75 @@ import 'features/address/presentation/bloc/address_event.dart';
 void main() async {
   // 1. Đảm bảo Flutter Binding được khởi tạo trước
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('[Main] Flutter Binding Initialized');
 
   // 2. Khởi tạo "Tủ đồ" (DI)
-  await configureDependencies();
+  debugPrint('[Main] Configuring Dependencies...');
+  try {
+    await configureDependencies();
+    debugPrint('[Main] Dependencies Configured');
+  } catch (e) {
+    debugPrint('[Main] Error configuring dependencies: $e');
+  }
 
-  // 3. Chạy App
+  // 3. Chạy App (DeepLinkService sẽ được khởi tạo trong MyApp để không block UI)
+  debugPrint('[Main] App Started');
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  StreamSubscription? _deepLinkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLink();
+  }
+
+  /// Khởi tạo DeepLinkService sau khi UI đã sẵn sàng (non-blocking)
+  Future<void> _initDeepLink() async {
+    try {
+      final deepLinkService = GetIt.I<DeepLinkService>();
+      debugPrint('[Main] Initializing DeepLinkService...');
+      await deepLinkService.init();
+      debugPrint('[Main] DeepLinkService Initialized');
+    } catch (e) {
+      debugPrint('[Main] Error initializing DeepLinkService: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSub?.cancel();
+    super.dispose();
+  }
+
+  void _setupDeepLinkListener(BuildContext context) {
+    // Tránh đăng ký nhiều lần
+    if (_deepLinkSub != null) return;
+
+    final deepLinkService = GetIt.I<DeepLinkService>();
+    _deepLinkSub = deepLinkService.deepLinkStream.listen((uri) {
+      debugPrint('[Main] DeepLink received: $uri');
+      final accessToken = uri.queryParameters['accessToken'];
+      final refreshToken = uri.queryParameters['refreshToken'];
+      if (accessToken != null && refreshToken != null) {
+        context.read<AuthBloc>().add(
+          AuthSocialLoginTokenReceived(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +120,13 @@ class MyApp extends StatelessWidget {
             title: 'Ứng dụng TMĐT',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
-            home: const HomePage(),
+            home: Builder(
+              builder: (context) {
+                // Đăng ký lắng nghe deep link ở cấp toàn cục, có quyền truy cập BlocProvider
+                _setupDeepLinkListener(context);
+                return const HomePage();
+              },
+            ),
           ),
         );
       },

@@ -1,5 +1,6 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/bloc/my_products/my_products_bloc.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
@@ -299,12 +300,11 @@ class _MyProductsPageState extends State<MyProductsPage> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.r),
                   child: firstImage != null
-                      ? Image.network(
-                          firstImage,
+                      ? AppNetworkImage(
+                          imageUrl: firstImage,
                           width: 80.w,
                           height: 80.w,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _imagePlaceholder(),
                         )
                       : _imagePlaceholder(),
                 ),

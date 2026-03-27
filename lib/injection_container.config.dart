@@ -169,6 +169,10 @@ import 'features/search/domain/repositories/search_repository.dart' as _i246;
 import 'features/search/domain/usecases/search_history_usecases.dart' as _i949;
 import 'features/search/domain/usecases/search_products_usecase.dart' as _i453;
 import 'features/search/presentation/bloc/search_bloc.dart' as _i944;
+import 'features/shop/data/datasources/shop_remote_datasource.dart' as _i671;
+import 'features/shop/data/repositories/shop_repository_impl.dart' as _i632;
+import 'features/shop/domain/repositories/shop_repository.dart' as _i683;
+import 'features/shop/presentation/bloc/shop_registration_bloc.dart' as _i92;
 import 'features/shop_video/data/datasources/shop_video_remote_datasource.dart'
     as _i861;
 import 'features/shop_video/data/repositories/shop_video_repository_impl.dart'
@@ -336,6 +340,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i772.DiscountRemoteDataSource>(
       () => _i772.DiscountRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
+    gh.lazySingleton<_i671.ShopRemoteDataSource>(
+      () => _i671.ShopRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
     gh.lazySingleton<_i143.ProductRemoteDataSource>(
       () => _i143.ProductRemoteDataSourceImpl(gh<_i45.DioClient>()),
@@ -528,6 +535,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i350.DeleteDiscountUseCase>(),
       ),
     );
+    gh.lazySingleton<_i683.ShopRepository>(
+      () => _i632.ShopRepositoryImpl(gh<_i671.ShopRemoteDataSource>()),
+    );
     gh.factory<_i400.AddressBloc>(
       () => _i400.AddressBloc(
         getAddressesUseCase: gh<_i494.GetAddressesUseCase>(),
@@ -568,6 +578,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i337.SellerOrderBloc>(
       () => _i337.SellerOrderBloc(gh<_i608.OrderRepository>()),
+    );
+    gh.factory<_i92.ShopRegistrationBloc>(
+      () => _i92.ShopRegistrationBloc(gh<_i683.ShopRepository>()),
     );
     gh.lazySingleton<_i259.GetDailyDiscoverUseCase>(
       () => _i259.GetDailyDiscoverUseCase(gh<_i841.ProductRepository>()),

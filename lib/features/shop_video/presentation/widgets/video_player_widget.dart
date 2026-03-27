@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -108,11 +109,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             children: [
               // Show thumbnail while loading if available
               if (!_isInitialized && widget.thumbnailUrl != null)
-                Image.network(
-                  widget.thumbnailUrl!,
+                AppNetworkImage(
+                  imageUrl: widget.thumbnailUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
                 ),
               if (_hasError)
                 const Center(

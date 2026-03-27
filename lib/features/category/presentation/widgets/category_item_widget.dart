@@ -3,7 +3,7 @@ import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/category/domain/entities/category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class CategoryItemWidget extends StatelessWidget {
   final CategoryEntity category;
@@ -47,28 +47,11 @@ class CategoryItemWidget extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.r),
                   child: category.logo != null && category.logo!.isNotEmpty
-                      ? CachedNetworkImage(
+                      ? AppNetworkImage(
                           imageUrl: category.logo!,
                           width: 56.w,
                           height: 56.w,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            width: 56.w,
-                            height: 56.w,
-                            color: AppColors.inputBackground,
-                            child: Center(
-                              child: SizedBox(
-                                width: 16.w,
-                                height: 16.w,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primaryBlue,
-                                ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              _buildPlaceholderIcon(),
                         )
                       : _buildPlaceholderIcon(),
                 ),

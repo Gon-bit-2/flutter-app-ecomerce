@@ -3,7 +3,6 @@ import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/order/domain/entities/order_entity.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/bloc/order/order_bloc.dart';
 import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
-import 'package:app_fe_ecomerce/features/product/presentation/pages/product_detail_page.dart';
 import 'package:app_fe_ecomerce/features/review/presentation/bloc/create_review/create_review_bloc.dart';
 import 'package:app_fe_ecomerce/features/review/presentation/widgets/create_review_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
+import 'package:app_fe_ecomerce/features/product/presentation/pages/product_detail_page.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final int orderId;
@@ -29,7 +30,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          GetIt.I<OrderBloc>()..add(OrderDetailRequested(orderId: widget.orderId)),
+          GetIt.I<OrderBloc>()
+            ..add(OrderDetailRequested(orderId: widget.orderId)),
       child: Scaffold(
         backgroundColor: AppColors.inputBackground,
         appBar: AppBar(
@@ -47,9 +49,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             if (state is OrderCancelled || state is OrderStatusUpdated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state is OrderCancelled
-                      ? 'Hủy đơn hàng thành công'
-                      : 'Đã cập nhật trạng thái'),
+                  content: Text(
+                    state is OrderCancelled
+                        ? 'Hủy đơn hàng thành công'
+                        : 'Đã cập nhật trạng thái',
+                  ),
                   backgroundColor: AppColors.success,
                 ),
               );
@@ -225,7 +229,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ProductDetailPage(product: minimalProduct),
+                      builder: (_) =>
+                          ProductDetailPage(product: minimalProduct),
                     ),
                   );
                 },
@@ -332,8 +337,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               Text('Phương thức', style: AppTextStyles.bodyMedium),
               Text(
                 order.paymentMethod ?? 'Chuyển khoản / COD',
-                style:
-                    AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -342,7 +348,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Tạm tính', style: AppTextStyles.bodyMedium),
-              Text('${order.totalAmount ?? 0} đ', style: AppTextStyles.bodyMedium),
+              Text(
+                '${order.totalAmount ?? 0} đ',
+                style: AppTextStyles.bodyMedium,
+              ),
             ],
           ),
           const Divider(height: 24),
@@ -512,17 +521,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     // Ảnh sản phẩm
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4.r),
-                      child: Image.network(
-                        item.image ?? 'https://via.placeholder.com/48',
+                      child: AppNetworkImage(
+                        imageUrl:
+                            item.image ?? 'https://via.placeholder.com/48',
                         width: 48.w,
                         height: 48.w,
                         fit: BoxFit.cover,
-                        errorBuilder: (ctx, e, s) => Container(
-                          width: 48.w,
-                          height: 48.w,
-                          color: Colors.grey[200],
-                          child: Icon(Icons.image, size: 20.sp, color: Colors.grey),
-                        ),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -604,10 +608,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           children: [
                             Icon(Icons.star_border, size: 14.sp),
                             SizedBox(width: 4.w),
-                            Text(
-                              'Đánh giá',
-                              style: TextStyle(fontSize: 12.sp),
-                            ),
+                            Text('Đánh giá', style: TextStyle(fontSize: 12.sp)),
                           ],
                         ),
                       ),

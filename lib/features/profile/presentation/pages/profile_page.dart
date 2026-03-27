@@ -13,6 +13,7 @@ import 'package:app_fe_ecomerce/features/order/presentation/pages/order_history_
 import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/pages/voucher_wallet_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:app_fe_ecomerce/features/shop/presentation/pages/register_shop_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final UserEntity user;
@@ -82,7 +83,11 @@ class ProfilePage extends StatelessWidget {
                   : null,
               backgroundColor: AppColors.surface,
               child: user.avatar == null
-                  ? Icon(Icons.person, size: 36.sp, color: AppColors.textSecondary)
+                  ? Icon(
+                      Icons.person,
+                      size: 36.sp,
+                      color: AppColors.textSecondary,
+                    )
                   : null,
             ),
           ),
@@ -98,9 +103,7 @@ class ProfilePage extends StatelessWidget {
                 SizedBox(height: 4.h),
                 Text(
                   user.email,
-                  style: AppTextStyles.caption.copyWith(
-                    color: Colors.white70,
-                  ),
+                  style: AppTextStyles.caption.copyWith(color: Colors.white70),
                 ),
               ],
             ),
@@ -158,7 +161,12 @@ class ProfilePage extends StatelessWidget {
                 size: 20.sp,
               ),
             ),
-            title: Text("Xác thực 2 lớp", style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
+            title: Text(
+              "Xác thực 2 lớp",
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
             value: user.isTwoFactorEnabled,
             onChanged: (value) {
               if (value) {
@@ -173,7 +181,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const Divider(height: 1),
           // --- Seller Section Logic ---
-          if (user.roleId == 3 || user.roleId == 2 || user.roleId == 1) ...[
+          if (user.roleId == 3 || user.roleId == 1) ...[
             _buildMenuItem(
               Icons.storefront_outlined,
               "Shop của tôi",
@@ -189,14 +197,15 @@ class ProfilePage extends StatelessWidget {
             _buildMenuItem(
               Icons.store_outlined,
               "Bắt đầu bán hàng",
-              onTap: () {
-                // Navigate to Shop Registration
-                // TODO: Implement Shop Registration Page
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Chuyển đến trang đăng ký shop"),
-                  ),
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegisterShopPage()),
                 );
+                if (result == true && context.mounted) {
+                  // Gọi lại API fetch profile
+                  context.read<AuthBloc>().add(AuthCheckStatus());
+                }
               },
               textColor: AppColors.primaryBlue,
             ),
@@ -272,7 +281,11 @@ class ProfilePage extends StatelessWidget {
           color: textColor ?? AppColors.textPrimary,
         ),
       ),
-      trailing: Icon(Icons.chevron_right, size: 20.sp, color: AppColors.textSecondary),
+      trailing: Icon(
+        Icons.chevron_right,
+        size: 20.sp,
+        color: AppColors.textSecondary,
+      ),
       onTap: onTap,
     );
   }
@@ -421,9 +434,7 @@ class ProfilePage extends StatelessWidget {
                   width: 200.w,
                   height: 200.w,
                   color: Colors.grey[200],
-                  child: const Center(
-                    child: Text('Không có dữ liệu QR'),
-                  ),
+                  child: const Center(child: Text('Không có dữ liệu QR')),
                 ),
               SizedBox(height: 16.h),
               // Hiển thị secret key có thể copy

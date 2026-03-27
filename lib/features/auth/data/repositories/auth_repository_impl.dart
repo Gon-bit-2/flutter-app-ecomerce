@@ -71,7 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String code,
   }) async {
     try {
-      final tokenModel = await remoteDataSource.register(
+      await remoteDataSource.register(
         email: email,
         password: password,
         name: name,
@@ -79,11 +79,15 @@ class AuthRepositoryImpl implements AuthRepository {
         confirmPassword: confirmPassword,
         code: code,
       );
+      
+      // Auto login after successful registration
+      final tokenModel = await remoteDataSource.login(email, password);
       await localDataSource.saveTokens(
         tokenModel.accessToken,
         tokenModel.refreshToken,
       );
       final userModel = await remoteDataSource.getProfile();
+      
       return Right(userModel);
     } on DioException catch (e) {
       return Left(_handleError(e));

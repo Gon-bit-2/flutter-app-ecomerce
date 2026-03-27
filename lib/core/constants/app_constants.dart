@@ -13,7 +13,7 @@ class AppConstants {
   // *** QUAN TRỌNG: Thay đổi cấu hình này tùy theo môi trường ***
   // - Chạy trên emulator: đặt useRealDevice = false
   // - Chạy trên điện thoại thật: đặt useRealDevice = true
-  static const bool useRealDevice = true;
+  static const bool useRealDevice = false;
   static const String realDeviceIp = '192.168.29.93'; // IP máy tính của bạn
 
   static String get baseUrl {
@@ -89,4 +89,8 @@ class AppConstants {
 
   // WebSocket Chat
   static const String chatSocketEvent = 'receiveMessage';
+
+  // Shop Endpoints
+  static const String registerShopEndpoint = '/shop/register';
+  static const String myShopEndpoint = '/shop/my-shop';
 }
