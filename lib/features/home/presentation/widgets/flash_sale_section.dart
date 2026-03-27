@@ -1,5 +1,5 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/flash_sale_entity.dart';
@@ -87,13 +87,11 @@ class FlashSaleSection extends StatelessWidget {
                               color: AppColors.surface,
                               borderRadius: BorderRadius.circular(4.r),
                             ),
-                            child: CachedNetworkImage(
+                            child: AppNetworkImage(
                               imageUrl: product.images.isNotEmpty
                                   ? product.images.first
                                   : '',
                               fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) =>
-                                  const Center(child: Icon(Icons.error)),
                             ),
                           ),
                           Positioned(

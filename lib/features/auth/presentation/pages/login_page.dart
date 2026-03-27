@@ -1,9 +1,6 @@
-import 'dart:async';
-
 import 'package:app_fe_ecomerce/core/common/widgets/custom_button.dart';
 import 'package:app_fe_ecomerce/core/common/widgets/custom_text_field.dart';
 import 'package:app_fe_ecomerce/core/common/widgets/social_button.dart';
-import 'package:app_fe_ecomerce/core/services/deep_link_service.dart';
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
@@ -14,8 +11,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../../../injection_container.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -39,37 +34,16 @@ class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
   bool _autoValidate = false;
-  StreamSubscription? _sub;
 
-  @override
-  void initState() {
-    super.initState();
-    // Setup Deep Link Listener
-    final deepLinkService = getIt<DeepLinkService>();
-    deepLinkService.init();
-    _sub = deepLinkService.deepLinkStream.listen((uri) {
-      if (!mounted) return;
-      // print("DeepLink Received: $uri");
-      final accessToken = uri.queryParameters['accessToken'];
-      final refreshToken = uri.queryParameters['refreshToken'];
-      if (accessToken != null && refreshToken != null) {
-        context.read<AuthBloc>().add(
-          AuthSocialLoginTokenReceived(
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          ),
-        );
-      }
-    });
-  }
+  // Deep link listener đã được chuyển sang main.dart (xử lý toàn cục)
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _sub?.cancel();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {

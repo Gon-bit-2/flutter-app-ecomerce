@@ -1,11 +1,11 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../product/presentation/pages/product_detail_page.dart';
 import '../../../product/domain/entities/product.dart';
+import 'package:app_fe_ecomerce/features/product/presentation/pages/product_detail_page.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -47,8 +47,9 @@ class ProductCard extends StatelessWidget {
                 aspectRatio: 1,
                 child: Stack(
                   children: [
-                    (product.images.isNotEmpty && product.images.first.isNotEmpty)
-                        ? CachedNetworkImage(
+                    (product.images.isNotEmpty &&
+                            product.images.first.isNotEmpty)
+                        ? AppNetworkImage(
                             imageUrl: product.images.first.startsWith('url: ')
                                 ? product.images.first
                                       .replaceFirst('url: ', '')
@@ -57,17 +58,6 @@ class ProductCard extends StatelessWidget {
                             width: double.infinity,
                             height: double.infinity,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => Container(
-                              color: AppColors.surface,
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: AppColors.textSecondary,
-                                size: 32.sp,
-                              ),
-                            ),
-                            placeholder: (_, __) => Container(
-                              color: AppColors.surface,
-                            ),
                           )
                         : Container(
                             width: double.infinity,
@@ -151,9 +141,7 @@ class ProductCard extends StatelessWidget {
                     children: [
                       Text(
                         '${product.sold ?? 0} đã bán',
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 10.sp,
-                        ),
+                        style: AppTextStyles.caption.copyWith(fontSize: 10.sp),
                       ),
                     ],
                   ),

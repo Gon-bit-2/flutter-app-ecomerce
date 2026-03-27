@@ -22,16 +22,16 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
     return [
       const BannerEntity(
         id: 1,
-        imageUrl: 'https://picsum.photos/800/400?random=1',
+        imageUrl: 'https://res.cloudinary.com/dp5b7jl8y/image/upload/v1774599419/images/5e993a34-d523-42e7-bcaf-f1cd8dee7b1c.png',
         link: '',
       ),
       const BannerEntity(
         id: 2,
-        imageUrl: 'https://picsum.photos/800/400?random=2',
+        imageUrl: 'https://res.cloudinary.com/dp5b7jl8y/image/upload/v1774599422/images/6cbf0fa2-94e1-48af-8a80-5021eb88fad5.png',
       ),
       const BannerEntity(
         id: 3,
-        imageUrl: 'https://picsum.photos/800/400?random=3',
+        imageUrl: 'https://res.cloudinary.com/dp5b7jl8y/image/upload/v1774599423/images/6cb63cb3-eb43-47ee-b5d0-79c0acca88e5.png',
       ),
     ];
   }

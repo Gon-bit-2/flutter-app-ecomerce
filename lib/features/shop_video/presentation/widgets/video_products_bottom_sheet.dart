@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:ui';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../injection_container.dart';
 import '../../../product/domain/repositories/product_repository.dart';
@@ -10,16 +9,14 @@ import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/sku.dart';
 import '../../../cart/presentation/bloc/cart/cart_bloc.dart';
 import '../../domain/entities/product_info.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 /// Bottom Sheet hiển thị danh sách sản phẩm gắn trong video.
 /// Thiết kế giống Shopee/TikTok Shop: Card mờ, nền tối, nút mua nổi bật.
 class VideoProductsBottomSheet extends StatelessWidget {
   final List<ProductInfo> products;
 
-  const VideoProductsBottomSheet({
-    super.key,
-    required this.products,
-  });
+  const VideoProductsBottomSheet({super.key, required this.products});
 
   /// Hiển thị bottom sheet
   static void show(BuildContext context, List<ProductInfo> products) {
@@ -101,7 +98,9 @@ class VideoProductsBottomSheet extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(state.message),
-                          backgroundColor: const Color(0xFF4CAF50), // DS Thành công
+                          backgroundColor: const Color(
+                            0xFF4CAF50,
+                          ), // DS Thành công
                           behavior: SnackBarBehavior.floating,
                           duration: const Duration(seconds: 2),
                         ),
@@ -117,15 +116,22 @@ class VideoProductsBottomSheet extends StatelessWidget {
                     } else if (state is CartUnauthenticated) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('Vui lòng đăng nhập để thêm vào giỏ hàng'),
-                          backgroundColor: const Color(0xFFFF9800), // DS Cảnh báo
+                          content: const Text(
+                            'Vui lòng đăng nhập để thêm vào giỏ hàng',
+                          ),
+                          backgroundColor: const Color(
+                            0xFFFF9800,
+                          ), // DS Cảnh báo
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                     }
                   },
                   child: ListView.separated(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
                     shrinkWrap: true,
                     itemCount: products.length,
                     separatorBuilder: (_, __) => SizedBox(height: 12.h),
@@ -172,15 +178,18 @@ class _ProductListItemState extends State<_ProductListItem> {
         },
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Có lỗi xảy ra')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Có lỗi xảy ra')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showVariantSelectionSheet(BuildContext context, Product productDetails) {
+  void _showVariantSelectionSheet(
+    BuildContext context,
+    Product productDetails,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -195,8 +204,8 @@ class _ProductListItemState extends State<_ProductListItem> {
   void _addToCartDirectly() {
     if (widget.product.defaultSkuId != null) {
       context.read<CartBloc>().add(
-            CartItemAdded(skuId: widget.product.defaultSkuId!, quantity: 1),
-          );
+        CartItemAdded(skuId: widget.product.defaultSkuId!, quantity: 1),
+      );
     } else {
       // Fallback
       _fetchAndShowVariants();
@@ -219,23 +228,13 @@ class _ProductListItemState extends State<_ProductListItem> {
           // Thumbnail
           ClipRRect(
             borderRadius: BorderRadius.circular(8.r),
-            child: CachedNetworkImage(
+            child: AppNetworkImage(
               imageUrl: widget.product.images.isNotEmpty
                   ? widget.product.images.first
                   : 'https://via.placeholder.com/150',
               width: 68.w,
               height: 68.w,
               fit: BoxFit.cover,
-              errorWidget: (context, error, stackTrace) => Container(
-                width: 68.w,
-                height: 68.w,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F7), // DS Surface
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Icon(Icons.image_not_supported,
-                    color: const Color(0xFF757575), size: 24.sp),
-              ),
             ),
           ),
           SizedBox(width: 12.w),
@@ -266,7 +265,8 @@ class _ProductListItemState extends State<_ProductListItem> {
                       ),
                     ),
                     if (widget.product.virtualPrice != null &&
-                        widget.product.virtualPrice! > widget.product.basePrice) ...[
+                        widget.product.virtualPrice! >
+                            widget.product.basePrice) ...[
                       SizedBox(width: 6.w),
                       Text(
                         'đ${_formatPrice(widget.product.virtualPrice!)}',
@@ -353,15 +353,18 @@ class _ProductListItemState extends State<_ProductListItem> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation(
-                        isPrimary ? Colors.white : colorPrimary),
+                      isPrimary ? Colors.white : colorPrimary,
+                    ),
                   ),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, 
-                        color: isPrimary ? Colors.white : colorPrimary, 
-                        size: 14.sp),
+                    Icon(
+                      icon,
+                      color: isPrimary ? Colors.white : colorPrimary,
+                      size: 14.sp,
+                    ),
                     SizedBox(width: 4.w),
                     Text(
                       label,
@@ -465,13 +468,15 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
     }
     if (sku.stock < _quantity) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sản phẩm đã hết hàng hoặc không đủ số lượng')),
+        const SnackBar(
+          content: Text('Sản phẩm đã hết hàng hoặc không đủ số lượng'),
+        ),
       );
       return;
     }
     context.read<CartBloc>().add(
-          CartItemAdded(skuId: sku.id, quantity: _quantity),
-        );
+      CartItemAdded(skuId: sku.id, quantity: _quantity),
+    );
     Navigator.pop(context); // Close variant sheet
   }
 
@@ -502,19 +507,15 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.r),
-                child: CachedNetworkImage(
+                child: AppNetworkImage(
                   imageUrl: widget.product.images.isNotEmpty
-                      ? widget.product.images.first.replaceFirst('url: ', '').trim()
+                      ? widget.product.images.first
+                            .replaceFirst('url: ', '')
+                            .trim()
                       : '',
                   width: 80.w,
                   height: 80.w,
                   fit: BoxFit.cover,
-                  errorWidget: (_, __, ___) => Container(
-                    color: Colors.grey[200],
-                    width: 80.w,
-                    height: 80.w,
-                    child: const Icon(Icons.image),
-                  ),
                 ),
               ),
               SizedBox(width: 12.w),
@@ -534,7 +535,10 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
                     SizedBox(height: 4.h),
                     Text(
                       'Kho: $maxStock',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13.sp),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 13.sp,
+                      ),
                     ),
                   ],
                 ),
@@ -563,13 +567,20 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.sp,
+                              ),
+                            ),
                             SizedBox(height: 8.h),
                             Wrap(
                               spacing: 8.w,
                               runSpacing: 8.h,
                               children: options.map((opt) {
-                                bool isSelected = _selectedVariants[name] == opt.toString();
+                                bool isSelected =
+                                    _selectedVariants[name] == opt.toString();
                                 return ChoiceChip(
                                   label: Text(opt.toString()),
                                   selected: isSelected,
@@ -578,15 +589,25 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
                                       _selectedVariants[name] = opt.toString();
                                     });
                                   },
-                                  selectedColor: const Color(0xFFE1F5FE), // DS Light Primary
+                                  selectedColor: const Color(
+                                    0xFFE1F5FE,
+                                  ), // DS Light Primary
                                   backgroundColor: Colors.grey[100],
                                   labelStyle: TextStyle(
-                                    color: isSelected ? const Color(0xFF00A8E8) : Colors.black87,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? const Color(0xFF00A8E8)
+                                        : Colors.black87,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8.r),
-                                    side: BorderSide(color: isSelected ? const Color(0xFF00A8E8) : Colors.transparent),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? const Color(0xFF00A8E8)
+                                          : Colors.transparent,
+                                    ),
                                   ),
                                 );
                               }).toList(),
@@ -595,24 +616,42 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
                         ),
                       );
                     }),
-                  
+
                   // Quantity
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Số lượng", style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Số lượng",
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Row(
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                            onPressed: _quantity > 1
+                                ? () => setState(() => _quantity--)
+                                : null,
                             color: _quantity > 1 ? Colors.black87 : Colors.grey,
                           ),
-                          Text('$_quantity', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                          Text(
+                            '$_quantity',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: _quantity < maxStock ? () => setState(() => _quantity++) : null,
-                            color: _quantity < maxStock ? Colors.black87 : Colors.grey,
+                            onPressed: _quantity < maxStock
+                                ? () => setState(() => _quantity++)
+                                : null,
+                            color: _quantity < maxStock
+                                ? Colors.black87
+                                : Colors.grey,
                           ),
                         ],
                       ),
@@ -622,7 +661,7 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
               ),
             ),
           ),
-          
+
           SizedBox(height: 16.h),
           SizedBox(
             width: double.infinity,
@@ -631,11 +670,17 @@ class _VariantSelectionSheetState extends State<_VariantSelectionSheet> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00A8E8), // DS Primary
                 padding: EdgeInsets.symmetric(vertical: 14.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
               child: Text(
                 'Xác nhận vào giỏ',
-                style: TextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

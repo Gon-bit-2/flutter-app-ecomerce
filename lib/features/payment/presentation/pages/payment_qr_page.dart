@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class PaymentQRPage extends StatefulWidget {
   final int paymentId;
@@ -229,19 +230,11 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
                     height: 250.w,
                     child: const Center(child: Icon(Icons.qr_code, size: 100)),
                   )
-                : Image.network(
-                    qrUrl,
+                : AppNetworkImage(
+                    imageUrl: qrUrl, 
                     width: 250.w,
                     height: 250.w,
                     fit: BoxFit.contain,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return SizedBox(
-                        width: 250.w,
-                        height: 250.w,
-                        child: const Center(child: CircularProgressIndicator()),
-                      );
-                    },
                   ),
           ),
 

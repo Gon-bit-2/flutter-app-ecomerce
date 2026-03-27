@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/review/presentation/bloc/create_review/create_review_bloc.dart';
 import 'package:flutter/material.dart';
@@ -162,17 +163,11 @@ class _CreateReviewBottomSheetState extends State<CreateReviewBottomSheet> {
                     if (widget.productImage != null)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6.r),
-                        child: Image.network(
-                          widget.productImage!,
+                        child: AppNetworkImage(
+                          imageUrl: widget.productImage!,
                           width: 48.w,
                           height: 48.w,
                           fit: BoxFit.cover,
-                          errorBuilder: (ctx, e, s) => Container(
-                            width: 48.w,
-                            height: 48.w,
-                            color: Colors.grey[200],
-                            child: Icon(Icons.image, color: Colors.grey, size: 20.sp),
-                          ),
                         ),
                       ),
                     if (widget.productImage != null) SizedBox(width: 12.w),
@@ -304,8 +299,8 @@ class _CreateReviewBottomSheetState extends State<CreateReviewBottomSheet> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8.r),
                               child: kIsWeb 
-                                  ? Image.network(
-                                      _selectedImages[index].path,
+                                  ? AppNetworkImage(
+                                      imageUrl: _selectedImages[index].path,
                                       width: 80.h,
                                       height: 80.h,
                                       fit: BoxFit.cover,

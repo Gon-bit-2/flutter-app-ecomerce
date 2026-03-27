@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 /// Trang thêm/sửa danh mục.
 /// - `category != null` → Chế độ sửa (pre-fill dữ liệu)
@@ -319,24 +320,11 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8.r),
-              child: Image.network(
-                _logoUrl!,
+              child: AppNetworkImage(
+                imageUrl: _logoUrl!,
                 width: 80.w,
                 height: 80.w,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 80.w,
-                  height: 80.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    color: AppColors.error,
-                    size: 32.sp,
-                  ),
-                ),
               ),
             ),
             SizedBox(width: 12.w),

@@ -3,7 +3,7 @@ import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class CartItemWidget extends StatelessWidget {
   final CartEntity item;
@@ -56,36 +56,11 @@ class CartItemWidget extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8.r),
             child: item.image != null && item.image!.isNotEmpty
-                ? CachedNetworkImage(
+                ? AppNetworkImage(
                     imageUrl: item.image!,
                     width: 80.w,
                     height: 80.w,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      width: 80.w,
-                      height: 80.w,
-                      color: AppColors.inputBackground,
-                      child: Center(
-                        child: SizedBox(
-                          width: 20.w,
-                          height: 20.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 80.w,
-                      height: 80.w,
-                      color: AppColors.inputBackground,
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        color: AppColors.textSecondary,
-                        size: 24.sp,
-                      ),
-                    ),
                   )
                 : Container(
                     width: 80.w,

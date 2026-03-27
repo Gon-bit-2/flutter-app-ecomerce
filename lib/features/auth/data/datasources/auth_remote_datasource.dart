@@ -14,14 +14,14 @@ abstract class AuthRemoteDataSource {
   }); // Updated
   Future<void> sendOtp(String email, String type); // New
   Future<void> verifyOtp(String email, String code, String type); // New
-  Future<TokenModel> register({
+  Future<UserModel> register({
     required String email,
     required String password,
     required String name,
     required String phoneNumber,
     required String confirmPassword,
     required String code,
-  }); // New: returns TokenModel or User? Usually register implies auto-login or just success. API Doc says it returns TokenModel if successful login, or maybe just user. But Register usually returns User or Token. Let's assume it returns TokenModel if it auto-logs in, or we might need to check. Text says "Register" POST /auth/register. Response not specified in API_LIST clearly for success, but usually creates user. Wait, API LIST doesn't specify response for Register. Standard is usually User or Token. Let's assume it returns TokenModel or just bool (void).
+  });
   // Re-reading API_LIST... "Register" doesn't show response. "Login" shows response.
   // "Register" -> usually simply creates user. But if we want to auto login, it might return token.
   // Let's assume for now it returns void (success) or maybe TokenModel if backend supports it.
@@ -99,7 +99,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<TokenModel> register({
+  Future<UserModel> register({
     required String email,
     required String password,
     required String name,
@@ -118,51 +118,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'code': code,
       },
     );
-    // Assuming register returns Token similar to login for auto-login,
-    // or if it returns User, we might need to adjust.
-    // Since I don't see the response schema, I will assume it might be TokenModel or UserModel.
-    // If it is void, I will change. But `AuthRepository` expects `UserEntity`.
-    // Validating against `AuthRepositoryImpl`... `register` simply returns `Future<Either<Failure, UserEntity>>`.
-    // If backend returns User, utilize `UserModel.fromJson`.
-    if (response.data != null &&
-        (response.data as Map).containsKey('accessToken')) {
-      return TokenModel.fromJson(response.data);
-    }
-    // If it doesn't return token, maybe we should return something else?
-    // Let's assume it returns TokenModel for now as a "best guess" or throw if not.
-    // Actually, creating a user usually returns the user.
-    // I will change the return type to `Future<void>` or `Future<UserModel>` based on typical flow.
-    // Let's go with `Future<dynamic>` to be safe or inspect response? No, strict typing is better.
-    // I'll assume it returns the Registered User info or Token.
-    // Let's try `Future<dynamic>` for register in `RemoteDataSource`? No.
-    // Let's check `AuthRepository` again. `Future<Either<Failure, UserEntity>>`.
-    // So `RemoteDataSource` should return `UserModel` ideally.
-    // But wait, if register requires login afterwards manually, then it returns void/User.
-    // I will assume it returns `UserModel` (the created user).
-    // But wait, `TokenModel` is better if we want to auto-login.
-    // Let's check `login` returns `TokenModel`.
-
-    // I will use `Future<dynamic>` which is safe, but `AuthRemoteDataSource` implies typed contract.
-    // I will guess `Future<void>` for now, and Repository will handle the "Next step" (like auto login or redirect).
-    // Re-reading `API_LIST.md` for Register...
-    // Input: ...
-    // Output: Not specified.
-    // Let's check `AuthRepositoryImpl` provided by user.
-    // `Future<Either<Failure, UserEntity>> register`
-    // Implementation: `throw UnimplementedError()`.
-
-    // I will change `register` to return `Future<void>` in DataSource, and Repository will just return Right(null) or maybe we fetch profile?
-    // Actually, `AuthRepository` signature says it returns `UserEntity`.
-    // I will make `register` return `Future<UserModel>` hoping backend returns the user.
-    return TokenModel.fromJson(
-      response.data,
-    ); // Placeholder, assuming it returns Token like Login?
-    // Or maybe it strictly returns User info like `{"id": 1, ...}`.
-    // I will look at `login` flow: login -> token -> save token -> getProfile.
-    // Register flow might be: register -> (maybe token?) -> if not, just success.
-    // I will stick with `Future<dynamic>` for now in DS to avoid breakage, but declaring it `Future<TokenModel>` or `Future<UserModel>` is better.
-    // Let's use `Future<TokenModel>` assuming modern auth often returns token on register.
-    // If not, I'll fix it later.
+    return UserModel.fromJson(response.data);
   }
 
   @override

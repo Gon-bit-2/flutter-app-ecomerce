@@ -1,10 +1,10 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/chat/domain/entities/conversation_entity.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class ConversationItemWidget extends StatelessWidget {
   final ConversationEntity conversation;
@@ -78,13 +78,11 @@ class ConversationItemWidget extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(25.r),
       child: avatar != null && avatar.isNotEmpty
-          ? CachedNetworkImage(
+          ? AppNetworkImage(
               imageUrl: avatar,
               width: 50.w,
               height: 50.w,
               fit: BoxFit.cover,
-              placeholder: (context, url) => _defaultAvatar(),
-              errorWidget: (context, url, error) => _defaultAvatar(),
             )
           : _defaultAvatar(),
     );

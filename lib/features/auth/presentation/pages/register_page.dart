@@ -8,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pinput/pinput.dart';
 
-import '../../../../injection_container.dart';
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -80,10 +80,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<AuthBloc>(),
-      child: Scaffold(
-        backgroundColor: Colors.white, // AppColors.background
+    return Scaffold(
+      backgroundColor: Colors.white, // AppColors.background
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
@@ -126,11 +124,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (state is AuthSuccess) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Đăng ký thành công! Vui lòng đăng nhập."),
+                      content: Text("Đăng ký thành công!"),
                       backgroundColor: AppColors.success,
                     ),
                   );
-                  // Quay về trang trước đó sạch sẽ
+                  // Quay về trang chủ (isFirst)
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 }
                 if (state is AuthVerifyOtpSuccess) {
@@ -167,8 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   // --- STEP 1: EMAIL ---

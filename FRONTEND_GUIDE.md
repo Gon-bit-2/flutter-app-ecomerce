@@ -613,3 +613,33 @@ const order = await fetch('/order', {
 - Giảm `useCount`, reset `isUsed = false`, xóa `DiscountUsage`
 - User có thể sử dụng lại voucher cho đơn hàng khác
 - Frontend không cần xử lý gì thêm — backend tự xử lý hoàn toàn
+
+## 15. Tích Hợp Đăng Ký Shop (Hệ thống Multi-vendor)
+
+Kể từ giờ, thông tin Shop (cửa hàng kinh doanh) đã được tách bạch với thông tin User. 
+
+### a. Đăng ký mở Cửa hàng (Shop Registration)
+- **API:** `POST /shop/register`
+- **Mô tả:** User muốn kinh doanh sẽ phải điền form đăng ký cửa hàng. 
+- **Body:**
+  ```json
+  {
+    "name": "Tên cửa hàng (Bắt buộc)",
+    "description": "Mô tả cửa hàng (Tùy chọn)",
+    "phoneNumber": "Số điện thoại shop (Tùy chọn)",
+    "address": "Địa chỉ lấy hàng (Tùy chọn)",
+    "email": "Email liên hệ (Tùy chọn)"
+  }
+  ```
+- **Xử lý Response:** Nếu thành công API trả về message `"Shop registration created successfully. Please wait for admin approval."` và mặc định trạng thái của shop sẽ là `PENDING`.
+
+### b. Kiểm tra trạng thái Shop hiện tại của User
+- **API:** `GET /shop/my-shop`
+- **Mô tả:** Dùng để kiểm tra xem User hiện tại đã đăng ký Shop chưa, và trạng thái duyệt thế nào để render giao diện phù hợp.
+- **Xử lý logic Frontend:**
+  - Nếu API trả về `null`: User chưa từng tạo đơn đăng ký Shop. ➡ *Hiển thị nút "Đăng ký bán hàng".*
+  - Nếu API trả về object kèm `status === 'PENDING'`: Đơn đăng ký đang chờ admin duyệt. ➡ *Hiển thị "Hồ sơ đang chờ duyệt".*
+  - Nếu `status === 'REJECTED'`: Bị từ chối. ➡ *Hiển thị lý do / Form tạo lại.*
+  - Nếu `status === 'APPROVED'`: Cửa hàng đã hoạt động. ➡ *Chuyển hướng vào trang Dashboard quản lý (Seller Center).*
+
+> **Lưu ý:** Hiện tại `shopId` của một Shop luôn bằng với `userId` (1-1 relationship) nên logic thao tác với đơn hàng, mã giảm giá và video trước đó không bị ảnh hưởng.

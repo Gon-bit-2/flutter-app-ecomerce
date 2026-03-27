@@ -6,6 +6,7 @@ import '../bloc/seller_video/seller_video_bloc.dart';
 import '../bloc/seller_video/seller_video_event.dart';
 import '../bloc/seller_video/seller_video_state.dart';
 import 'create_video_page.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class MyVideosPage extends StatelessWidget {
   final int shopId; // Thông thường lấy từ AuthBloc context, truyền tạm để demo
@@ -83,7 +84,7 @@ class MyVideosView extends StatelessWidget {
                   Container(
                     color: Colors.grey[300],
                     child: video.thumbnailUrl != null
-                        ? Image.network(video.thumbnailUrl!, fit: BoxFit.cover)
+                        ? AppNetworkImage(imageUrl: video.thumbnailUrl!,  fit: BoxFit.cover)
                         : const Center(child: Icon(Icons.video_file, color: Colors.grey)),
                   ),
                   Positioned(

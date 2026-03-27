@@ -1,5 +1,4 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../category/domain/entities/category.dart';
@@ -23,36 +22,7 @@ class CategorySection extends StatelessWidget {
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 50.w,
-                height: 50.w,
-                decoration: const BoxDecoration(
-                  color: AppColors.secondary,
-                  shape: BoxShape.circle,
-                ),
-                padding: EdgeInsets.all(10.w),
-                child: cat.logo != null
-                    ? CachedNetworkImage(
-                        imageUrl: cat.logo!,
-                        errorWidget: (context, url, error) => Icon(
-                          Icons.category,
-                          color: AppColors.primaryBlue,
-                          size: 24.sp,
-                        ),
-                        placeholder: (context, url) => Padding(
-                          padding: EdgeInsets.all(10.w),
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        Icons.category,
-                        color: AppColors.primaryBlue,
-                        size: 24.sp,
-                      ),
-              ),
+              Container(width: 50.w),
               SizedBox(height: 5.h),
               SizedBox(
                 width: 60.w,

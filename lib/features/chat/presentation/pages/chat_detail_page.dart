@@ -4,11 +4,11 @@ import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.d
 import 'package:app_fe_ecomerce/features/chat/presentation/bloc/chat/chat_bloc.dart';
 import 'package:app_fe_ecomerce/features/chat/presentation/widgets/chat_input_widget.dart';
 import 'package:app_fe_ecomerce/features/chat/presentation/widgets/message_bubble_widget.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class ChatDetailPage extends StatelessWidget {
   final int conversationId;
@@ -123,10 +123,7 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
                     itemBuilder: (context, index) {
                       final message = state.messages[index];
                       final isMe = message.senderId == currentUserId;
-                      return MessageBubbleWidget(
-                        message: message,
-                        isMe: isMe,
-                      );
+                      return MessageBubbleWidget(message: message, isMe: isMe);
                     },
                   );
                 }
@@ -138,11 +135,13 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
           // Ô nhập tin nhắn
           ChatInputWidget(
             onSend: (content) {
-              context.read<ChatBloc>().add(ChatSendMessage(
-                    receiverId: widget.receiverId,
-                    content: content,
-                    currentUserId: currentUserId,
-                  ));
+              context.read<ChatBloc>().add(
+                ChatSendMessage(
+                  receiverId: widget.receiverId,
+                  content: content,
+                  currentUserId: currentUserId,
+                ),
+              );
             },
           ),
         ],
@@ -198,13 +197,11 @@ class _ChatDetailViewState extends State<_ChatDetailView> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18.r),
       child: avatar != null && avatar.isNotEmpty
-          ? CachedNetworkImage(
+          ? AppNetworkImage(
               imageUrl: avatar,
               width: 36.w,
               height: 36.w,
               fit: BoxFit.cover,
-              placeholder: (context, url) => _defaultAvatar(),
-              errorWidget: (context, url, error) => _defaultAvatar(),
             )
           : _defaultAvatar(),
     );
