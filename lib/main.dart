@@ -16,6 +16,8 @@ import 'features/category/presentation/bloc/category/category_bloc.dart';
 import 'features/order/presentation/bloc/order/order_bloc.dart';
 import 'features/address/presentation/bloc/address_bloc.dart';
 import 'features/address/presentation/bloc/address_event.dart';
+import 'features/notification/presentation/bloc/notification_bloc.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   // 1. Đảm bảo Flutter Binding được khởi tạo trước
@@ -31,7 +33,10 @@ void main() async {
     debugPrint('[Main] Error configuring dependencies: $e');
   }
 
-  // 3. Chạy App (DeepLinkService sẽ được khởi tạo trong MyApp để không block UI)
+  // 3. Cấu hình timeago locale
+  timeago.setLocaleMessages('vi', timeago.ViMessages());
+
+  // 4. Chạy App (DeepLinkService sẽ được khởi tạo trong MyApp để không block UI)
   debugPrint('[Main] App Started');
   runApp(const MyApp());
 }
@@ -114,6 +119,10 @@ class _MyAppState extends State<MyApp> {
             BlocProvider<AddressBloc>(
               create: (context) =>
                   GetIt.I<AddressBloc>()..add(GetAddressesEvent()),
+            ),
+            BlocProvider<NotificationBloc>(
+              create: (context) =>
+                  GetIt.I<NotificationBloc>()..add(NotificationStarted()),
             ),
           ],
           child: MaterialApp(

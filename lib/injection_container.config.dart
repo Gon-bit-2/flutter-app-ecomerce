@@ -123,6 +123,20 @@ import 'features/home/domain/repositories/home_repository.dart' as _i649;
 import 'features/home/domain/usecases/get_daily_discover_usecase.dart' as _i259;
 import 'features/home/domain/usecases/get_home_data_usecase.dart' as _i702;
 import 'features/home/presentation/bloc/home_bloc.dart' as _i123;
+import 'features/notification/data/datasources/notification_remote_datasource.dart'
+    as _i1002;
+import 'features/notification/data/repositories/notification_repository_impl.dart'
+    as _i829;
+import 'features/notification/domain/repositories/notification_repository.dart'
+    as _i1068;
+import 'features/notification/domain/usecases/get_notifications_usecase.dart'
+    as _i693;
+import 'features/notification/domain/usecases/mark_all_notifications_as_read_usecase.dart'
+    as _i1034;
+import 'features/notification/domain/usecases/mark_notification_as_read_usecase.dart'
+    as _i827;
+import 'features/notification/presentation/bloc/notification_bloc.dart'
+    as _i909;
 import 'features/order/data/datasources/order_remote_datasource.dart' as _i176;
 import 'features/order/data/repositories/order_repository_impl.dart' as _i113;
 import 'features/order/domain/repositories/order_repository.dart' as _i608;
@@ -355,6 +369,9 @@ extension GetItInjectableX on _i174.GetIt {
         remoteDataSource: gh<_i315.AddressRemoteDataSource>(),
       ),
     );
+    gh.lazySingleton<_i1002.NotificationRemoteDataSource>(
+      () => _i1002.NotificationRemoteDataSourceImpl(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i987.CartRemoteDataSource>(
       () => _i987.CartRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -538,6 +555,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i683.ShopRepository>(
       () => _i632.ShopRepositoryImpl(gh<_i671.ShopRemoteDataSource>()),
     );
+    gh.lazySingleton<_i1068.NotificationRepository>(
+      () => _i829.NotificationRepositoryImpl(
+        gh<_i1002.NotificationRemoteDataSource>(),
+      ),
+    );
     gh.factory<_i400.AddressBloc>(
       () => _i400.AddressBloc(
         getAddressesUseCase: gh<_i494.GetAddressesUseCase>(),
@@ -621,6 +643,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i841.ProductRepository>(),
       ),
     );
+    gh.factory<_i693.GetNotificationsUseCase>(
+      () => _i693.GetNotificationsUseCase(gh<_i1068.NotificationRepository>()),
+    );
+    gh.factory<_i1034.MarkAllNotificationsAsReadUseCase>(
+      () => _i1034.MarkAllNotificationsAsReadUseCase(
+        gh<_i1068.NotificationRepository>(),
+      ),
+    );
+    gh.factory<_i827.MarkNotificationAsReadUseCase>(
+      () => _i827.MarkNotificationAsReadUseCase(
+        gh<_i1068.NotificationRepository>(),
+      ),
+    );
     gh.lazySingleton<_i812.GoogleAuthUseCase>(
       () => _i812.GoogleAuthUseCase(gh<_i1015.AuthRepository>()),
     );
@@ -638,6 +673,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i293.VerifyOtpUseCase>(
       () => _i293.VerifyOtpUseCase(gh<_i1015.AuthRepository>()),
+    );
+    gh.factory<_i909.NotificationBloc>(
+      () => _i909.NotificationBloc(
+        gh<_i693.GetNotificationsUseCase>(),
+        gh<_i827.MarkNotificationAsReadUseCase>(),
+        gh<_i1034.MarkAllNotificationsAsReadUseCase>(),
+        gh<_i1068.NotificationRepository>(),
+      ),
     );
     gh.factory<_i123.HomeBloc>(
       () => _i123.HomeBloc(

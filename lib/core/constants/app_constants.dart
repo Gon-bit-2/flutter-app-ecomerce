@@ -93,4 +93,11 @@ class AppConstants {
   // Shop Endpoints
   static const String registerShopEndpoint = '/shop/register';
   static const String myShopEndpoint = '/shop/my-shop';
+
+  // Notification Endpoints
+  static const String notificationsEndpoint = '/notifications';
+  static const String notificationsReadAllEndpoint = '/notifications/read-all';
+
+  // WebSocket Notification
+  static const String notificationSocketEvent = 'new-notification';
 }
