@@ -12,6 +12,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/product_detail_page.dart';
+import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final int orderId;
@@ -88,7 +89,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     _buildOrderSummary(order),
 
                     if (order.status == 'UNPAID')
-                      _buildCancelButton(context, order),
+                      _buildUnpaidActions(context, order),
 
                     // Nút xác nhận đã nhận hàng
                     if (order.status == 'SHIPPED')
@@ -375,26 +376,86 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  Widget _buildCancelButton(BuildContext context, OrderEntity order) {
+  Widget _buildUnpaidActions(BuildContext context, OrderEntity order) {
+    final bool isSepay = order.paymentMethod?.contains('SEPAY') == true;
+    final bool hasPaymentId = order.paymentId != null;
+    
+    // Check if within 24 hours
+    final now = DateTime.now();
+    final createdAt = order.createdAt ?? now;
+    final bool isExpired = now.difference(createdAt).inHours >= 24;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-      child: OutlinedButton(
-        onPressed: () {
-          _showCancelConfirmDialog(context, order.id);
-        },
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.error,
-          side: const BorderSide(color: AppColors.error),
-          padding: EdgeInsets.symmetric(vertical: 12.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.r),
+      child: Column(
+        children: [
+          // DEBUG INFO TRÊN UI ĐỂ TÌM NGUYÊN NHÂN:
+          if (!isSepay || !hasPaymentId)
+            Text(
+              'Debug: isSepay=$isSepay (method=${order.paymentMethod}), hasPaymentId=$hasPaymentId (id=${order.paymentId}), isExpired=$isExpired (createdAt=${order.createdAt})',
+              style: TextStyle(color: Colors.red, fontSize: 10.sp),
+            ),
+          
+          // Nút Thanh toán lại
+          if ((isSepay || order.paymentMethod == null) && (!isExpired)) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (order.paymentId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Không tìm thấy paymentId, API Backend đang thiếu!')),
+                    );
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PaymentQRPage(
+                        paymentId: order.paymentId!,
+                        totalAmount: order.totalAmount?.toDouble() ?? 0.0,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                child: Text(
+                  'Thanh toán ngay',
+                  style: AppTextStyles.buttonText.copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+          ],
+          // Nút Hủy đơn
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                _showCancelConfirmDialog(context, order.id);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                'Hủy đơn hàng',
+                style: AppTextStyles.buttonText.copyWith(color: AppColors.error),
+              ),
+            ),
           ),
-        ),
-        child: Text(
-          'Hủy đơn hàng',
-          style: AppTextStyles.buttonText.copyWith(color: AppColors.error),
-        ),
+        ],
       ),
     );
   }

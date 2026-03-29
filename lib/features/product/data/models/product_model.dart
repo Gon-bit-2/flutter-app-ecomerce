@@ -18,6 +18,8 @@ class ProductModel extends Product {
     super.virtualPrice,
     required super.images,
     required super.brandId,
+    super.brandName,
+    super.categoryIds,
     super.publishedAt,
     this.skus = const [],
     super.variants,
@@ -123,6 +125,22 @@ class ProductModel extends Product {
       return sku;
     }).toList();
 
+    // Parse categories manually
+    List<int>? parsedCategoryIds;
+    if (params['categories'] != null && params['categories'] is List) {
+      parsedCategoryIds = (params['categories'] as List)
+          .map((c) => c is Map ? (c['id'] as int?) : null)
+          .where((id) => id != null)
+          .cast<int>()
+          .toList();
+    }
+
+    // Parse brand name manually
+    String? parsedBrandName;
+    if (params['brand'] != null && params['brand'] is Map) {
+      parsedBrandName = params['brand']['name'] as String?;
+    }
+
     return ProductModel(
       id: model.id,
       name: model.name,
@@ -130,6 +148,8 @@ class ProductModel extends Product {
       virtualPrice: model.virtualPrice,
       images: model.images,
       brandId: model.brandId,
+      brandName: parsedBrandName ?? model.brandName,
+      categoryIds: parsedCategoryIds ?? model.categoryIds,
       publishedAt: model.publishedAt,
       skus: fixedSkus,
       variants: model.variants,

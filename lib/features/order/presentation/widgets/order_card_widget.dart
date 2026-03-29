@@ -2,6 +2,7 @@ import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/order/domain/entities/order_entity.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/pages/order_detail_page.dart';
+import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -222,7 +223,7 @@ class OrderCardWidget extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (order.status == 'UNPAID')
+                    if (order.status == 'UNPAID') ...[
                       OutlinedButton(
                         onPressed: () {
                           Navigator.push(
@@ -235,11 +236,40 @@ class OrderCardWidget extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
                           side: const BorderSide(color: AppColors.error),
-                          minimumSize: Size(100.w, 36.h),
+                          minimumSize: Size(80.w, 36.h),
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                         ),
                         child: const Text('Hủy đơn'),
                       ),
+                      if (DateTime.now().difference(order.createdAt ?? DateTime.now()).inHours < 24) ...[
+                        SizedBox(width: 8.w),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (order.paymentId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Đơn hàng thiếu Payment ID từ máy chủ!')),
+                              );
+                              return;
+                            }
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PaymentQRPage(
+                                  paymentId: order.paymentId!,
+                                  totalAmount: order.totalAmount?.toDouble() ?? 0.0,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            minimumSize: Size(100.w, 36.h),
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          ),
+                          child: const Text('Thanh toán', style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ],
                     if (order.status == 'SHIPPED')
                       ElevatedButton(
                         onPressed: () {

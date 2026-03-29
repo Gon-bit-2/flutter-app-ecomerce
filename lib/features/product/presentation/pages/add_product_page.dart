@@ -1,4 +1,5 @@
 import 'package:app_fe_ecomerce/features/category/domain/repositories/category_repository.dart';
+import 'package:app_fe_ecomerce/features/category/domain/entities/category.dart';
 import 'package:app_fe_ecomerce/features/common/domain/repositories/common_repository.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final _brandController = TextEditingController();
 
   // Selected Values not in controllers
-  int? _selectedCategoryId;
+  List<int> _selectedCategoryIds = [];
 
   // Bulk Apply Controllers
   final _skuDefaultPriceController = TextEditingController();
@@ -112,12 +113,14 @@ class _AddProductPageState extends State<AddProductPage> {
                     .toInt()
                     .toString();
               }
-              // Brand name would need to be fetched from the backend or mapped
-              // For now, if we don't have it on the Product entity, we can just leave it empty for user to edit or fetch
-              // _brandController.text = ...
+              
+              if (widget.product!.brandName != null) {
+                _brandController.text = widget.product!.brandName!;
+              }
 
-              // Handle Category (Single hardcoded for now in UI logic, assuming complex mapping later)
-              // _selectedCategoryId = ...
+              if (widget.product!.categoryIds != null) {
+                _selectedCategoryIds = List.from(widget.product!.categoryIds!);
+              }
             }
           }
         },
@@ -271,7 +274,55 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
+  void _showMultiSelectCategoryDialog(List<CategoryEntity> categories) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Chọn danh mục"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: categories.map((c) {
+                    final isSelected = _selectedCategoryIds.contains(c.id);
+                    return CheckboxListTile(
+                      title: Text(c.name),
+                      value: isSelected,
+                      onChanged: (val) {
+                        setDialogState(() {
+                          if (val == true) {
+                            _selectedCategoryIds.add(c.id);
+                          } else {
+                            _selectedCategoryIds.remove(c.id);
+                          }
+                        });
+                        setState(() {}); // Update the background parent form also
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text("Xong"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildBrandCategorySelectors(AddProductState state) {
+    final selectedCategoryNames = state.categories
+        .where((c) => _selectedCategoryIds.contains(c.id))
+        .map((c) => c.name)
+        .join(', ');
+
     return Row(
       children: [
         Expanded(
@@ -286,38 +337,29 @@ class _AddProductPageState extends State<AddProductPage> {
                 vertical: 12.h,
               ),
             ),
-            validator: (v) => (v == null || v.isEmpty) ? 'Bắt buộc' : null,
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Bắt buộc' : null,
           ),
         ),
         SizedBox(width: 8.w),
         Expanded(
-          child: DropdownButtonFormField<int>(
-            isDense: true,
-            isExpanded: true,
-            initialValue: _selectedCategoryId,
-            decoration: InputDecoration(
-              labelText: "Danh mục",
-              border: const OutlineInputBorder(),
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 8.w,
-                vertical: 12.h,
+          child: InkWell(
+            onTap: () => _showMultiSelectCategoryDialog(state.categories),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: "Danh mục",
+                border: const OutlineInputBorder(),
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 12.h,
+                ),
+              ),
+              child: Text(
+                _selectedCategoryIds.isEmpty ? "Chọn danh mục" : selectedCategoryNames,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            items: state.categories
-                .map(
-                  (c) => DropdownMenuItem(
-                    value: c.id,
-                    child: Text(
-                      c.name,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) => setState(() => _selectedCategoryId = v),
-            validator: (v) => v == null ? 'Bắt buộc' : null,
           ),
         ),
       ],
@@ -460,6 +502,16 @@ class _AddProductPageState extends State<AddProductPage> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
+      if (_selectedCategoryIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng chọn ít nhất 1 danh mục'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       // Validate ít nhất 1 ảnh
       if (_bloc.state.uploadedImageUrls.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -520,123 +572,126 @@ class _AddProductPageState extends State<AddProductPage> {
           'Xem trước sản phẩm',
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Ảnh
-              if (state.uploadedImageUrls.isNotEmpty)
-                SizedBox(
-                  height: 80.h,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: state.uploadedImageUrls.length,
-                    itemBuilder: (_, i) => Container(
-                      width: 80.h,
-                      height: 80.h,
-                      margin: EdgeInsets.only(right: 8.w),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.r),
-                        image: DecorationImage(
-                          image: NetworkImage(state.uploadedImageUrls[i]),
-                          fit: BoxFit.cover,
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.8,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Ảnh
+                if (state.uploadedImageUrls.isNotEmpty)
+                  SizedBox(
+                    height: 80.h,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: state.uploadedImageUrls.length,
+                      itemBuilder: (_, i) => Container(
+                        width: 80.h,
+                        height: 80.h,
+                        margin: EdgeInsets.only(right: 8.w),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.r),
+                          image: DecorationImage(
+                            image: NetworkImage(state.uploadedImageUrls[i]),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              SizedBox(height: 12.h),
+                SizedBox(height: 12.h),
 
-              // Tên
-              Text(
-                _nameController.text,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8.h),
-
-              // Giá
-              Row(
-                children: [
-                  Text(
-                    '${basePrice.toInt()} đ',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
+                // Tên
+                Text(
+                  _nameController.text,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
                   ),
-                  if (virtualPrice != null && virtualPrice > 0) ...[
-                    SizedBox(width: 8.w),
+                ),
+                SizedBox(height: 8.h),
+
+                // Giá
+                Row(
+                  children: [
                     Text(
-                      '${virtualPrice.toInt()} đ',
+                      '${basePrice.toInt()} đ',
                       style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.grey,
-                        decoration: TextDecoration.lineThrough,
+                        fontSize: 16.sp,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    if (virtualPrice != null && virtualPrice > 0) ...[
+                      SizedBox(width: 8.w),
+                      Text(
+                        '${virtualPrice.toInt()} đ',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-              SizedBox(height: 8.h),
-
-              // Thương hiệu + Danh mục
-              if (_brandController.text.isNotEmpty)
-                Text('Thương hiệu: ${_brandController.text}',
-                    style: TextStyle(fontSize: 13.sp)),
-
-              // Mô tả
-              if (_descController.text.isNotEmpty) ...[
+                ),
                 SizedBox(height: 8.h),
-                Text('Mô tả:',
-                    style: TextStyle(
-                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
-                Text(_descController.text,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[700]),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis),
-              ],
 
-              // Variants
-              if (state.variants.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                Text('Biến thể:',
-                    style: TextStyle(
-                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
-                ...state.variants.map((v) => Padding(
-                      padding: EdgeInsets.only(top: 4.h),
-                      child: Text('  ${v.name}: ${v.options.join(", ")}',
-                          style: TextStyle(fontSize: 12.sp)),
-                    )),
-              ],
+                // Thương hiệu + Danh mục
+                if (_brandController.text.isNotEmpty)
+                  Text('Thương hiệu: ${_brandController.text}',
+                      style: TextStyle(fontSize: 13.sp)),
 
-              // SKUs summary
-              if (state.skus.isNotEmpty) ...[
-                SizedBox(height: 12.h),
-                Text('SKU (${state.skus.length}):',
-                    style: TextStyle(
-                        fontSize: 13.sp, fontWeight: FontWeight.w600)),
-                ...state.skus.take(5).map((s) => Padding(
-                      padding: EdgeInsets.only(top: 2.h),
-                      child: Text(
-                          '  ${s.value}: ${s.price.toInt()}đ / Kho: ${s.stock}',
-                          style: TextStyle(fontSize: 12.sp)),
-                    )),
-                if (state.skus.length > 5)
-                  Text('  ... và ${state.skus.length - 5} SKU khác',
+                // Mô tả
+                if (_descController.text.isNotEmpty) ...[
+                  SizedBox(height: 8.h),
+                  Text('Mô tả:',
                       style: TextStyle(
-                          fontSize: 12.sp, fontStyle: FontStyle.italic)),
-              ],
+                          fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                  Text(_descController.text,
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[700]),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis),
+                ],
 
-              // Ảnh count
-              SizedBox(height: 8.h),
-              Text('Ảnh: ${state.uploadedImageUrls.length} ảnh',
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
-            ],
+                // Variants
+                if (state.variants.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  Text('Biến thể:',
+                      style: TextStyle(
+                          fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                  ...state.variants.map((v) => Padding(
+                        padding: EdgeInsets.only(top: 4.h),
+                        child: Text('  ${v.name}: ${v.options.join(", ")}',
+                            style: TextStyle(fontSize: 12.sp)),
+                      )),
+                ],
+
+                // SKUs summary
+                if (state.skus.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  Text('SKU (${state.skus.length}):',
+                      style: TextStyle(
+                          fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                  ...state.skus.take(5).map((s) => Padding(
+                        padding: EdgeInsets.only(top: 2.h),
+                        child: Text(
+                            '  ${s.value}: ${s.price.toInt()}đ / Kho: ${s.stock}',
+                            style: TextStyle(fontSize: 12.sp)),
+                      )),
+                  if (state.skus.length > 5)
+                    Text('  ... và ${state.skus.length - 5} SKU khác',
+                        style: TextStyle(
+                            fontSize: 12.sp, fontStyle: FontStyle.italic)),
+                ],
+
+                // Ảnh count
+                SizedBox(height: 8.h),
+                Text('Ảnh: ${state.uploadedImageUrls.length} ảnh',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -670,7 +725,7 @@ class _AddProductPageState extends State<AddProductPage> {
         basePrice: basePrice,
         virtualPrice: double.tryParse(_virtualPriceController.text) ?? 0,
         brandName: _brandController.text,
-        categoryId: _selectedCategoryId,
+        categoryIds: _selectedCategoryIds,
       ),
     );
   }

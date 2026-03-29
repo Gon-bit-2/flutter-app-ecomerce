@@ -19,6 +19,7 @@ import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart'
     as app_fe_ecomerce_cart;
 import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart' as app_fe_ecomerce_order;
 import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -481,8 +482,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     SliverAppBar(
                       pinned: true,
                       floating: true,
-                      backgroundColor: Colors
-                          .transparent, // Make it transparent initially? Or white.
+                      backgroundColor: Colors.white,
                       // For a product detail, usually we have a translucent back button.
                       // Let's stick to standard white app bar for simplicity or "glassmorphism" overlay?
                       // The image suggests a standard header with Back, Share, Cart.
@@ -720,7 +720,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(
               'đ${formatCurrency.format(displayPrice)}',
               style: TextStyle(
-                color: const Color(0xFFEE4D2D),
+                color: AppColors.primaryBlue,
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
               ),
@@ -739,13 +739,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEAE6),
+                  color: AppColors.secondary,
                   borderRadius: BorderRadius.circular(2.r),
                 ),
                 child: Text(
                   "-${discount.toStringAsFixed(0)}%",
                   style: TextStyle(
-                    color: const Color(0xFFEE4D2D),
+                    color: AppColors.primaryBlue,
                     fontSize: 10.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1003,12 +1003,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                         // Đồng bộ với page widget chính
                                         setState(() {});
                                       },
-                                      selectedColor: const Color(
-                                        0xFFFFEAE6,
-                                      ), // Cam nhạt
+                                      selectedColor: AppColors.secondary,
                                       labelStyle: TextStyle(
                                         color: isSelected
-                                            ? const Color(0xFFEE4D2D)
+                                            ? AppColors.primaryBlue
                                             : Colors.black87,
                                         fontWeight: isSelected
                                             ? FontWeight.bold
@@ -1021,7 +1019,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                         ),
                                         side: BorderSide(
                                           color: isSelected
-                                              ? const Color(0xFFEE4D2D)
+                                              ? AppColors.primaryBlue
                                               : Colors.transparent,
                                         ),
                                       ),
@@ -1092,9 +1090,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         _addToCart(buyNow: buyNow);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFFEE4D2D,
-                        ), // Shopee orange
+                        backgroundColor: AppColors.primaryBlue,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4.r),
@@ -1432,7 +1428,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               Text(
                                 'đ${formatCurrency.format(product.basePrice)}',
                                 style: TextStyle(
-                                  color: const Color(0xFFEE4D2D),
+                                  color: AppColors.primaryBlue,
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -1479,7 +1475,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     children: [
                       Icon(
                         Icons.store_outlined,
-                        color: const Color(0xFFEE4D2D),
+                        color: AppColors.primaryBlue,
                         size: 20.sp,
                       ),
                       SizedBox(height: 2.h),
@@ -1503,13 +1499,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 onTap: () => _showVariantBottomSheet(buyNow: false),
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
-                  color: const Color(0xFFFFEAE6), // Cam nhạt
+                  color: AppColors.secondary,
                   child: Text(
                     "Thêm vào giỏ hàng",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: const Color(0xFFEE4D2D),
+                      color: AppColors.primaryBlue,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1523,7 +1519,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 onTap: () => _showVariantBottomSheet(buyNow: true),
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
-                  color: const Color(0xFFEE4D2D), // Shopee orange
+                  color: AppColors.primaryBlue,
                   child: Text(
                     "Mua ngay",
                     textAlign: TextAlign.center,

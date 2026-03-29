@@ -18,6 +18,7 @@ class OrderModel extends OrderEntity {
     super.receiverPhone,
     super.receiverAddress,
     super.paymentMethod,
+    super.paymentId,
     this.items,
     super.createdAt,
   }) : super(items: items);
@@ -55,6 +56,7 @@ class OrderModel extends OrderEntity {
       receiverPhone: rPhone,
       receiverAddress: rAddress,
       paymentMethod: pMethod,
+      paymentId: (json['paymentId'] as num?)?.toInt(),
       items: (json['items'] as List<dynamic>?)
           ?.map((e) => OrderItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum DiscountType { FIXED_AMOUNT, PERCENTAGE, SHIPPING }
+enum DiscountType { FIXED_AMOUNT, PERCENTAGE, SHIPPING, COIN_CASHBACK }
 
 enum DiscountScope { PLATFORM, SHOP }
 
@@ -25,6 +25,11 @@ class Discount extends Equatable {
   final bool isActive;
   final DateTime startDate;
   final DateTime endDate;
+  
+  // Các field phụ do backend join/trả về thêm
+  final int? userUsage;
+  final bool? isSaved;
+  final bool? isUsed;
 
   const Discount({
     required this.id,
@@ -45,6 +50,9 @@ class Discount extends Equatable {
     required this.isActive,
     required this.startDate,
     required this.endDate,
+    this.userUsage,
+    this.isSaved,
+    this.isUsed,
   });
 
   @override
@@ -67,5 +75,8 @@ class Discount extends Equatable {
     isActive,
     startDate,
     endDate,
+    userUsage,
+    isSaved,
+    isUsed,
   ];
 }

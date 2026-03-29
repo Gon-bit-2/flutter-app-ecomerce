@@ -64,7 +64,7 @@ class _MyShopPageState extends State<MyShopPage> {
                 SizedBox(height: 20.h),
                 _buildStatisticsSection(),
                 SizedBox(height: 24.h),
-                _buildMenuGrid(context, user.id),
+                _buildMenuGrid(context, user),
               ],
             ),
           ),
@@ -228,8 +228,12 @@ class _MyShopPageState extends State<MyShopPage> {
     );
   }
 
-  Widget _buildMenuGrid(BuildContext context, int shopId) {
-    final menuItems = [
+  Widget _buildMenuGrid(BuildContext context, UserEntity user) {
+    final int shopId = user.id;
+    // Kiểm tra admin: roleId == 1 hoặc role name chứa 'admin'
+    final bool isAdmin = user.roleId == 1;
+
+    final menuItems = <Map<String, dynamic>>[
       {
         "icon": Icons.add_box_outlined,
         "title": "Thêm sản phẩm",
@@ -274,7 +278,7 @@ class _MyShopPageState extends State<MyShopPage> {
       },
       {
         "icon": Icons.local_offer_outlined,
-        "title": "Khuyến mãi",
+        "title": "Khuyến mãi Shop",
         "onTap": () {
           Navigator.push(
             context,
@@ -284,6 +288,22 @@ class _MyShopPageState extends State<MyShopPage> {
           );
         },
       },
+      // Admin: Thêm menu riêng cho quản lý voucher toàn sàn
+      if (isAdmin)
+        {
+          "icon": Icons.public,
+          "title": "Voucher sàn",
+          "onTap": () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SellerDiscountListPage(
+                  isAdmin: true,
+                ),
+              ),
+            );
+          },
+        },
       {
         "icon": Icons.settings_outlined,
         "title": "Thiết lập Shop",

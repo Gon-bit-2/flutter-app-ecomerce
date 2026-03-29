@@ -12,6 +12,7 @@ import 'package:app_fe_ecomerce/features/order/presentation/pages/order_history_
     as app_fe_ecomerce_order;
 import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/pages/voucher_wallet_page.dart';
+import 'package:app_fe_ecomerce/features/discount/presentation/pages/seller_discount_list_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:app_fe_ecomerce/features/shop/presentation/pages/register_shop_page.dart';
 
@@ -240,6 +241,25 @@ class ProfilePage extends StatelessWidget {
             },
           ),
           const Divider(height: 1),
+          // --- Admin: Quản lý Voucher Toàn Sàn ---
+          if (user.roleId == 1) ...[
+            _buildMenuItem(
+              Icons.public,
+              "Quản lý Voucher Sàn",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SellerDiscountListPage(
+                      isAdmin: true,
+                    ),
+                  ),
+                );
+              },
+              textColor: Colors.red.shade700,
+            ),
+            const Divider(height: 1),
+          ],
           // ----------------------------
           _buildMenuItem(
             Icons.help_outline,

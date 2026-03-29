@@ -18,6 +18,7 @@ Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
       'receiverPhone': instance.receiverPhone,
       'receiverAddress': instance.receiverAddress,
       'paymentMethod': instance.paymentMethod,
+      'paymentId': instance.paymentId,
       'createdAt': instance.createdAt?.toIso8601String(),
       'props': instance.props,
       'items': instance.items?.map((e) => e.toJson()).toList(),

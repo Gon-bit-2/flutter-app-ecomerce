@@ -101,51 +101,55 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             // Info
-            Padding(
-              padding: EdgeInsets.all(8.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textPrimary,
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(8.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Text(
-                        'đ',
-                        style: TextStyle(
-                          color: AppColors.primaryBlue,
-                          fontSize: 10.sp,
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Text(
+                          'đ',
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontSize: 10.sp,
+                          ),
                         ),
-                      ),
-                      Text(
-                        formatCurrency.format(product.basePrice),
-                        style: TextStyle(
-                          color: AppColors.primaryBlue,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
+                        Text(
+                          formatCurrency.format(product.basePrice),
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${product.sold ?? 0} đã bán',
-                        style: AppTextStyles.caption.copyWith(fontSize: 10.sp),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${product.sold ?? 0} đã bán',
+                          style: AppTextStyles.caption.copyWith(fontSize: 10.sp),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

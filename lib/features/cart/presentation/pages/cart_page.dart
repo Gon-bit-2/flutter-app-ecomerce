@@ -14,6 +14,7 @@ import 'package:app_fe_ecomerce/features/discount/presentation/widgets/discount_
 import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_bloc.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_event.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_state.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 class CartPage extends StatelessWidget {
@@ -403,11 +404,17 @@ class _CartViewState extends State<CartView> {
       subTotal += (item.price ?? 0) * item.quantity;
     }
 
+    int currentUserId = 1;
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess) {
+      currentUserId = authState.user.id;
+    }
+
     context.read<DiscountBloc>().add(
       DoPreviewDiscount(
         code: _appliedDiscount!.code,
         orderValue: subTotal.toDouble(),
-        userId: 1, // Optional: backend handle from token
+        userId: currentUserId,
         shopId: _appliedDiscount!.shopId ?? 0,
         items: selectedItems
             .map(

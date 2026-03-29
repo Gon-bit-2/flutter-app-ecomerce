@@ -51,8 +51,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
         ? response.data
         : (response.data['data'] as List? ?? []);
     return data
-        .map((item) =>
-            NotificationModel.fromJson(item as Map<String, dynamic>))
+        .map((item) => NotificationModel.fromJson(item as Map<String, dynamic>))
         .toList();
   }
 
@@ -65,9 +64,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
 
   @override
   Future<void> markAllAsRead() async {
-    await _dioClient.patch(
-      '${AppConstants.notificationsReadAllEndpoint}',
-    );
+    await _dioClient.patch(AppConstants.notificationsReadAllEndpoint);
   }
 
   @override
@@ -93,8 +90,9 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
         final notification = NotificationModel.fromJson(data);
         _notificationStreamController.add(notification);
       } else if (data is Map) {
-        final notification =
-            NotificationModel.fromJson(Map<String, dynamic>.from(data));
+        final notification = NotificationModel.fromJson(
+          Map<String, dynamic>.from(data),
+        );
         _notificationStreamController.add(notification);
       }
     });

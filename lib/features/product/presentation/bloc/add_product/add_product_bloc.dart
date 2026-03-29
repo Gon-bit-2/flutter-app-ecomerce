@@ -285,7 +285,7 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
       "virtualPrice": event.virtualPrice,
       "brandId": 1,
       "images": imagesToUpload,
-      "categories": event.categoryId != null ? [event.categoryId] : [],
+      "categories": event.categoryIds ?? [],
       "publishedAt": DateTime.now().toUtc().toIso8601String(),
       "variants": finalVariants,
       "skus": skusPayload,
