@@ -15,7 +15,12 @@ class Product extends Equatable {
   final List<dynamic>? variants; // Json type
   final String? description;
 
-  // UI Calculated fields (Keep these as they are useful for frontend but maybe nullable if not provided)
+  // Shop info
+  final int? createdById;
+  final String? shopName;
+  final String? shopAvatar;
+
+  // UI Calculated fields
   final double? rating;
   final int? sold;
   final bool isMall;
@@ -34,6 +39,9 @@ class Product extends Equatable {
     this.skus = const [],
     this.variants,
     this.description,
+    this.createdById,
+    this.shopName,
+    this.shopAvatar,
     this.rating,
     this.sold,
     this.isMall = false,
@@ -54,6 +62,9 @@ class Product extends Equatable {
     skus,
     variants,
     description,
+    createdById,
+    shopName,
+    shopAvatar,
     rating,
     sold,
     isMall,

@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/features/category/presentation/pages/category_page.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/pages/seller_orders_page.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
@@ -91,12 +92,12 @@ class _MyShopPageState extends State<MyShopPage> {
         children: [
           CircleAvatar(
             radius: 30.r,
-            backgroundColor: Colors.blue.shade50,
+            backgroundColor: AppColors.secondary,
             backgroundImage: user.avatar != null
                 ? NetworkImage(user.avatar!)
                 : null,
             child: user.avatar == null
-                ? Icon(Icons.storefront, size: 30.r, color: Colors.blue)
+                ? Icon(Icons.storefront, size: 30.r, color: AppColors.primaryBlue)
                 : null,
           ),
           SizedBox(width: 16.w),
@@ -213,7 +214,7 @@ class _MyShopPageState extends State<MyShopPage> {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, size: 24.sp, color: Colors.blue),
+          Icon(icon, size: 24.sp, color: AppColors.primaryBlue),
           SizedBox(height: 4.h),
           Text(
             value,
@@ -360,7 +361,7 @@ class _MyShopPageState extends State<MyShopPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 32.sp, color: Colors.blue),
+            Icon(icon, size: 32.sp, color: AppColors.primaryBlue),
             SizedBox(height: 12.h),
             Text(
               title,

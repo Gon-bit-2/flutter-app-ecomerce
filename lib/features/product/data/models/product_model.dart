@@ -24,6 +24,9 @@ class ProductModel extends Product {
     this.skus = const [],
     super.variants,
     super.description,
+    super.createdById,
+    super.shopName,
+    super.shopAvatar,
     super.rating,
     super.sold,
     super.isMall,
@@ -141,6 +144,20 @@ class ProductModel extends Product {
       parsedBrandName = params['brand']['name'] as String?;
     }
 
+    // Parse shop info from 'user' nested object (createdBy)
+    int? parsedCreatedById;
+    String? parsedShopName;
+    String? parsedShopAvatar;
+    if (params['createdById'] != null) {
+      parsedCreatedById = (params['createdById'] as num).toInt();
+    }
+    if (params['user'] != null && params['user'] is Map) {
+      final user = params['user'] as Map;
+      parsedShopName = user['name'] as String?;
+      parsedShopAvatar = user['avatar'] as String?;
+      parsedCreatedById ??= (user['id'] as num?)?.toInt();
+    }
+
     return ProductModel(
       id: model.id,
       name: model.name,
@@ -154,6 +171,9 @@ class ProductModel extends Product {
       skus: fixedSkus,
       variants: model.variants,
       description: model.description,
+      createdById: parsedCreatedById,
+      shopName: parsedShopName,
+      shopAvatar: parsedShopAvatar,
       rating: model.rating,
       sold: model.sold,
       isMall: model.isMall,

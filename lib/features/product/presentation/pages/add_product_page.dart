@@ -1,6 +1,7 @@
 import 'package:app_fe_ecomerce/features/category/domain/repositories/category_repository.dart';
 import 'package:app_fe_ecomerce/features/category/domain/entities/category.dart';
 import 'package:app_fe_ecomerce/features/common/domain/repositories/common_repository.dart';
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -172,19 +173,21 @@ class _AddProductPageState extends State<AddProductPage> {
                             children: [
                               Expanded(
                                 child: _buildTextField(
-                                  "Giá cơ bản",
+                                  "Giá bán",
                                   _basePriceController,
                                   isNumber: true,
                                   isPrice: true,
+                                  helperText: "Giá khách hàng phải trả",
                                 ),
                               ),
                               SizedBox(width: 12.w),
                               Expanded(
                                 child: _buildTextField(
-                                  "Giá ảo (Gạch ngang)",
+                                  "Giá gốc (trước giảm)",
                                   _virtualPriceController,
                                   isNumber: true,
                                   isRequired: false,
+                                  helperText: "Hiển thị gạch ngang, bỏ trống nếu không giảm",
                                 ),
                               ),
                             ],
@@ -371,8 +374,13 @@ class _AddProductPageState extends State<AddProductPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Biến thể",
+          "Phân loại hàng",
           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          "Ví dụ: Màu sắc, Kích thước",
+          style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
         ),
         SizedBox(height: 8.h),
         ...state.variants.asMap().entries.map((entry) {
@@ -388,7 +396,7 @@ class _AddProductPageState extends State<AddProductPage> {
         OutlinedButton.icon(
           onPressed: () => _bloc.add(AddProductVariantAdded()),
           icon: const Icon(Icons.add),
-          label: const Text("Thêm biến thể"),
+          label: const Text("Thêm phân loại mới"),
         ),
       ],
     );
@@ -399,51 +407,68 @@ class _AddProductPageState extends State<AddProductPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Cấu hình SKU",
+          "Giá & Kho theo phân loại",
           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          "Thiết lập giá bán và số lượng tồn kho cho từng phân loại",
+          style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
         ),
         SizedBox(height: 8.h),
         // Bulk Apply
         Container(
           padding: EdgeInsets.all(12.w),
-          color: Colors.grey[50],
+          decoration: BoxDecoration(
+            color: AppColors.secondary,
+            borderRadius: BorderRadius.circular(8.r),
+          ),
           child: Column(
             children: [
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      "Giá chung",
+                      "Giá đồng nhất",
                       _skuDefaultPriceController,
                       isNumber: true,
                       isRequired: false,
+                      helperText: "Áp dụng chung cho tất cả",
                     ),
                   ),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: _buildTextField(
-                      "Kho chung",
+                      "Tồn kho đồng nhất",
                       _skuDefaultStockController,
                       isNumber: true,
                       isRequired: false,
+                      helperText: "Áp dụng chung cho tất cả",
                     ),
                   ),
                 ],
               ),
               SizedBox(height: 8.h),
-              ElevatedButton(
-                onPressed: () {
-                  final price = double.tryParse(
-                    _skuDefaultPriceController.text,
-                  );
-                  final stock = int.tryParse(_skuDefaultStockController.text);
-                  if (price != null || stock != null) {
-                    _bloc.add(
-                      AddProductApplyDefaultSku(price: price, stock: stock),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final price = double.tryParse(
+                      _skuDefaultPriceController.text,
                     );
-                  }
-                },
-                child: const Text("Áp dụng tất cả"),
+                    final stock = int.tryParse(_skuDefaultStockController.text);
+                    if (price != null || stock != null) {
+                      _bloc.add(
+                        AddProductApplyDefaultSku(price: price, stock: stock),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text("Áp giá & kho cho tất cả"),
+                ),
               ),
             ],
           ),
@@ -470,6 +495,7 @@ class _AddProductPageState extends State<AddProductPage> {
     int maxLines = 1,
     bool isPrice = false,
     bool isStock = false,
+    String? helperText,
   }) {
     return TextFormField(
       controller: controller,
@@ -478,6 +504,8 @@ class _AddProductPageState extends State<AddProductPage> {
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
+        helperText: helperText,
+        helperMaxLines: 2,
       ),
       validator: (v) {
         if (isRequired && (v == null || v.isEmpty)) {
@@ -619,7 +647,7 @@ class _AddProductPageState extends State<AddProductPage> {
                       '${basePrice.toInt()} đ',
                       style: TextStyle(
                         fontSize: 16.sp,
-                        color: Colors.red,
+                        color: AppColors.primaryBlue,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -705,7 +733,7 @@ class _AddProductPageState extends State<AddProductPage> {
               _performSubmit(basePrice);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: AppColors.primaryBlue,
             ),
             child: Text(
               widget.product == null ? 'Đăng sản phẩm' : 'Cập nhật',
@@ -800,7 +828,7 @@ class _VariantItemWidgetState extends State<_VariantItemWidget> {
                   child: TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
-                      labelText: "Tên biến thể (VD: Màu sắc)",
+                      labelText: "Tên phân loại (VD: Màu sắc, Size)",
                     ),
                     onChanged: (v) {
                       // Optional: Update on every char or just on focus loss.
@@ -822,7 +850,7 @@ class _VariantItemWidgetState extends State<_VariantItemWidget> {
               Expanded(
                 child: TextField(
                   controller: _optionController,
-                  decoration: const InputDecoration(labelText: "Thêm tùy chọn"),
+                  decoration: const InputDecoration(labelText: "Thêm lựa chọn", hintText: "VD: Đỏ, Xanh, Vàng"),
                   onSubmitted: (v) => _addOption(),
                 ),
               ),
@@ -938,7 +966,7 @@ class _SkuItemWidgetState extends State<_SkuItemWidget> {
                   child: TextFormField(
                     controller: _priceController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Giá"),
+                    decoration: const InputDecoration(labelText: "Giá bán"),
                   ),
                 ),
               ),
@@ -951,7 +979,7 @@ class _SkuItemWidgetState extends State<_SkuItemWidget> {
                   child: TextFormField(
                     controller: _stockController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Kho"),
+                    decoration: const InputDecoration(labelText: "Tồn kho"),
                   ),
                 ),
               ),

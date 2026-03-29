@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failures.dart';
@@ -15,7 +15,8 @@ abstract class ShopVideoRepository {
   Future<Either<Failure, ShopVideo>> getShopVideoDetail(int id);
 
   Future<Either<Failure, ShopVideo>> createShopVideo({
-    required File video,
+    required Uint8List videoBytes,
+    required String fileName,
     String? caption,
     String? thumbnailUrl,
     List<int>? productIds,

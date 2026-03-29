@@ -1,6 +1,7 @@
 import 'package:app_fe_ecomerce/core/constants/app_constants.dart';
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
+import 'package:app_fe_ecomerce/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:app_fe_ecomerce/features/payment/domain/entities/payment_config_entity.dart';
 import 'package:app_fe_ecomerce/features/payment/domain/usecases/get_payment_config_usecase.dart';
 import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
@@ -64,10 +65,14 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
     );
   }
 
-  void _initSocket() {
+  Future<void> _initSocket() async {
     if (widget.isTestingMode) {
       return; // Prevent connecting real socket during testing
     }
+
+    // Lấy accessToken để xác thực socket
+    final authLocal = GetIt.I<AuthLocalDataSource>();
+    final accessToken = await authLocal.getAccessToken();
 
     // Assuming backend endpoint is baseUrl without trailing slash
     final socketUrl =
@@ -76,9 +81,23 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
     _socket = io.io(
       socketUrl,
       io.OptionBuilder()
-          .setTransports(['websocket'])
-          // TODO: Implement token retrieval for socket authentication if needed based on FRONTEND_GUIDE (extraHeaders: Authorization)
-          // Usually would fetch token from SharedPreferences here
+          // Trên Web, WebSocket không hỗ trợ custom headers.
+          // Dùng polling trước (hỗ trợ headers), rồi auto-upgrade lên websocket.
+          .setTransports(['polling', 'websocket'])
+          .setExtraHeaders({
+            if (accessToken != null)
+              'Authorization': 'Bearer $accessToken',
+          })
+          .setQuery({
+            if (accessToken != null)
+              'token': accessToken,
+          })
+          .setAuth({
+            if (accessToken != null)
+              'token': accessToken,
+          })
+          .enableAutoConnect()
+          .enableReconnection()
           .build(),
     );
 
@@ -99,6 +118,10 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
 
     _socket.onDisconnect((_) {
       debugPrint('Disconnected from payment socket');
+    });
+
+    _socket.onConnectError((err) {
+      debugPrint('Payment socket connection error: $err');
     });
   }
 

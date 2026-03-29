@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
@@ -13,13 +13,15 @@ class CreateShopVideoUseCase {
   CreateShopVideoUseCase(this.repository);
 
   Future<Either<Failure, ShopVideo>> call({
-    required File video,
+    required Uint8List videoBytes,
+    required String fileName,
     String? caption,
     String? thumbnailUrl,
     List<int>? productIds,
   }) {
     return repository.createShopVideo(
-      video: video,
+      videoBytes: videoBytes,
+      fileName: fileName,
       caption: caption,
       thumbnailUrl: thumbnailUrl,
       productIds: productIds,

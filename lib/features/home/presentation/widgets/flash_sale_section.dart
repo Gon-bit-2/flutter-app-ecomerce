@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/flash_sale_entity.dart';
 import 'package:intl/intl.dart';
 import '../../../product/presentation/pages/product_detail_page.dart';
+import '../pages/flash_sale_page.dart';
 
 class FlashSaleSection extends StatefulWidget {
   final FlashSaleEntity flashSale;
@@ -81,7 +82,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                     fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
                     fontStyle: FontStyle.italic,
-                    color: Colors.orange[900], // Or black
+                    color: AppColors.primaryBlue,
                   ),
                 ),
                 SizedBox(width: 10.w),
@@ -93,7 +94,16 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                 _buildTimerBox(secondsStr),
                 const Spacer(),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FlashSalePage(
+                          initialProducts: widget.flashSale.products,
+                        ),
+                      ),
+                    );
+                  },
                   child: Row(
                     children: [
                       Text(
@@ -157,7 +167,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                               top: 0,
                               right: 0,
                               child: Container(
-                                color: Colors.yellow[700],
+                                color: AppColors.warning,
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 4.w,
                                   vertical: 2.h,
@@ -167,6 +177,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                                   style: TextStyle(
                                     fontSize: 10.sp,
                                     fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
@@ -177,7 +188,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                         Text(
                           'đ${formatCurrency.format(product.basePrice)}',
                           style: TextStyle(
-                            color: Colors.red,
+                            color: AppColors.primaryBlue,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
                           ),
@@ -188,7 +199,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                           width: double.infinity,
                           height: 16.h,
                           decoration: BoxDecoration(
-                            color: Colors.red[100],
+                            color: AppColors.secondary,
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Stack(
@@ -196,7 +207,7 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                               Container(
                                 width: 80.w, // Mock progress
                                 decoration: BoxDecoration(
-                                  color: Colors.red,
+                                  color: AppColors.primaryBlue,
                                   borderRadius: BorderRadius.circular(8.r),
                                 ),
                               ),

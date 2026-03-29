@@ -373,16 +373,16 @@ class _SellerDiscountListPageState extends State<SellerDiscountListPage>
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
+                      color: AppColors.warning.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.orange.shade200),
+                      border: Border.all(color: AppColors.warning.withOpacity(0.4)),
                     ),
                     child: Text(
                       discount.code,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange.shade800,
+                        color: AppColors.warning,
                         letterSpacing: 1,
                       ),
                     ),

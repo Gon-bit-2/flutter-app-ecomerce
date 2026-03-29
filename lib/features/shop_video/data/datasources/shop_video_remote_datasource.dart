@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -9,7 +9,8 @@ abstract class ShopVideoRemoteDataSource {
   Future<List<ShopVideoModel>> getShopVideos({int page = 1, int limit = 10, int? shopId});
   Future<ShopVideoModel> getShopVideoDetail(int id);
   Future<ShopVideoModel> createShopVideo({
-    required File video,
+    required Uint8List videoBytes,
+    required String fileName,
     String? caption,
     String? thumbnailUrl,
     List<int>? productIds,
@@ -29,7 +30,7 @@ class ShopVideoRemoteDataSourceImpl implements ShopVideoRemoteDataSource {
 
   @override
   Future<List<ShopVideoModel>> getShopVideos({int page = 1, int limit = 10, int? shopId}) async {
-    final query = {'page': page, 'limit': limit};
+    final query = <String, dynamic>{'page': page, 'limit': limit};
     if (shopId != null) query['shopId'] = shopId;
     
     final response = await client.get('/shop-video', queryParameters: query);
@@ -45,20 +46,19 @@ class ShopVideoRemoteDataSourceImpl implements ShopVideoRemoteDataSource {
 
   @override
   Future<ShopVideoModel> createShopVideo({
-    required File video,
+    required Uint8List videoBytes,
+    required String fileName,
     String? caption,
     String? thumbnailUrl,
     List<int>? productIds,
   }) async {
-    String fileName = video.path.split('/').last;
     final formDataMap = <String, dynamic>{
-      'video': await MultipartFile.fromFile(video.path, filename: fileName),
+      'video': MultipartFile.fromBytes(videoBytes, filename: fileName),
     };
 
     if (caption != null) formDataMap['caption'] = caption;
     if (thumbnailUrl != null) formDataMap['thumbnailUrl'] = thumbnailUrl;
     if (productIds != null && productIds.isNotEmpty) {
-      // Dựa theo API_LIST, chuyển array thành string format
       formDataMap['productIds'] = productIds.toString(); 
     }
 

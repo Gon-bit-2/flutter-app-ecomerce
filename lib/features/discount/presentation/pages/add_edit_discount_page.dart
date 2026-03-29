@@ -467,8 +467,10 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                         TextFormField(
                           controller: _maxDiscountController,
                           decoration: const InputDecoration(
-                            labelText: 'Giảm tối đa (Đóng khung giới hạn)',
+                            labelText: 'Giảm tối đa',
                             suffixText: 'đ',
+                            helperText: 'Số tiền giảm cao nhất. VD: Giảm 50% nhưng tối đa 100.000đ',
+                            helperMaxLines: 2,
                           ),
                           keyboardType: TextInputType.number,
                         ),
@@ -489,7 +491,8 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                             child: TextFormField(
                               controller: _maxUsesController,
                               decoration: const InputDecoration(
-                                labelText: 'Tổng lượt dùng tối đa',
+                                labelText: 'Tổng số lượng mã',
+                                helperText: 'Số lần mã có thể được dùng',
                               ),
                               keyboardType: TextInputType.number,
                             ),
@@ -499,7 +502,8 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                             child: TextFormField(
                               controller: _maxUsesPerUserController,
                               decoration: const InputDecoration(
-                                labelText: 'Lượt/người dùng',
+                                labelText: 'Mỗi khách dùng tối đa',
+                                helperText: 'Số lần mỗi khách được dùng',
                               ),
                               keyboardType: TextInputType.number,
                             ),

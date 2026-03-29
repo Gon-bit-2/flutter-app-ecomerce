@@ -20,6 +20,7 @@ import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart'
 import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart' as app_fe_ecomerce_order;
 import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
+import 'package:app_fe_ecomerce/features/shop/presentation/pages/shop_profile_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -588,6 +589,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               color: Color(0xFFEEEEEE),
                             ),
                             _buildShippingSection(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildShopInfoSection(),
                             const Divider(
                               thickness: 1,
                               color: Color(0xFFEEEEEE),
@@ -1447,6 +1453,92 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildShopInfoSection() {
+    final shopName = _currentProduct.shopName ?? 'Shop #${_currentProduct.createdById ?? ""}';
+    final shopAvatar = _currentProduct.shopAvatar;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 12.h),
+      child: Row(
+        children: [
+          // Shop Avatar
+          CircleAvatar(
+            radius: 22.r,
+            backgroundColor: AppColors.secondary,
+            backgroundImage: shopAvatar != null ? NetworkImage(shopAvatar) : null,
+            child: shopAvatar == null
+                ? Icon(Icons.storefront, size: 22.r, color: AppColors.primaryBlue)
+                : null,
+          ),
+          SizedBox(width: 12.w),
+          // Shop Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  shopName,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    Icon(Icons.verified, size: 12.sp, color: AppColors.primaryBlue),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Shop Uy Tín',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Nút Xem Shop nhỏ
+          OutlinedButton(
+            onPressed: () {
+              if (_currentProduct.createdById != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ShopProfilePage(
+                      shopId: _currentProduct.createdById!,
+                      shopName: _currentProduct.shopName,
+                      shopAvatar: _currentProduct.shopAvatar,
+                    ),
+                  ),
+                );
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.primaryBlue),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+              minimumSize: Size.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            child: Text(
+              'Xem Shop',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.primaryBlue,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBottomBar() {
     return Container(
       decoration: BoxDecoration(
@@ -1456,17 +1548,59 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: SafeArea(
         child: Row(
           children: [
-            // Nút xem shop
+            // Nút Chat
             Expanded(
-              flex: 2,
+              flex: 1,
               child: InkWell(
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Tính năng xem shop đang phát triển'),
+                      content: Text('Tính năng chat đang phát triển'),
                       duration: Duration(seconds: 1),
                     ),
                   );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        color: AppColors.primaryBlue,
+                        size: 20.sp,
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        "Chat",
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Container(width: 1, height: 30.h, color: Colors.grey.shade300),
+            // Nút xem shop
+            Expanded(
+              flex: 1,
+              child: InkWell(
+                onTap: () {
+                  if (_currentProduct.createdById != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShopProfilePage(
+                          shopId: _currentProduct.createdById!,
+                          shopName: _currentProduct.shopName,
+                          shopAvatar: _currentProduct.shopAvatar,
+                        ),
+                      ),
+                    );
+                  }
                 },
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -1480,7 +1614,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                       SizedBox(height: 2.h),
                       Text(
-                        "Xem Shop",
+                        "Shop",
                         style: TextStyle(
                           fontSize: 10.sp,
                           color: Colors.grey[700],

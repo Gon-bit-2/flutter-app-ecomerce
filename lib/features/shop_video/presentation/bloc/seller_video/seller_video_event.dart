@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
 
 abstract class SellerVideoEvent extends Equatable {
@@ -21,20 +21,22 @@ class LoadMyVideosEvent extends SellerVideoEvent {
 class LoadMoreMyVideosEvent extends SellerVideoEvent {}
 
 class CreateSellerVideoEvent extends SellerVideoEvent {
-  final File video;
+  final Uint8List videoBytes;
+  final String fileName;
   final String? caption;
   final String? thumbnailUrl;
   final List<int>? productIds;
 
   const CreateSellerVideoEvent({
-    required this.video,
+    required this.videoBytes,
+    required this.fileName,
     this.caption,
     this.thumbnailUrl,
     this.productIds,
   });
 
   @override
-  List<Object?> get props => [video, caption, thumbnailUrl, productIds];
+  List<Object?> get props => [videoBytes, fileName, caption, thumbnailUrl, productIds];
 }
 
 class UpdateSellerVideoEvent extends SellerVideoEvent {
