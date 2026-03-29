@@ -58,6 +58,7 @@ const _$DiscountTypeEnumMap = {
   DiscountType.FIXED_AMOUNT: 'FIXED_AMOUNT',
   DiscountType.PERCENTAGE: 'PERCENTAGE',
   DiscountType.SHIPPING: 'SHIPPING',
+  DiscountType.COIN_CASHBACK: 'COIN_CASHBACK',
 };
 
 const _$DiscountScopeEnumMap = {

@@ -1,6 +1,6 @@
 List<String> _buildSkuValues(List<List<String>> optionGroups) {
   if (optionGroups.isEmpty) {
-    return ['Default'];
+    return ['Mặc định'];
   }
 
   List<String> results = [''];

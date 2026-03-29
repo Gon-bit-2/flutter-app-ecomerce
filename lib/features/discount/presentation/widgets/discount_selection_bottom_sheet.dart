@@ -69,15 +69,20 @@ class _DiscountSelectionBottomSheetState
   }
 
   void _applySelection() {
-    if (_codeController.text.isNotEmpty) {
-      // Logic for manual code input could be extended here
-      // i.e creating a dummy object or calling api to check first.
-    } else if (_tempSelectedDiscount != null) {
-      widget.onDiscountSelected(_tempSelectedDiscount!);
+    final selectedDiscount = _tempSelectedDiscount;
+    final codeText = _codeController.text.trim();
+
+    // Đóng bottom sheet trước
+    Navigator.pop(context);
+
+    // Sau đó gọi callback
+    if (codeText.isNotEmpty) {
+      // Nhập mã thủ công — TODO: có thể extend gọi API check code
+    } else if (selectedDiscount != null) {
+      widget.onDiscountSelected(selectedDiscount);
     } else {
       widget.onClearDiscount();
     }
-    Navigator.pop(context);
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/entities/discount.dart';
 
 import '../../../domain/usecases/get_my_vouchers.dart';
 import '../../../domain/usecases/get_available_discounts.dart';
@@ -14,6 +15,8 @@ class DiscountBloc extends Bloc<DiscountEvent, DiscountState> {
   final GetAvailableDiscounts getAvailableDiscounts;
   final PreviewDiscount previewDiscount;
   final SaveDiscount saveDiscount;
+  
+  List<Discount> currentMyVouchers = [];
 
   DiscountBloc({
     required this.getMyVouchers,
@@ -38,7 +41,10 @@ class DiscountBloc extends Bloc<DiscountEvent, DiscountState> {
     );
     failureOrVouchers.fold(
       (failure) => emit(DiscountError(message: failure.message)),
-      (vouchers) => emit(MyVouchersLoaded(vouchers: vouchers)),
+      (vouchers) {
+        currentMyVouchers = vouchers;
+        emit(MyVouchersLoaded(vouchers: vouchers));
+      },
     );
   }
 

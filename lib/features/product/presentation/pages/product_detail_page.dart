@@ -19,6 +19,8 @@ import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart'
     as app_fe_ecomerce_cart;
 import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_page.dart' as app_fe_ecomerce_order;
 import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
+import 'package:app_fe_ecomerce/features/shop/presentation/pages/shop_profile_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -481,8 +483,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     SliverAppBar(
                       pinned: true,
                       floating: true,
-                      backgroundColor: Colors
-                          .transparent, // Make it transparent initially? Or white.
+                      backgroundColor: Colors.white,
                       // For a product detail, usually we have a translucent back button.
                       // Let's stick to standard white app bar for simplicity or "glassmorphism" overlay?
                       // The image suggests a standard header with Back, Share, Cart.
@@ -588,6 +589,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               color: Color(0xFFEEEEEE),
                             ),
                             _buildShippingSection(),
+                            const Divider(
+                              thickness: 1,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                            _buildShopInfoSection(),
                             const Divider(
                               thickness: 1,
                               color: Color(0xFFEEEEEE),
@@ -720,7 +726,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(
               'đ${formatCurrency.format(displayPrice)}',
               style: TextStyle(
-                color: const Color(0xFFEE4D2D),
+                color: AppColors.primaryBlue,
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
               ),
@@ -739,13 +745,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEAE6),
+                  color: AppColors.secondary,
                   borderRadius: BorderRadius.circular(2.r),
                 ),
                 child: Text(
                   "-${discount.toStringAsFixed(0)}%",
                   style: TextStyle(
-                    color: const Color(0xFFEE4D2D),
+                    color: AppColors.primaryBlue,
                     fontSize: 10.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1003,12 +1009,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                         // Đồng bộ với page widget chính
                                         setState(() {});
                                       },
-                                      selectedColor: const Color(
-                                        0xFFFFEAE6,
-                                      ), // Cam nhạt
+                                      selectedColor: AppColors.secondary,
                                       labelStyle: TextStyle(
                                         color: isSelected
-                                            ? const Color(0xFFEE4D2D)
+                                            ? AppColors.primaryBlue
                                             : Colors.black87,
                                         fontWeight: isSelected
                                             ? FontWeight.bold
@@ -1021,7 +1025,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                         ),
                                         side: BorderSide(
                                           color: isSelected
-                                              ? const Color(0xFFEE4D2D)
+                                              ? AppColors.primaryBlue
                                               : Colors.transparent,
                                         ),
                                       ),
@@ -1092,9 +1096,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         _addToCart(buyNow: buyNow);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFFEE4D2D,
-                        ), // Shopee orange
+                        backgroundColor: AppColors.primaryBlue,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4.r),
@@ -1432,7 +1434,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               Text(
                                 'đ${formatCurrency.format(product.basePrice)}',
                                 style: TextStyle(
-                                  color: const Color(0xFFEE4D2D),
+                                  color: AppColors.primaryBlue,
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -1451,6 +1453,92 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildShopInfoSection() {
+    final shopName = _currentProduct.shopName ?? 'Shop #${_currentProduct.createdById ?? ""}';
+    final shopAvatar = _currentProduct.shopAvatar;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 12.h),
+      child: Row(
+        children: [
+          // Shop Avatar
+          CircleAvatar(
+            radius: 22.r,
+            backgroundColor: AppColors.secondary,
+            backgroundImage: shopAvatar != null ? NetworkImage(shopAvatar) : null,
+            child: shopAvatar == null
+                ? Icon(Icons.storefront, size: 22.r, color: AppColors.primaryBlue)
+                : null,
+          ),
+          SizedBox(width: 12.w),
+          // Shop Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  shopName,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    Icon(Icons.verified, size: 12.sp, color: AppColors.primaryBlue),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Shop Uy Tín',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Nút Xem Shop nhỏ
+          OutlinedButton(
+            onPressed: () {
+              if (_currentProduct.createdById != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ShopProfilePage(
+                      shopId: _currentProduct.createdById!,
+                      shopName: _currentProduct.shopName,
+                      shopAvatar: _currentProduct.shopAvatar,
+                    ),
+                  ),
+                );
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.primaryBlue),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+              minimumSize: Size.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.r),
+              ),
+            ),
+            child: Text(
+              'Xem Shop',
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.primaryBlue,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBottomBar() {
     return Container(
       decoration: BoxDecoration(
@@ -1460,14 +1548,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: SafeArea(
         child: Row(
           children: [
-            // Nút xem shop
+            // Nút Chat
             Expanded(
-              flex: 2,
+              flex: 1,
               child: InkWell(
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Tính năng xem shop đang phát triển'),
+                      content: Text('Tính năng chat đang phát triển'),
                       duration: Duration(seconds: 1),
                     ),
                   );
@@ -1478,13 +1566,55 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.store_outlined,
-                        color: const Color(0xFFEE4D2D),
+                        Icons.chat_bubble_outline,
+                        color: AppColors.primaryBlue,
                         size: 20.sp,
                       ),
                       SizedBox(height: 2.h),
                       Text(
-                        "Xem Shop",
+                        "Chat",
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Container(width: 1, height: 30.h, color: Colors.grey.shade300),
+            // Nút xem shop
+            Expanded(
+              flex: 1,
+              child: InkWell(
+                onTap: () {
+                  if (_currentProduct.createdById != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShopProfilePage(
+                          shopId: _currentProduct.createdById!,
+                          shopName: _currentProduct.shopName,
+                          shopAvatar: _currentProduct.shopAvatar,
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.store_outlined,
+                        color: AppColors.primaryBlue,
+                        size: 20.sp,
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        "Shop",
                         style: TextStyle(
                           fontSize: 10.sp,
                           color: Colors.grey[700],
@@ -1503,13 +1633,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 onTap: () => _showVariantBottomSheet(buyNow: false),
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
-                  color: const Color(0xFFFFEAE6), // Cam nhạt
+                  color: AppColors.secondary,
                   child: Text(
                     "Thêm vào giỏ hàng",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: const Color(0xFFEE4D2D),
+                      color: AppColors.primaryBlue,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1523,7 +1653,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 onTap: () => _showVariantBottomSheet(buyNow: true),
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 14.h),
-                  color: const Color(0xFFEE4D2D), // Shopee orange
+                  color: AppColors.primaryBlue,
                   child: Text(
                     "Mua ngay",
                     textAlign: TextAlign.center,

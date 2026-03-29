@@ -18,10 +18,15 @@ class ProductModel extends Product {
     super.virtualPrice,
     required super.images,
     required super.brandId,
+    super.brandName,
+    super.categoryIds,
     super.publishedAt,
     this.skus = const [],
     super.variants,
     super.description,
+    super.createdById,
+    super.shopName,
+    super.shopAvatar,
     super.rating,
     super.sold,
     super.isMall,
@@ -123,6 +128,36 @@ class ProductModel extends Product {
       return sku;
     }).toList();
 
+    // Parse categories manually
+    List<int>? parsedCategoryIds;
+    if (params['categories'] != null && params['categories'] is List) {
+      parsedCategoryIds = (params['categories'] as List)
+          .map((c) => c is Map ? (c['id'] as int?) : null)
+          .where((id) => id != null)
+          .cast<int>()
+          .toList();
+    }
+
+    // Parse brand name manually
+    String? parsedBrandName;
+    if (params['brand'] != null && params['brand'] is Map) {
+      parsedBrandName = params['brand']['name'] as String?;
+    }
+
+    // Parse shop info from 'user' nested object (createdBy)
+    int? parsedCreatedById;
+    String? parsedShopName;
+    String? parsedShopAvatar;
+    if (params['createdById'] != null) {
+      parsedCreatedById = (params['createdById'] as num).toInt();
+    }
+    if (params['user'] != null && params['user'] is Map) {
+      final user = params['user'] as Map;
+      parsedShopName = user['name'] as String?;
+      parsedShopAvatar = user['avatar'] as String?;
+      parsedCreatedById ??= (user['id'] as num?)?.toInt();
+    }
+
     return ProductModel(
       id: model.id,
       name: model.name,
@@ -130,10 +165,15 @@ class ProductModel extends Product {
       virtualPrice: model.virtualPrice,
       images: model.images,
       brandId: model.brandId,
+      brandName: parsedBrandName ?? model.brandName,
+      categoryIds: parsedCategoryIds ?? model.categoryIds,
       publishedAt: model.publishedAt,
       skus: fixedSkus,
       variants: model.variants,
       description: model.description,
+      createdById: parsedCreatedById,
+      shopName: parsedShopName,
+      shopAvatar: parsedShopAvatar,
       rating: model.rating,
       sold: model.sold,
       isMall: model.isMall,

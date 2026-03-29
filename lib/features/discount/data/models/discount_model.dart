@@ -24,6 +24,9 @@ class DiscountModel extends Discount {
     required super.isActive,
     required super.startDate,
     required super.endDate,
+    super.userUsage,
+    super.isSaved,
+    super.isUsed,
   });
 
   factory DiscountModel.fromJson(Map<String, dynamic> json) =>

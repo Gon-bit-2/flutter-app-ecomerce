@@ -165,10 +165,15 @@ class _VoucherWalletPageState extends State<VoucherWalletPage>
         itemCount: vouchers.length,
         itemBuilder: (context, index) {
           final discount = vouchers[index];
+          final isSavedLocally = _discountBloc.currentMyVouchers.any((my) => my.id == discount.id);
+          final isSaved = discount.isSaved == true || isSavedLocally;
+          final isExhausted = discount.isUsed == true || (discount.userUsage != null && discount.userUsage! >= discount.maxUsesPerUser);
+          
           return DiscountCardWidget(
             discount: discount,
-            showSaveButton: true,
-            onSave: () {
+            showSaveButton: !isSaved && !isExhausted,
+            isSelected: isSaved || isExhausted,
+            onSave: (isSaved || isExhausted) ? null : () {
               _discountBloc
                   .add(SaveVoucherRequested(discountId: discount.id));
             },

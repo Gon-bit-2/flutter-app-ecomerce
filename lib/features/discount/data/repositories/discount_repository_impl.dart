@@ -224,9 +224,11 @@ class DiscountRepositoryImpl implements DiscountRepository {
 
   String? _parseErrorMessage(dynamic messageData) {
     if (messageData == null) return null;
-    if (messageData is String) return messageData;
-    if (messageData is List) {
-      return messageData
+    String? msg;
+    if (messageData is String) {
+      msg = messageData;
+    } else if (messageData is List) {
+      msg = messageData
           .map((e) {
             if (e is Map && e.containsKey('message')) {
               return e['message'].toString();
@@ -234,7 +236,15 @@ class DiscountRepositoryImpl implements DiscountRepository {
             return e.toString();
           })
           .join('\n');
+    } else {
+      msg = messageData.toString();
     }
-    return messageData.toString();
+    
+    // Map confusing backend message
+    if (msg.contains('Bạn đã hết lượt sử dụng với voucher này')) {
+      msg = msg.replaceAll('Bạn đã hết lượt sử dụng với voucher này', 'Voucher này đã hết lượt sử dụng');
+    }
+    
+    return msg;
   }
 }

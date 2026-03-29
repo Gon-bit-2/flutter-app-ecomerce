@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
@@ -43,14 +43,16 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
 
   @override
   Future<Either<Failure, ShopVideo>> createShopVideo({
-    required File video,
+    required Uint8List videoBytes,
+    required String fileName,
     String? caption,
     String? thumbnailUrl,
     List<int>? productIds,
   }) async {
     try {
       final result = await remoteDataSource.createShopVideo(
-        video: video,
+        videoBytes: videoBytes,
+        fileName: fileName,
         caption: caption,
         thumbnailUrl: thumbnailUrl,
         productIds: productIds,
@@ -130,7 +132,7 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
       if (statusCode == 401) {
         return const Left(ServerFailure('Bạn cần đăng nhập để bình luận'));
       }
-      final message = e.response?.data?['message'] ?? 'Lão khi gửi bình luận';
+      final message = e.response?.data?['message'] ?? 'Lỗi khi gửi bình luận';
       return Left(ServerFailure(message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));

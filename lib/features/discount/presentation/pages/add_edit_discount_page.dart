@@ -12,8 +12,16 @@ import '../bloc/seller_discount/seller_discount_state.dart';
 
 class AddEditDiscountPage extends StatefulWidget {
   final Discount? discount; // Null if create, non-null if edit
+  final int? shopId; // Lấy từ màn hình cha (seller)
+  final bool
+  isAdmin; // true = Admin tạo mã toàn sàn, false = Seller tạo mã shop
 
-  const AddEditDiscountPage({super.key, this.discount});
+  const AddEditDiscountPage({
+    super.key,
+    this.discount,
+    this.shopId,
+    this.isAdmin = false,
+  });
 
   @override
   State<AddEditDiscountPage> createState() => _AddEditDiscountPageState();
@@ -32,9 +40,11 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
   late TextEditingController _maxUsesController;
   late TextEditingController _descController;
   late TextEditingController _maxDiscountController;
+  late TextEditingController _maxUsesPerUserController;
 
   String _type = 'PERCENTAGE';
   String _scope = 'SHOP';
+  String _applyTo = 'ALL';
   bool _isActive = true;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -43,6 +53,11 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
   void initState() {
     super.initState();
     _bloc = GetIt.I<SellerDiscountBloc>();
+
+    // Admin mặc định scope PLATFORM, Seller mặc định scope SHOP
+    if (widget.isAdmin) {
+      _scope = 'PLATFORM';
+    }
 
     final d = widget.discount;
     _nameController = TextEditingController(text: d?.name ?? '');
@@ -58,10 +73,14 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
     _maxDiscountController = TextEditingController(
       text: d?.maxDiscountValue?.toString() ?? '',
     );
+    _maxUsesPerUserController = TextEditingController(
+      text: d?.maxUsesPerUser.toString() ?? '1',
+    );
 
     if (d != null) {
       _type = d.type.name;
       _scope = d.scope.name;
+      _applyTo = d.applyTo.name;
       _isActive = d.isActive;
       _startDate = d.startDate;
       _endDate = d.endDate;
@@ -77,6 +96,7 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
     _maxUsesController.dispose();
     _descController.dispose();
     _maxDiscountController.dispose();
+    _maxUsesPerUserController.dispose();
     super.dispose();
   }
 
@@ -103,6 +123,17 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate ngày bắt buộc
+    if (_startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn ngày bắt đầu và ngày kết thúc'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final data = <String, dynamic>{
       'name': _nameController.text.trim(),
       'code': _codeController.text.trim(),
@@ -111,6 +142,14 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
       'scope': _scope,
       'isActive': _isActive,
       'description': _descController.text.trim(),
+      // Các trường bắt buộc theo API - luôn gửi
+      'startDate': _startDate!.toUtc().toIso8601String(),
+      'endDate': _endDate!.toUtc().toIso8601String(),
+      'minOrderValue': num.tryParse(_minOrderValueController.text.trim()) ?? 0,
+      'maxTotalUses': int.tryParse(_maxUsesController.text.trim()) ?? 100,
+      'maxUsesPerUser':
+          int.tryParse(_maxUsesPerUserController.text.trim()) ?? 1,
+      'applyTo': _applyTo,
     };
 
     if (_maxDiscountController.text.isNotEmpty &&
@@ -120,26 +159,26 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
       );
     }
 
-    if (_minOrderValueController.text.isNotEmpty) {
-      data['minOrderValue'] = num.tryParse(
-        _minOrderValueController.text.trim(),
-      );
-    }
-    if (_maxUsesController.text.isNotEmpty) {
-      data['maxTotalUses'] = int.tryParse(_maxUsesController.text.trim());
-    }
-    if (_startDate != null) {
-      data['startDate'] = _startDate!.toUtc().toIso8601String();
-    }
-    if (_endDate != null) {
-      data['endDate'] = _endDate!.toUtc().toIso8601String();
-    }
+    // Luôn gửi productIds và categoryIds (mảng rỗng khi applyTo = ALL)
+    data['productIds'] = <int>[];
+    data['categoryIds'] = <int>[];
 
-    // Hardcoded shopId = 1 for Seller (Ideally drawn from User Session)
     if (!isEditing) {
-      data['shopId'] = 1;
-      data['applyTo'] = 'ALL';
-      data['maxUsesPerUser'] = 1;
+      if (widget.isAdmin) {
+        // Admin tạo mã toàn sàn: scope = PLATFORM, không cần shopId
+        // Backend sẽ lưu shopId = null cho voucher PLATFORM
+        if (_scope == 'PLATFORM') {
+          // Không gửi shopId cho mã toàn sàn
+        } else {
+          // Admin cũng có thể tạo mã cho shop cụ thể nếu muốn
+          if (widget.shopId != null) {
+            data['shopId'] = widget.shopId;
+          }
+        }
+      } else {
+        // Seller: luôn gửi shopId, backend kiểm tra quyền sở hữu
+        data['shopId'] = widget.shopId;
+      }
     }
 
     if (isEditing) {
@@ -153,19 +192,30 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
 
   @override
   Widget build(BuildContext context) {
+    final String pageTitle;
+    if (isEditing) {
+      pageTitle = 'Sửa Mã Giảm Giá';
+    } else if (widget.isAdmin) {
+      pageTitle = 'Tạo Mã Toàn Sàn';
+    } else {
+      pageTitle = 'Tạo Mã Shop';
+    }
+
     return BlocProvider.value(
       value: _bloc,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
-          backgroundColor: AppColors.primaryBlue,
+          backgroundColor: widget.isAdmin
+              ? AppColors.error.withOpacity(0.85)
+              : AppColors.primaryBlue,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            isEditing ? 'Sửa Mã Giảm Giá' : 'Thêm Mã Mới',
+            pageTitle,
             style: AppTextStyles.h3.copyWith(color: Colors.white),
           ),
         ),
@@ -184,7 +234,9 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
             ),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
+                backgroundColor: widget.isAdmin
+                    ? AppColors.error.withOpacity(0.85)
+                    : AppColors.primaryBlue,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -228,6 +280,45 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Banner hiển thị loại mã đang tạo
+                  if (!isEditing)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      color: widget.isAdmin
+                          ? Colors.red.shade50
+                          : Colors.blue.shade50,
+                      child: Row(
+                        children: [
+                          Icon(
+                            widget.isAdmin ? Icons.public : Icons.storefront,
+                            color: widget.isAdmin
+                                ? Colors.red.shade700
+                                : Colors.blue.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              widget.isAdmin
+                                  ? 'Bạn đang tạo mã giảm giá áp dụng toàn sàn (PLATFORM)'
+                                  : 'Bạn đang tạo mã giảm giá cho Shop của bạn',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: widget.isAdmin
+                                    ? Colors.red.shade700
+                                    : Colors.blue.shade700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   _buildCardSection(
                     title: 'Thông tin cơ bản',
                     children: [
@@ -270,6 +361,62 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                   ),
 
                   _buildCardSection(
+                    title: 'Phạm vi áp dụng',
+                    children: [
+                      // Scope: Admin có thể chọn PLATFORM/SHOP, Seller bị khóa ở SHOP
+                      DropdownButtonFormField<String>(
+                        initialValue: _scope,
+                        decoration: const InputDecoration(
+                          labelText: 'Phạm vi mã *',
+                        ),
+                        items: widget.isAdmin
+                            ? const [
+                                DropdownMenuItem(
+                                  value: 'PLATFORM',
+                                  child: Text('🌐  Toàn sàn (Platform)'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'SHOP',
+                                  child: Text('🏪  Shop cụ thể'),
+                                ),
+                              ]
+                            : const [
+                                DropdownMenuItem(
+                                  value: 'SHOP',
+                                  child: Text('🏪  Shop của tôi'),
+                                ),
+                              ],
+                        onChanged: widget.isAdmin
+                            ? (val) {
+                                if (val != null) setState(() => _scope = val);
+                              }
+                            : null, // Seller không được đổi scope
+                      ),
+                      const SizedBox(height: 16),
+                      // ApplyTo selector
+                      DropdownButtonFormField<String>(
+                        initialValue: _applyTo,
+                        decoration: const InputDecoration(
+                          labelText: 'Áp dụng cho *',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'ALL',
+                            child: Text('Tất cả sản phẩm'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'SPECIFIC',
+                            child: Text('Sản phẩm/danh mục cụ thể'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _applyTo = val);
+                        },
+                      ),
+                    ],
+                  ),
+
+                  _buildCardSection(
                     title: 'Thiết lập mã giảm giá',
                     children: [
                       DropdownButtonFormField<String>(
@@ -277,19 +424,24 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                         decoration: const InputDecoration(
                           labelText: 'Loại giảm giá *',
                         ),
-                        items: const [
-                          DropdownMenuItem(
+                        items: [
+                          const DropdownMenuItem(
                             value: 'PERCENTAGE',
                             child: Text('Giảm theo phần trăm (%)'),
                           ),
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                             value: 'FIXED_AMOUNT',
                             child: Text('Giảm số tiền cố định (đ)'),
                           ),
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                             value: 'SHIPPING',
-                            child: Text('Miễn phí vận chuyển (đ)'),
+                            child: Text('Miễn phí vận chuyển'),
                           ),
+                          if (widget.isAdmin)
+                            const DropdownMenuItem(
+                              value: 'COIN_CASHBACK',
+                              child: Text('Hoàn xu (Coin Cashback)'),
+                            ),
                         ],
                         onChanged: (val) {
                           if (val != null) setState(() => _type = val);
@@ -301,6 +453,9 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                         decoration: InputDecoration(
                           labelText: 'Mức giảm *',
                           suffixText: _type == 'PERCENTAGE' ? '%' : 'đ',
+                          helperText: _type == 'SHIPPING'
+                              ? 'Nhập 100 = miễn phí ship, < 100 = giảm % ship'
+                              : null,
                         ),
                         keyboardType: TextInputType.number,
                         validator: (val) => val == null || val.isEmpty
@@ -312,8 +467,10 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                         TextFormField(
                           controller: _maxDiscountController,
                           decoration: const InputDecoration(
-                            labelText: 'Giảm tối đa (Đóng khung giới hạn)',
+                            labelText: 'Giảm tối đa',
                             suffixText: 'đ',
+                            helperText: 'Số tiền giảm cao nhất. VD: Giảm 50% nhưng tối đa 100.000đ',
+                            helperMaxLines: 2,
                           ),
                           keyboardType: TextInputType.number,
                         ),
@@ -328,12 +485,30 @@ class _AddEditDiscountPageState extends State<AddEditDiscountPage> {
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _maxUsesController,
-                        decoration: const InputDecoration(
-                          labelText: 'Tổng lượt sử dụng tối đa',
-                        ),
-                        keyboardType: TextInputType.number,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _maxUsesController,
+                              decoration: const InputDecoration(
+                                labelText: 'Tổng số lượng mã',
+                                helperText: 'Số lần mã có thể được dùng',
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _maxUsesPerUserController,
+                              decoration: const InputDecoration(
+                                labelText: 'Mỗi khách dùng tối đa',
+                                helperText: 'Số lần mỗi khách được dùng',
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

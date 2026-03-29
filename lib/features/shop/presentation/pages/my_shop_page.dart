@@ -1,3 +1,4 @@
+import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/features/category/presentation/pages/category_page.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/pages/seller_orders_page.dart';
 import 'package:app_fe_ecomerce/features/product/presentation/pages/add_product_page.dart';
@@ -64,7 +65,7 @@ class _MyShopPageState extends State<MyShopPage> {
                 SizedBox(height: 20.h),
                 _buildStatisticsSection(),
                 SizedBox(height: 24.h),
-                _buildMenuGrid(context, user.id),
+                _buildMenuGrid(context, user),
               ],
             ),
           ),
@@ -91,12 +92,12 @@ class _MyShopPageState extends State<MyShopPage> {
         children: [
           CircleAvatar(
             radius: 30.r,
-            backgroundColor: Colors.blue.shade50,
+            backgroundColor: AppColors.secondary,
             backgroundImage: user.avatar != null
                 ? NetworkImage(user.avatar!)
                 : null,
             child: user.avatar == null
-                ? Icon(Icons.storefront, size: 30.r, color: Colors.blue)
+                ? Icon(Icons.storefront, size: 30.r, color: AppColors.primaryBlue)
                 : null,
           ),
           SizedBox(width: 16.w),
@@ -213,7 +214,7 @@ class _MyShopPageState extends State<MyShopPage> {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, size: 24.sp, color: Colors.blue),
+          Icon(icon, size: 24.sp, color: AppColors.primaryBlue),
           SizedBox(height: 4.h),
           Text(
             value,
@@ -228,8 +229,12 @@ class _MyShopPageState extends State<MyShopPage> {
     );
   }
 
-  Widget _buildMenuGrid(BuildContext context, int shopId) {
-    final menuItems = [
+  Widget _buildMenuGrid(BuildContext context, UserEntity user) {
+    final int shopId = user.id;
+    // Kiểm tra admin: roleId == 1 hoặc role name chứa 'admin'
+    final bool isAdmin = user.roleId == 1;
+
+    final menuItems = <Map<String, dynamic>>[
       {
         "icon": Icons.add_box_outlined,
         "title": "Thêm sản phẩm",
@@ -274,7 +279,7 @@ class _MyShopPageState extends State<MyShopPage> {
       },
       {
         "icon": Icons.local_offer_outlined,
-        "title": "Khuyến mãi",
+        "title": "Khuyến mãi Shop",
         "onTap": () {
           Navigator.push(
             context,
@@ -284,6 +289,22 @@ class _MyShopPageState extends State<MyShopPage> {
           );
         },
       },
+      // Admin: Thêm menu riêng cho quản lý voucher toàn sàn
+      if (isAdmin)
+        {
+          "icon": Icons.public,
+          "title": "Voucher sàn",
+          "onTap": () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SellerDiscountListPage(
+                  isAdmin: true,
+                ),
+              ),
+            );
+          },
+        },
       {
         "icon": Icons.settings_outlined,
         "title": "Thiết lập Shop",
@@ -340,7 +361,7 @@ class _MyShopPageState extends State<MyShopPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 32.sp, color: Colors.blue),
+            Icon(icon, size: 32.sp, color: AppColors.primaryBlue),
             SizedBox(height: 12.h),
             Text(
               title,

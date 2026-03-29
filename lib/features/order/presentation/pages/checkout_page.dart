@@ -15,6 +15,7 @@ import 'package:app_fe_ecomerce/features/discount/presentation/widgets/discount_
 import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_bloc.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_event.dart';
 import 'package:app_fe_ecomerce/features/discount/presentation/bloc/discount/discount_state.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:get_it/get_it.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -47,20 +48,38 @@ class _CheckoutPageState extends State<CheckoutPage> {
   double _productDiscountAmount = 0.0;
   double _shippingDiscountAmount = 0.0;
 
-  // Phí ship mock
+  // Giá trị từ API preview — đóng đinh theo FRONTEND_GUIDE
+  double? _finalPrice;
+  double? _finalShippingFee;
+
+  // Phí ship mặc định
   final double _shippingFee = 30000;
+
+  // Bloc instance lưu trực tiếp để tránh lỗi Provider context
+  late final DiscountBloc _discountBloc;
 
   double get _totalDiscountAmount =>
       _productDiscountAmount + _shippingDiscountAmount;
 
+  // Tổng thanh toán: ưu tiên dùng giá trị từ API preview
+  double get _grandTotal {
+    if (_finalPrice != null || _finalShippingFee != null) {
+      return (_finalPrice ?? widget.totalPrice.toDouble()) +
+          (_finalShippingFee ?? _shippingFee);
+    }
+    return widget.totalPrice.toDouble() + _shippingFee;
+  }
+
   @override
   void initState() {
     super.initState();
+    _discountBloc = GetIt.I<DiscountBloc>();
   }
 
   @override
   void dispose() {
     _noteController.dispose();
+    _discountBloc.close();
     super.dispose();
   }
 
@@ -82,7 +101,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _showConfirmOrderDialog() {
-    num totalAmount = widget.totalPrice + _shippingFee - _totalDiscountAmount;
+    num totalAmount = _grandTotal;
 
     showDialog(
       context: context,
@@ -239,8 +258,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => GetIt.I<DiscountBloc>(),
+    return BlocProvider.value(
+      value: _discountBloc,
       child: Builder(
         builder: (context) {
           return Scaffold(
@@ -307,10 +326,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           MaterialPageRoute(
                             builder: (_) => PaymentQRPage(
                               paymentId: state.result.paymentId ?? 0,
-                              totalAmount:
-                                  widget.totalPrice +
-                                  _shippingFee -
-                                  _totalDiscountAmount,
+                              totalAmount: _grandTotal,
                             ),
                           ),
                         );
@@ -321,6 +337,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   },
                 ),
                 BlocListener<DiscountBloc, DiscountState>(
+                  bloc: _discountBloc,
                   listener: (context, state) {
                     if (state is DiscountError) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -336,25 +353,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     }
                     if (state is DiscountPreviewLoaded) {
                       setState(() {
+                        // Đóng đinh 4 giá trị từ API preview (theo FRONTEND_GUIDE mục g)
                         _productDiscountAmount =
-                            (state.previewData['productDiscount'] ??
-                                    state.previewData['discountValue'] ??
-                                    0.0)
+                            (state.previewData['discountAmount'] ?? 0.0)
                                 .toDouble();
                         _shippingDiscountAmount =
                             (state.previewData['shippingDiscount'] ?? 0.0)
                                 .toDouble();
+                        _finalPrice =
+                            (state.previewData['finalPrice'] as num?)?.toDouble();
+                        _finalShippingFee =
+                            (state.previewData['finalShippingFee'] as num?)?.toDouble();
+                      });
 
+                      if (_totalDiscountAmount > 0) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Áp dụng mã giảm thành công: -$_totalDiscountAmountđ',
+                              'Áp dụng mã giảm thành công: -${_totalDiscountAmount.toStringAsFixed(0)}đ',
                             ),
                             backgroundColor: AppColors.success,
                             duration: const Duration(seconds: 1),
                           ),
                         );
-                      });
+                      }
                     }
                   },
                 ),
@@ -753,6 +775,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       setState(() {
         _productDiscountAmount = 0.0;
         _shippingDiscountAmount = 0.0;
+        _finalPrice = null;
+        _finalShippingFee = null;
       });
       return;
     }
@@ -762,6 +786,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       setState(() {
         _productDiscountAmount = 0.0;
         _shippingDiscountAmount = 0.0;
+        _finalPrice = null;
+        _finalShippingFee = null;
       });
       return;
     }
@@ -771,14 +797,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
       subTotal += (item.price ?? 0) * item.quantity;
     }
 
+    int currentUserId = 1;
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess) {
+      currentUserId = authState.user.id;
+    }
+
     // Preview cho shop discount
     if (_shopDiscount != null) {
-      context.read<DiscountBloc>().add(
+      _discountBloc.add(
         DoPreviewDiscount(
           code: _shopDiscount!.code,
           orderValue: subTotal.toDouble(),
           shippingFee: _shippingFee,
-          userId: 1,
+          userId: currentUserId,
           shopId: _shopDiscount!.shopId ?? 0,
           items: items
               .map(
@@ -795,12 +827,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     // Preview cho platform discount
     if (_platformDiscount != null) {
-      context.read<DiscountBloc>().add(
+      _discountBloc.add(
         DoPreviewDiscount(
           code: _platformDiscount!.code,
           orderValue: subTotal.toDouble(),
           shippingFee: _shippingFee,
-          userId: 1,
+          userId: currentUserId,
           shopId: 0,
           items: items
               .map(
@@ -879,8 +911,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildOrderSummarySection() {
-    num total = widget.totalPrice + _shippingFee;
-
     return Container(
       margin: EdgeInsets.only(top: 8.h, bottom: 20.h),
       padding: EdgeInsets.all(16.w),
@@ -917,7 +947,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Phí vận chuyển', style: AppTextStyles.bodyMedium),
-              Text('$_shippingFee đ', style: AppTextStyles.bodyMedium),
+              Text('${_shippingFee.toStringAsFixed(0)} đ', style: AppTextStyles.bodyMedium),
             ],
           ),
           if (_productDiscountAmount > 0) ...[
@@ -927,7 +957,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 Text('Giảm giá sản phẩm', style: AppTextStyles.bodyMedium),
                 Text(
-                  '- $_productDiscountAmount đ',
+                  '- ${_productDiscountAmount.toStringAsFixed(0)} đ',
                   style: AppTextStyles.bodyMedium.copyWith(color: Colors.green),
                 ),
               ],
@@ -940,7 +970,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 Text('Giảm phí vận chuyển', style: AppTextStyles.bodyMedium),
                 Text(
-                  '- $_shippingDiscountAmount đ',
+                  '- ${_shippingDiscountAmount.toStringAsFixed(0)} đ',
                   style: AppTextStyles.bodyMedium.copyWith(color: Colors.blue),
                 ),
               ],
@@ -957,7 +987,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
               Text(
-                '${total - _totalDiscountAmount} đ',
+                '${_grandTotal.toStringAsFixed(0)} đ',
                 style: AppTextStyles.h3.copyWith(color: AppColors.error),
               ),
             ],
@@ -1000,7 +1030,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text('Tổng cộng', style: AppTextStyles.bodyMedium),
                   Text(
-                    '${widget.totalPrice + _shippingFee - _totalDiscountAmount} đ',
+                    '${_grandTotal.toStringAsFixed(0)} đ',
                     style: AppTextStyles.h3.copyWith(color: AppColors.error),
                   ),
                 ],

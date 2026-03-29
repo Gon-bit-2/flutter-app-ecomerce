@@ -8,12 +8,19 @@ class Product extends Equatable {
   final double? virtualPrice; // For "Original Price" strike-through
   final List<String> images;
   final int brandId;
+  final String? brandName;
+  final List<int>? categoryIds;
   final DateTime? publishedAt;
   final List<SKU> skus;
   final List<dynamic>? variants; // Json type
   final String? description;
 
-  // UI Calculated fields (Keep these as they are useful for frontend but maybe nullable if not provided)
+  // Shop info
+  final int? createdById;
+  final String? shopName;
+  final String? shopAvatar;
+
+  // UI Calculated fields
   final double? rating;
   final int? sold;
   final bool isMall;
@@ -26,10 +33,15 @@ class Product extends Equatable {
     this.virtualPrice,
     required this.images,
     required this.brandId,
+    this.brandName,
+    this.categoryIds,
     this.publishedAt,
     this.skus = const [],
     this.variants,
     this.description,
+    this.createdById,
+    this.shopName,
+    this.shopAvatar,
     this.rating,
     this.sold,
     this.isMall = false,
@@ -44,10 +56,15 @@ class Product extends Equatable {
     virtualPrice,
     images,
     brandId,
+    brandName,
+    categoryIds,
     publishedAt,
     skus,
     variants,
     description,
+    createdById,
+    shopName,
+    shopAvatar,
     rating,
     sold,
     isMall,

@@ -35,26 +35,35 @@ class DiscountCardWidget extends StatelessWidget {
       valueText = currencyFormatter.format(discount.value);
     }
 
-    // Nhận diện loại Freeship chính xác từ enum
-    final isFreeship =
-        discount.type == DiscountType.SHIPPING ||
+    // Determine tags, colors, etc.
+    final bool isShop = discount.scope == DiscountScope.SHOP;
+    final bool isFreeship = discount.type == DiscountType.SHIPPING ||
         discount.name.toLowerCase().contains('freeship') ||
         discount.name.toLowerCase().contains('vận chuyển');
-    final tagColor = isFreeship
+    
+    // NẾU VOUCHER ĐÃ SỬ DỤNG HẾT LƯỢT HOẶC ĐÃ HẾT HẠN THÌ LÀM MỜ
+    final bool isExhausted = discount.isUsed == true || (discount.userUsage != null && discount.userUsage! >= discount.maxUsesPerUser);
+    final bool isExpired = discount.endDate.isBefore(DateTime.now());
+    final bool isDisabled = !discount.isActive || isExpired || isExhausted;
+
+    Color tagColor = isFreeship
         ? Colors.teal
-        : (discount.scope == DiscountScope.SHOP
-              ? Colors.orange.shade700
-              : Theme.of(context).primaryColor);
+        : (isShop ? Colors.orange.shade700 : Theme.of(context).primaryColor);
+
+    if (isDisabled) {
+      tagColor = Colors.grey.shade500;
+    }
+
     final bgColor = isFreeship
         ? Colors.teal.shade50
-        : (discount.scope == DiscountScope.SHOP
+        : (isShop
               ? Colors.orange.shade50
               : Theme.of(context).primaryColor.withOpacity(0.05));
 
     return GestureDetector(
-      onTap: discount.isActive ? onTap : null,
+      onTap: !isDisabled ? onTap : null,
       child: Opacity(
-        opacity: discount.isActive ? 1.0 : 0.5,
+        opacity: !isDisabled ? 1.0 : 0.5,
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -265,12 +274,35 @@ class DiscountCardWidget extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          'HSD: ${dateFormat.format(discount.endDate)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'HSD: ${dateFormat.format(discount.endDate)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                            if (discount.userUsage != null)
+                              Text(
+                                'Đã dùng: ${discount.userUsage}/${discount.maxUsesPerUser}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isExhausted
+                                      ? Colors.red.shade400
+                                      : Colors.grey.shade500,
+                                ),
+                              )
+                            else if (discount.maxUsesPerUser > 1)
+                              Text(
+                                'Lượt/người: ${discount.maxUsesPerUser}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),

@@ -13,6 +13,10 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
   virtualPrice: (json['virtualPrice'] as num?)?.toDouble(),
   images: (json['images'] as List<dynamic>).map((e) => e as String).toList(),
   brandId: (json['brandId'] as num).toInt(),
+  brandName: json['brandName'] as String?,
+  categoryIds: (json['categoryIds'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
   publishedAt: json['publishedAt'] == null
       ? null
       : DateTime.parse(json['publishedAt'] as String),
@@ -37,6 +41,8 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'virtualPrice': instance.virtualPrice,
       'images': instance.images,
       'brandId': instance.brandId,
+      'brandName': instance.brandName,
+      'categoryIds': instance.categoryIds,
       'publishedAt': instance.publishedAt?.toIso8601String(),
       'variants': instance.variants,
       'description': instance.description,

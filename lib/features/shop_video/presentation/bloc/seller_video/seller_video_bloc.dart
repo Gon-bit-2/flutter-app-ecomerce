@@ -100,7 +100,8 @@ class SellerVideoBloc extends Bloc<SellerVideoEvent, SellerVideoState> {
     emit(SellerVideoActionLoading());
 
     final result = await createShopVideoUseCase.call(
-      video: event.video,
+      videoBytes: event.videoBytes,
+      fileName: event.fileName,
       caption: event.caption,
       thumbnailUrl: event.thumbnailUrl,
       productIds: event.productIds,

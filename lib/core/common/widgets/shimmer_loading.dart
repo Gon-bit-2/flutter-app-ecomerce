@@ -55,17 +55,19 @@ class ProductCardSkeleton extends StatelessWidget {
             child: ShimmerLoading(height: double.infinity, borderRadius: 0),
           ),
           // Info skeleton
-          Padding(
-            padding: EdgeInsets.all(8.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ShimmerLoading(height: 12.h, width: 120.w),
-                SizedBox(height: 6.h),
-                ShimmerLoading(height: 14.h, width: 80.w),
-                SizedBox(height: 6.h),
-                ShimmerLoading(height: 10.h, width: 50.w),
-              ],
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.all(8.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerLoading(height: 12.h, width: 120.w),
+                  SizedBox(height: 6.h),
+                  ShimmerLoading(height: 14.h, width: 80.w),
+                  SizedBox(height: 6.h),
+                  ShimmerLoading(height: 10.h, width: 50.w),
+                ],
+              ),
             ),
           ),
         ],
