@@ -289,6 +289,11 @@ class _AddressFormPageState extends State<AddressFormPage> {
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
         border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
         filled: false,
         contentPadding: const EdgeInsets.symmetric(
           vertical: 12,

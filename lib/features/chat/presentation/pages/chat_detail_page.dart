@@ -28,7 +28,10 @@ class ChatDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => GetIt.I<ChatBloc>()
-        ..add(ChatLoadMessages(conversationId: conversationId))
+        ..add(ChatLoadMessages(
+          conversationId: conversationId,
+          receiverId: receiverId,
+        ))
         ..add(ChatConnectSocket()),
       child: _ChatDetailView(
         otherUserName: otherUserName,

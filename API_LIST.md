@@ -1281,6 +1281,24 @@ _No Auth Headers_ (Public)
 https://qr.sepay.vn/img?acc={accountNumber}&bank={bankCode}&amount={totalAmount}&des={prefix}{paymentId}
 ```
 
+### Get Payment Status
+
+**GET** `/payment/:paymentId/status`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+**Response:**
+
+```json
+{
+  "status": "PENDING" // "PENDING" | "SUCCESS" | "FAILED"
+}
+```
+
+**Mô tả:** Frontend dùng API này để chủ động kiểm tra trạng thái thanh toán (Fallback Checking) khi người dùng bấm nút "Tôi đã thanh toán".
+
 ### Webhook Receiver (SePay)
 
 **POST** `/payment/receiver`

@@ -417,6 +417,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       builder: (_) => PaymentQRPage(
                         paymentId: order.paymentId!,
                         totalAmount: order.totalAmount?.toDouble() ?? 0.0,
+                        orderId: order.id,
                       ),
                     ),
                   );

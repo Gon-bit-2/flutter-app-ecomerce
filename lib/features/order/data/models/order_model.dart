@@ -67,6 +67,9 @@ class OrderModel extends OrderEntity {
     }
 
     String? pMethod = json['paymentMethod'] as String?;
+    if (pMethod == null && json['paymentId'] != null) {
+      pMethod = 'SEPAY';
+    }
 
     return OrderModel(
       id: (json['id'] as num).toInt(),
