@@ -1,5 +1,7 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/notification/presentation/bloc/notification_bloc.dart';
 import 'package:app_fe_ecomerce/features/notification/presentation/widgets/notification_item_widget.dart';
 import 'package:flutter/material.dart';
@@ -80,12 +82,26 @@ class _NotificationPageState extends State<NotificationPage> {
       ),
       body: BlocBuilder<NotificationBloc, NotificationState>(
         builder: (context, state) {
+          // Kiểm tra trạng thái đăng nhập trước
+          final authState = context.watch<AuthBloc>().state;
+          if (authState is! AuthSuccess) {
+            return _buildLoginRequiredView();
+          }
+
           if (state.status == NotificationStatus.loading) {
             return _buildLoadingSkeleton();
           }
 
           if (state.status == NotificationStatus.failure) {
-            return _buildErrorView(state.errorMessage ?? 'Đã có lỗi xảy ra');
+            // Nếu lỗi do thiếu token → cũng hiện yêu cầu đăng nhập
+            final errorMsg = state.errorMessage ?? '';
+            if (errorMsg.contains('Missing') ||
+                errorMsg.contains('Token') ||
+                errorMsg.contains('401') ||
+                errorMsg.contains('Unauthorized')) {
+              return _buildLoginRequiredView();
+            }
+            return _buildErrorView(errorMsg.isNotEmpty ? errorMsg : 'Đã có lỗi xảy ra');
           }
 
           if (state.notifications.isEmpty) {
@@ -232,6 +248,76 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoginRequiredView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 32.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80.w,
+              height: 80.w,
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.notifications_outlined,
+                size: 40.sp,
+                color: AppColors.primaryBlue,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              'Đăng nhập để xem thông báo',
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 18.sp,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Hãy đăng nhập để không bỏ lỡ\ncác thông báo quan trọng từ đơn hàng\nvà khuyến mãi hấp dẫn!',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LoginPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                child: Text(
+                  'Đăng nhập ngay',
+                  style: AppTextStyles.buttonText.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

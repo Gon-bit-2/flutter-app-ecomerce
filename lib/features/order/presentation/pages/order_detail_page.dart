@@ -337,7 +337,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             children: [
               Text('Phương thức', style: AppTextStyles.bodyMedium),
               Text(
-                order.paymentMethod ?? 'Chuyển khoản / COD',
+                order.paymentMethod == 'SEPAY'
+                    ? 'Chuyển khoản (SePay)'
+                    : (order.paymentMethod ?? 'Thanh toán tiền mặt / COD'),
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

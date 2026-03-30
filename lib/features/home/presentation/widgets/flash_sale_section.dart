@@ -195,34 +195,50 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                         ),
                         SizedBox(height: 4.h),
                         // Progress Bar
-                        Container(
-                          width: double.infinity,
-                          height: 16.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Stack(
-                            children: [
-                              Container(
-                                width: 80.w, // Mock progress
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final totalSold = product.sold ?? 0;
+                            // Tính tổng stock từ SKUs nếu có, fallback 100
+                            final totalStock = product.skus.isNotEmpty
+                                ? product.skus.fold(0, (sum, sku) => sum + sku.stock)
+                                : 100;
+                            final total = totalSold + totalStock;
+                            final ratio = total > 0
+                                ? (totalSold / total).clamp(0.0, 1.0)
+                                : 0.0;
+
+                            return Container(
+                              width: double.infinity,
+                              height: 16.h,
+                              decoration: BoxDecoration(
+                                color: AppColors.secondary,
+                                borderRadius: BorderRadius.circular(8.r),
                               ),
-                              Center(
-                                child: Text(
-                                  '${product.sold ?? 0} ĐÃ BÁN',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10.sp,
-                                    fontWeight: FontWeight.bold,
+                              child: Stack(
+                                children: [
+                                  FractionallySizedBox(
+                                    widthFactor: ratio,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryBlue,
+                                        borderRadius: BorderRadius.circular(8.r),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  Center(
+                                    child: Text(
+                                      '${product.sold ?? 0} ĐÃ BÁN',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                       ],
                     ),
