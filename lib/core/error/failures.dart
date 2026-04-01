@@ -30,3 +30,13 @@ class NetworkFailure extends Failure {
 class CacheFailure extends Failure {
   const CacheFailure(super.message);
 }
+
+// Lỗi parse dữ liệu từ API (response không đúng format mong đợi)
+class ParsingFailure extends Failure {
+  final dynamic rawData;
+
+  const ParsingFailure(super.message, [this.rawData]);
+
+  @override
+  List<Object> get props => [message, if (rawData != null) rawData!];
+}

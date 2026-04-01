@@ -201,18 +201,43 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
 
     try {
       final dioClient = GetIt.I<DioClient>();
-      final response = await dioClient.get('/payment/${widget.paymentId}/status');
-      
-      final data = response.data;
-      if (data != null && data['status'] != null) {
-        final status = data['status'].toString().toUpperCase();
-        if (status == 'SUCCESS' || status == 'PAID') {
-          _triggerSuccess();
-        } else {
-          _showSnackBar('Chưa ghi nhận thanh toán. Trạng thái hiện tại: $status');
+      bool isSuccess = false;
+      String lastStatus = 'PENDING';
+
+      // Thử tối đa 3 lần, mỗi lần cách nhau 2 giây (tổng ~6s)
+      for (int i = 0; i < 3; i++) {
+        final response = await dioClient.get('/payment/${widget.paymentId}/status');
+        
+        final data = response.data;
+        debugPrint('--- MANUAL CHECK RESPONSE PING $i ---');
+        debugPrint(data.toString());
+        
+        if (data != null) {
+          // Xử lý cả trường hợp response bọc trong { "data": { "status": "..." } }
+          final payload = data['data'] != null ? data['data'] : data;
+          
+          if (payload['status'] != null) {
+            lastStatus = payload['status'].toString().toUpperCase();
+            if (lastStatus == 'SUCCESS' || lastStatus == 'PAID') {
+              isSuccess = true;
+              break;
+            }
+          }
         }
+        
+        // Nghỉ 2s trước khi thử lại nếu chưa thành công (trừ lần cuối cùng)
+        if (i < 2) {
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
+
+      if (isSuccess) {
+        _triggerSuccess();
       } else {
-        _showSnackBar('Không thể lấy trạng thái thanh toán.');
+        _showSnackBar(
+          'Giao dịch đang xử lý hoặc chưa nhận được tiền (Trạng thái: $lastStatus). '
+          'Quá trình này có thể mất 1-5 phút. Vui lòng chờ và thử lại sau.',
+        );
       }
     } catch (e) {
       _showSnackBar('Lỗi khi kiểm tra thanh toán. Vui lòng thử lại sau.', isError: true);

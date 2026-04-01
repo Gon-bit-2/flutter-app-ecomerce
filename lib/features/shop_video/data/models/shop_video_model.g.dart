@@ -25,7 +25,7 @@ ShopVideoModel _$ShopVideoModelFromJson(Map<String, dynamic> json) =>
           (json['products'] as List<dynamic>?)
               ?.map((e) => ProductInfoModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
-          const [],
+          [],
     );
 
 Map<String, dynamic> _$ShopVideoModelToJson(ShopVideoModel instance) =>
@@ -36,12 +36,12 @@ Map<String, dynamic> _$ShopVideoModelToJson(ShopVideoModel instance) =>
       'thumbnailUrl': instance.thumbnailUrl,
       'status': _$ShopVideoStatusEnumMap[instance.status]!,
       'shopId': instance.shopId,
-      'likeCount': instance.likeCount,
-      'commentCount': instance.commentCount,
-      'isLiked': instance.isLiked,
       'createdAt': instance.createdAt.toIso8601String(),
       'shop': instance.shop?.toJson(),
       'products': instance.products.map((e) => e.toJson()).toList(),
+      'likeCount': instance.likeCount,
+      'commentCount': instance.commentCount,
+      'isLiked': instance.isLiked,
     };
 
 const _$ShopVideoStatusEnumMap = {

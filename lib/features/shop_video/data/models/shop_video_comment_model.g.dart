@@ -22,7 +22,7 @@ ShopVideoCommentModel _$ShopVideoCommentModelFromJson(
             (e) => ShopVideoCommentModel.fromJson(e as Map<String, dynamic>),
           )
           .toList() ??
-      const [],
+      [],
 );
 
 Map<String, dynamic> _$ShopVideoCommentModelToJson(

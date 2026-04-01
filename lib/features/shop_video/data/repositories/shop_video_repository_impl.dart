@@ -23,6 +23,8 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Không thể tải video';
       return Left(ServerFailure(message));
+    } on VideoDataParsingException catch (e) {
+      return Left(ParsingFailure(e.message, e.rawData));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -36,6 +38,8 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Lỗi tải chi tiết video';
       return Left(ServerFailure(message));
+    } on VideoDataParsingException catch (e) {
+      return Left(ParsingFailure(e.message, e.rawData));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -61,6 +65,14 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Lỗi tải video sản phẩm lên server';
       return Left(ServerFailure(message));
+    } on VideoDataParsingException catch (e) {
+      // Video đã được upload lên cloud thành công, nhưng response trả về không parse được
+      // Đây là lỗi từ API contract, không phải lỗi user
+      return Left(ParsingFailure(
+        'Video đã tải lên thành công nhưng dữ liệu phản hồi không đúng định dạng. '
+        'Vui lòng quay lại để kiểm tra.',
+        e.rawData,
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -74,6 +86,8 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Lỗi cập nhật video';
       return Left(ServerFailure(message));
+    } on VideoDataParsingException catch (e) {
+      return Left(ParsingFailure(e.message, e.rawData));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -117,6 +131,8 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Không thể tải bình luận';
       return Left(ServerFailure(message));
+    } on VideoDataParsingException catch (e) {
+      return Left(ParsingFailure(e.message, e.rawData));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -134,6 +150,8 @@ class ShopVideoRepositoryImpl implements ShopVideoRepository {
       }
       final message = e.response?.data?['message'] ?? 'Lỗi khi gửi bình luận';
       return Left(ServerFailure(message));
+    } on VideoDataParsingException catch (e) {
+      return Left(ParsingFailure(e.message, e.rawData));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

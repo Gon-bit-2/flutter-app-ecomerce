@@ -10,6 +10,7 @@ class ShopVideoCommentModel extends ShopVideoComment {
   final UserModel? user;
   
   @override
+  @JsonKey(defaultValue: [])
   final List<ShopVideoCommentModel> replies;
 
   const ShopVideoCommentModel({
@@ -21,8 +22,14 @@ class ShopVideoCommentModel extends ShopVideoComment {
     this.replies = const [],
   }) : super(user: user, replies: replies);
 
-  factory ShopVideoCommentModel.fromJson(Map<String, dynamic> json) =>
-      _$ShopVideoCommentModelFromJson(json);
+  factory ShopVideoCommentModel.fromJson(Map<String, dynamic> json) {
+    // Xử lý an toàn cho các trường có thể bị null từ API
+    final safeJson = <String, dynamic>{
+      ...json,
+      'replies': json['replies'] ?? [],
+    };
+    return _$ShopVideoCommentModelFromJson(safeJson);
+  }
 
   Map<String, dynamic> toJson() => _$ShopVideoCommentModelToJson(this);
 }

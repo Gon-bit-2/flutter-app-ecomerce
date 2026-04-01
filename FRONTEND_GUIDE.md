@@ -4,7 +4,8 @@ Tài liệu này cung cấp các quy chuẩn và hướng dẫn để đội Fro
 
 ## 1. Cấu Hình Chung
 
-- **Base URL (Dev):** `http://localhost:9999`
+- **Base URL (Dev):** `http://localhost:9999` (Cho các API chung)
+- **Base URL (Nhận Webhook từ ngoài/Test thực tế với 3rd party):** `https://guardlike-danica-unguileful.ngrok-free.app`
 - **Prefix:** Hiện tại API không sử dụng prefix global (ví dụ `/api/v1`), các endpoint bắt đầu trực tiếp từ root (ví dụ `/auth/login`).
 - **Thời gian:** Toàn bộ thời gian (datetime) trao đổi nên sử dụng format ISO 8601 UTC (ví dụ: `2023-10-27T10:00:00Z`).
 
