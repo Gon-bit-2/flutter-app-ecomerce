@@ -4,6 +4,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/user_model.dart';
 import '../models/token_model.dart'; // Import file mới tạo
+import 'package:dio/dio.dart';
 
 abstract class AuthRemoteDataSource {
   Future<TokenModel> login(
@@ -166,7 +167,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final response = await _dioClient.get(
       AppConstants.googleCallbackEndpoint,
       queryParameters: {'state': state, 'code': code},
+      options: Options(
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < 500,
+      ),
     );
+
+    // Chặn lỗi Unsupported scheme của Dio
+    // Backend trả về redirect 302 về appecomerce://callback?accessToken=...&refreshToken=...
+    if (response.statusCode == 302 || response.statusCode == 301) {
+      final location = response.headers.value('location');
+      if (location != null) {
+        final uri = Uri.parse(location);
+        final accessToken = uri.queryParameters['accessToken'];
+        final refreshToken = uri.queryParameters['refreshToken'];
+        if (accessToken != null && refreshToken != null) {
+          return TokenModel(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          );
+        }
+      }
+    }
+
     return TokenModel.fromJson(response.data);
   }
 

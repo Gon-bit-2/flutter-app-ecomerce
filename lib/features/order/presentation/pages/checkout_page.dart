@@ -327,6 +327,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             builder: (_) => PaymentQRPage(
                               paymentId: state.result.paymentId ?? 0,
                               totalAmount: _grandTotal,
+                              orderId: state.result.orders.isNotEmpty ? state.result.orders.first.id : null,
                             ),
                           ),
                         );

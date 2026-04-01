@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/pages/google_login_webview.dart' as app_webview;
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -95,18 +95,12 @@ class _LoginViewState extends State<LoginView> {
               Navigator.of(context).popUntil((route) => route.isFirst);
             }
             if (state is AuthGoogleUrlSuccess) {
-              final uri = Uri.parse(state.url);
-              try {
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } else {
-                  await launchUrl(uri);
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Không thể mở đăng nhập Google: $e")),
-                );
-              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => app_webview.GoogleLoginWebView(url: state.url),
+                ),
+              );
             }
           },
           builder: (context, state) {

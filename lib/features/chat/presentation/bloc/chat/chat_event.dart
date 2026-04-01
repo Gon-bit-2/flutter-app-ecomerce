@@ -13,11 +13,15 @@ class ChatLoadConversations extends ChatEvent {}
 /// Tải tin nhắn trong 1 hội thoại
 class ChatLoadMessages extends ChatEvent {
   final int conversationId;
+  final int? receiverId;
 
-  const ChatLoadMessages({required this.conversationId});
+  const ChatLoadMessages({
+    required this.conversationId,
+    this.receiverId,
+  });
 
   @override
-  List<Object?> get props => [conversationId];
+  List<Object?> get props => [conversationId, receiverId];
 }
 
 /// Gửi tin nhắn

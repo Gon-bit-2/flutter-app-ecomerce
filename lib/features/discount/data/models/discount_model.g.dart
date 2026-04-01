@@ -30,6 +30,9 @@ DiscountModel _$DiscountModelFromJson(Map<String, dynamic> json) =>
       isActive: json['isActive'] as bool,
       startDate: DateTime.parse(json['startDate'] as String),
       endDate: DateTime.parse(json['endDate'] as String),
+      userUsage: (json['userUsage'] as num?)?.toInt(),
+      isSaved: json['isSaved'] as bool?,
+      isUsed: json['isUsed'] as bool?,
     );
 
 Map<String, dynamic> _$DiscountModelToJson(DiscountModel instance) =>
@@ -52,6 +55,9 @@ Map<String, dynamic> _$DiscountModelToJson(DiscountModel instance) =>
       'isActive': instance.isActive,
       'startDate': instance.startDate.toIso8601String(),
       'endDate': instance.endDate.toIso8601String(),
+      'userUsage': instance.userUsage,
+      'isSaved': instance.isSaved,
+      'isUsed': instance.isUsed,
     };
 
 const _$DiscountTypeEnumMap = {

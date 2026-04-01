@@ -44,8 +44,32 @@ class OrderModel extends OrderEntity {
       rPhone ??= addressMap['phoneNumber'] as String?;
       rAddress ??= addressMap['address'] as String?;
     }
+    
+    // Fallback: Lấy thông tin từ user object nếu các field trên tiếp tục null
+    if (json['user'] != null && json['user'] is Map) {
+      final userMap = json['user'] as Map;
+      rName ??= userMap['name'] as String?;
+      rPhone ??= userMap['phoneNumber'] ?? userMap['phone'] as String?;
+    }
+
+    // Nếu Total Amount = 0 hoặc null, tự động tính tổng tiền từ danh sách sản phẩm
+    if (totalAmountVal == null || totalAmountVal == 0) {
+      final itemsList = json['items'] as List<dynamic>?;
+      if (itemsList != null) {
+        num calculated = 0;
+        for (var item in itemsList) {
+           final price = item['price'] ?? item['skuPrice'] ?? 0;
+           final quantity = item['quantity'] ?? 0;
+           calculated += (price * quantity);
+        }
+        totalAmountVal = calculated;
+      }
+    }
 
     String? pMethod = json['paymentMethod'] as String?;
+    if (pMethod == null && json['paymentId'] != null) {
+      pMethod = 'SEPAY';
+    }
 
     return OrderModel(
       id: (json['id'] as num).toInt(),
@@ -112,6 +136,15 @@ class OrderItemModel extends OrderItemEntity {
         } else {
           imageUrl = imgDynamic;
         }
+      }
+    } else if (json['product'] != null && json['product'] is Map) {
+      // Fallback lấy ảnh từ object product nếu có
+      final productMap = json['product'] as Map;
+      if (productMap['images'] != null && productMap['images'] is List && (productMap['images'] as List).isNotEmpty) {
+        final imgRaw = (productMap['images'] as List).first.toString();
+        imageUrl = imgRaw.startsWith('url: ') ? imgRaw.replaceFirst('url: ', '').trim() : imgRaw;
+      } else if (productMap['image'] != null) {
+        imageUrl = productMap['image'] as String?;
       }
     }
 

@@ -54,12 +54,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     emit(ChatMessagesLoading());
-    final result = await _getMessagesUseCase(event.conversationId);
+    
+    int targetConversationId = event.conversationId;
+
+    if (targetConversationId == 0 && event.receiverId != null) {
+      final convResult = await _getConversationsUseCase(NoParams());
+      convResult.fold(
+        (failure) {},
+        (conversations) {
+          try {
+            final matchingConv = conversations.firstWhere(
+              (c) => c.otherUser.id == event.receiverId,
+            );
+            targetConversationId = matchingConv.id;
+          } catch (_) {}
+        },
+      );
+    }
+
+    if (targetConversationId == 0) {
+      emit(const MessagesLoaded(
+        messages: [],
+        conversationId: 0,
+      ));
+      return;
+    }
+
+    final result = await _getMessagesUseCase(targetConversationId);
     result.fold(
       (failure) => emit(ChatFailure(failure.message)),
       (messages) => emit(MessagesLoaded(
         messages: messages,
-        conversationId: event.conversationId,
+        conversationId: targetConversationId,
       )),
     );
   }
@@ -68,12 +94,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ChatSendMessage event,
     Emitter<ChatState> emit,
   ) async {
+    final tempId = DateTime.now().millisecondsSinceEpoch;
+    
     // Optimistic update: thêm tin nhắn vào list trước khi API trả về
     if (state is MessagesLoaded) {
       final currentMessages = (state as MessagesLoaded).messages;
       final conversationId = (state as MessagesLoaded).conversationId;
       final optimisticMessage = MessageEntity(
-        id: DateTime.now().millisecondsSinceEpoch, // temp id
+        id: tempId,
         senderId: event.currentUserId,
         receiverId: event.receiverId,
         content: event.content,
@@ -99,14 +127,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           final currentState = state as MessagesLoaded;
           // Thay thế optimistic message bằng message thật từ server
           final updatedMessages = currentState.messages.map((m) {
-            if (m.id == DateTime.now().millisecondsSinceEpoch) {
+            if (m.id == tempId) {
               return message;
             }
             return m;
           }).toList();
+          
+          int newConversationId = currentState.conversationId;
+          if (newConversationId == 0 && message.conversationId != null) {
+            newConversationId = message.conversationId!;
+          }
+
           emit(MessagesLoaded(
             messages: updatedMessages,
-            conversationId: currentState.conversationId,
+            conversationId: newConversationId,
           ));
         }
       },
@@ -119,6 +153,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) {
     if (state is MessagesLoaded) {
       final currentState = state as MessagesLoaded;
+      
+      if (currentState.conversationId != 0 && 
+          event.message.conversationId != null && 
+          event.message.conversationId != currentState.conversationId) {
+        return; 
+      }
+
       // Kiểm tra tin nhắn trùng lặp
       final isDuplicate = currentState.messages.any((m) => m.id == event.message.id);
       if (!isDuplicate) {

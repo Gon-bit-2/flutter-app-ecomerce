@@ -107,8 +107,7 @@ class _SellerDiscountListPageState extends State<SellerDiscountListPage>
 
   @override
   Widget build(BuildContext context) {
-    final Color themeColor =
-        widget.isAdmin ? AppColors.error.withOpacity(0.85) : AppColors.primaryBlue;
+    final Color themeColor = AppColors.primaryBlue;
     final String pageTitle =
         widget.isAdmin ? 'Quản Lý Voucher Toàn Sàn' : 'Quản lý Khuyến Mãi';
 
