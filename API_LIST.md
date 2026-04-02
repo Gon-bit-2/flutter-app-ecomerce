@@ -184,7 +184,7 @@ _No Auth Headers_
 
 ### Get Product Translation Detail
 
-**GET** `/product-translation?productTranslationId=1`
+**GET** `/product-translation/:productTranslationId`
 
 **Headers**
 
@@ -705,7 +705,7 @@ _No Body_
 
 ### Get Brand Translation Detail
 
-**GET** `/brand-translation?brandTranslationId=1`
+**GET** `/brand-translation/:brandTranslationId`
 
 **Headers**
 
@@ -823,7 +823,7 @@ _No Body_
 
 ### Get Category Translation Detail
 
-**GET** `/category-transaliton?categoryTranslationId=1`
+**GET** `/category-transaliton/:categoryTranslationId`
 
 **Headers**
 
@@ -850,7 +850,7 @@ _No Body_
 
 ### Update Category Translation
 
-**PUT** `/category-transaliton/:id`
+**PUT** `/category-transaliton/:categoryTranslationId`
 
 **Headers**
 
@@ -867,7 +867,7 @@ _No Body_
 
 ### Delete Category Translation
 
-**DELETE** `/category-transaliton/:id`
+**DELETE** `/category-transaliton/:categoryTranslationId`
 
 **Headers**
 

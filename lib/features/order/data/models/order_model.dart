@@ -116,7 +116,7 @@ class OrderItemModel extends OrderItemEntity {
       priceVal = json['skuPrice'] as num;
     }
 
-    // Backend trả hình ảnh (có thể) dưới dạng String JSON: '{"data":[{"url":"..."}]}'
+    // Backend trả hình ảnh dưới dạng String JSON hoặc URL trực tiếp
     String? imageUrl;
     if (json['image'] != null) {
       final imgDynamic = json['image'];
@@ -131,18 +131,26 @@ class OrderItemModel extends OrderItemEntity {
               }
             }
           } catch (e) {
-            imageUrl = imgDynamic; // Nếu lỗi parse json, coi như nó là URL
+            imageUrl = imgDynamic;
           }
+        } else if (imgDynamic.startsWith('url: ')) {
+          imageUrl = imgDynamic.replaceFirst('url: ', '').trim();
         } else {
           imageUrl = imgDynamic;
         }
       }
-    } else if (json['product'] != null && json['product'] is Map) {
-      // Fallback lấy ảnh từ object product nếu có
+    }
+
+    // Fallback: Lấy ảnh từ object product nếu image vẫn null
+    if (imageUrl == null && json['product'] != null && json['product'] is Map) {
       final productMap = json['product'] as Map;
-      if (productMap['images'] != null && productMap['images'] is List && (productMap['images'] as List).isNotEmpty) {
+      if (productMap['images'] != null &&
+          productMap['images'] is List &&
+          (productMap['images'] as List).isNotEmpty) {
         final imgRaw = (productMap['images'] as List).first.toString();
-        imageUrl = imgRaw.startsWith('url: ') ? imgRaw.replaceFirst('url: ', '').trim() : imgRaw;
+        imageUrl = imgRaw.startsWith('url: ')
+            ? imgRaw.replaceFirst('url: ', '').trim()
+            : imgRaw;
       } else if (productMap['image'] != null) {
         imageUrl = productMap['image'] as String?;
       }

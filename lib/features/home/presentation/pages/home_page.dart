@@ -279,44 +279,167 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildGuestProfile(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.surface,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF0F2F5),
+            Colors.white,
+          ],
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_circle, size: 80.sp, color: AppColors.textSecondary),
-          SizedBox(height: 16.h),
+          // Avatar placeholder với viền gradient
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF1565C0).withOpacity(0.3),
+                  const Color(0xFF42A5F5).withOpacity(0.3),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1E88E5).withOpacity(0.15),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 48.r,
+              backgroundColor: Colors.white,
+              child: CircleAvatar(
+                radius: 44.r,
+                backgroundColor: const Color(0xFFE3F2FD),
+                child: Icon(
+                  Icons.person_rounded,
+                  size: 50.sp,
+                  color: const Color(0xFF90CAF9),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          // Tiêu đề chào mừng
           Text(
-            "Chào mừng đến với E-Commerce",
-            style: AppTextStyles.h3,
+            "Chào mừng bạn!",
+            style: AppTextStyles.h2.copyWith(
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1A1A2E),
+              letterSpacing: 0.3,
+            ),
           ),
           SizedBox(height: 8.h),
           Text(
-            "Đăng nhập để quản lý tài khoản",
-            style: AppTextStyles.bodyMedium,
+            "Đăng nhập để trải nghiệm mua sắm\nvà quản lý tài khoản dễ dàng",
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 36.h),
+          // Nút đăng nhập gradient
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 40.w),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
-                minimumSize: Size(double.infinity, 48.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+            child: Container(
+              width: double.infinity,
+              height: 50.h,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+                ),
+                borderRadius: BorderRadius.circular(14.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1E88E5).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(14.r),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.login_rounded,
+                          color: Colors.white,
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 10.w),
+                        Text(
+                          "Đăng nhập / Đăng ký",
+                          style: AppTextStyles.buttonText.copyWith(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              child: Text("Đăng nhập / Đăng ký", style: AppTextStyles.buttonText),
+            ),
+          ),
+          SizedBox(height: 20.h),
+          // Tính năng highlights
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildGuestFeature(Icons.local_shipping_rounded, 'Giao nhanh'),
+                _buildGuestFeature(Icons.verified_rounded, 'Uy tín'),
+                _buildGuestFeature(Icons.support_agent_rounded, 'Hỗ trợ 24/7'),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildGuestFeature(IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          width: 42.w,
+          height: 42.w,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3F2FD),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Icon(icon, color: const Color(0xFF1E88E5), size: 20.sp),
+        ),
+        SizedBox(height: 6.h),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }
