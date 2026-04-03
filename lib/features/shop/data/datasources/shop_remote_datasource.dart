@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/shop_model.dart';
+import '../models/shop_statistics_model.dart';
 import '../../../../core/constants/app_constants.dart';
 
 abstract class ShopRemoteDataSource {
@@ -13,6 +14,8 @@ abstract class ShopRemoteDataSource {
   });
   
   Future<ShopModel?> getMyShop();
+
+  Future<ShopStatisticsModel> getShopStatistics();
 }
 
 @LazySingleton(as: ShopRemoteDataSource)
@@ -46,5 +49,11 @@ class ShopRemoteDataSourceImpl implements ShopRemoteDataSource {
     final response = await _dioClient.get(AppConstants.myShopEndpoint);
     if (response.data == null || response.data == '') return null;
     return ShopModel.fromJson(response.data);
+  }
+
+  @override
+  Future<ShopStatisticsModel> getShopStatistics() async {
+    final response = await _dioClient.get(AppConstants.shopStatisticsEndpoint);
+    return ShopStatisticsModel.fromJson(response.data);
   }
 }

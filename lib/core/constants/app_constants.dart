@@ -93,6 +93,7 @@ class AppConstants {
   // Shop Endpoints
   static const String registerShopEndpoint = '/shop/register';
   static const String myShopEndpoint = '/shop/my-shop';
+  static const String shopStatisticsEndpoint = '/shop/statistics';
 
   // Notification Endpoints
   static const String notificationsEndpoint = '/notifications';

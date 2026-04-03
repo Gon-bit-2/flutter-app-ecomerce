@@ -677,6 +677,24 @@ Kể từ giờ, thông tin Shop (cửa hàng kinh doanh) đã được tách b�
   - Nếu `status === 'REJECTED'`: Bị từ chối. ➡ _Hiển thị lý do / Form tạo lại._
   - Nếu `status === 'APPROVED'`: Cửa hàng đã hoạt động. ➡ _Chuyển hướng vào trang Dashboard quản lý (Seller Center)._
 
+### c. Thống kê Doanh Thu & Đơn Hàng (Shop Dashboard)
+
+- **API:** `GET /shop/statistics`
+- **Mô tả:** Trả về thống kê số lượng đơn hàng và doanh thu của cửa hàng trong **hôm nay** và **tháng này**. 
+- **Cách Backend tính toán:** Điểm endpoint này tự động lọc các đơn hàng có trạng thái hợp lệ (`READY_TO_SHIP`, `SHIPPED`, `COMPLETED`) và tự động tính `tổng thành tiền hàng + phí ship - giảm giá voucher`. Frontend không cần tự lấy danh sách đơn về tính.
+- **Ví dụ gọi API bằng Fetch:**
+  ```javascript
+  const stats = await fetch('/shop/statistics', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+
+  // Response:
+  // {
+  //   "today": { "totalOrders": 15, "totalRevenue": 2500000 },
+  //   "thisMonth": { "totalOrders": 120, "totalRevenue": 24500000 }
+  // }
+  ```
+
 > **Lưu ý:** Hiện tại `shopId` của một Shop luôn bằng với `userId` (1-1 relationship) nên logic thao tác với đơn hàng, mã giảm giá và video trước đó không bị ảnh hưởng.
 
 ## 12. Tích Hợp WebSockets & Thông Báo (Notifications)

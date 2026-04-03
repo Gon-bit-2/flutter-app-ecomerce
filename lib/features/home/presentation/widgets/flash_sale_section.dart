@@ -39,13 +39,15 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
     _timeLeft = Duration(hours: 0, minutes: minutesLeft, seconds: secondsLeft);
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_timeLeft.inSeconds > 0) {
-          _timeLeft -= const Duration(seconds: 1);
-        } else {
-          _timeLeft = const Duration(minutes: 30);
-        }
-      });
+      if (mounted) {
+        setState(() {
+          if (_timeLeft.inSeconds > 0) {
+            _timeLeft -= const Duration(seconds: 1);
+          } else {
+            _timeLeft = const Duration(minutes: 30);
+          }
+        });
+      }
     });
   }
 
@@ -60,37 +62,41 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
     if (widget.flashSale.products.isEmpty) return const SizedBox.shrink();
 
     String hoursStr = _timeLeft.inHours.toString().padLeft(2, '0');
-    // We shouldn't pad the hours but actually in the UI, they had '02'.
-    // Flash sales can be 2 hours, but if it resets every 30m, hours is '00'.
     String minutesStr = (_timeLeft.inMinutes % 60).toString().padLeft(2, '0');
     String secondsStr = (_timeLeft.inSeconds % 60).toString().padLeft(2, '0');
 
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 10.h),
+      margin: EdgeInsets.symmetric(vertical: 8.h),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      decoration: BoxDecoration(
+        color: AppColors.secondary, // Xanh nhạt (#E3F2FD) từ Design System
+        borderRadius: BorderRadius.circular(16.r),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Row(
               children: [
+                Icon(Icons.bolt, color: const Color(0xFFFF9800), size: 28.sp), // Cảnh báo/Vàng cam
+                SizedBox(width: 4.w),
                 Text(
                   'FLASH SALE',
                   style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w900,
                     fontStyle: FontStyle.italic,
-                    color: AppColors.primaryBlue,
+                    color: AppColors.primaryBlue, // Sky Blue chủ đạo
                   ),
                 ),
-                SizedBox(width: 10.w),
-                // Timer Mock -> Real Timer
+                SizedBox(width: 12.w),
+                // Timer
                 _buildTimerBox(hoursStr),
-                const Text(' : ', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(':', style: _colonStyle()),
                 _buildTimerBox(minutesStr),
-                const Text(' : ', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(':', style: _colonStyle()),
                 _buildTimerBox(secondsStr),
                 const Spacer(),
                 GestureDetector(
@@ -108,12 +114,16 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                     children: [
                       Text(
                         'Xem tất cả',
-                        style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+                        style: TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Icon(
                         Icons.chevron_right,
-                        size: 16.sp,
-                        color: Colors.grey,
+                        size: 18.sp,
+                        color: AppColors.primaryBlue,
                       ),
                     ],
                   ),
@@ -121,18 +131,26 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
               ],
             ),
           ),
-          SizedBox(height: 10.h),
+          SizedBox(height: 16.h),
           // Product List
           SizedBox(
-            height: 240.h,
+            height: 250.h,
             child: ListView.separated(
-              padding: EdgeInsets.symmetric(horizontal: 10.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               itemCount: widget.flashSale.products.length,
-              separatorBuilder: (_, __) => SizedBox(width: 10.w),
+              separatorBuilder: (_, __) => SizedBox(width: 12.w),
               itemBuilder: (context, index) {
                 final product = widget.flashSale.products[index];
                 final formatCurrency = NumberFormat("#,##0", "vi_VN");
+
+                String? discountPercent;
+                if (product.virtualPrice != null && product.virtualPrice! > product.basePrice) {
+                  final percent = ((product.virtualPrice! - product.basePrice) / product.virtualPrice! * 100).round();
+                  discountPercent = '-$percent%';
+                }
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -142,103 +160,135 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
                       ),
                     );
                   },
-                  child: SizedBox(
-                    width: 130.w,
+                  child: Container(
+                    width: 140.w,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Image
+                        // Image Stack
                         Stack(
                           children: [
-                            Container(
-                              height: 130.w,
-                              width: 130.w,
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(4.r),
+                            ClipRRect(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12.r),
+                                topRight: Radius.circular(12.r),
                               ),
-                              child: AppNetworkImage(
-                                imageUrl: product.images.isNotEmpty
-                                    ? product.images.first
-                                    : '',
-                                fit: BoxFit.cover,
+                              child: SizedBox(
+                                height: 140.w,
+                                width: double.infinity,
+                                child: AppNetworkImage(
+                                  imageUrl: product.images.isNotEmpty
+                                      ? product.images.first
+                                      : '',
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Container(
-                                color: AppColors.warning,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 4.w,
-                                  vertical: 2.h,
-                                ),
-                                child: Text(
-                                  '50%',
-                                  style: TextStyle(
-                                    fontSize: 10.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                            if (discountPercent != null)
+                              Positioned(
+                                top: 8.h,
+                                left: 0,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                    vertical: 4.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF9800), // Vàng cam để nổi bật trên nền xanh
+                                    borderRadius: BorderRadius.only(
+                                      topRight: Radius.circular(8.r),
+                                      bottomRight: Radius.circular(8.r),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    discountPercent,
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          'đ${formatCurrency.format(product.basePrice)}',
-                          style: TextStyle(
-                            color: AppColors.primaryBlue,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        // Progress Bar
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final totalSold = product.sold ?? 0;
-                            // Tính tổng stock từ SKUs nếu có, fallback 100
-                            final totalStock = product.skus.isNotEmpty
-                                ? product.skus.fold(0, (sum, sku) => sum + sku.stock)
-                                : 100;
-                            final total = totalSold + totalStock;
-                            final ratio = total > 0
-                                ? (totalSold / total).clamp(0.0, 1.0)
-                                : 0.0;
+                        Padding(
+                          padding: EdgeInsets.all(8.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'đ${formatCurrency.format(product.basePrice)}',
+                                style: TextStyle(
+                                  color: AppColors.primaryBlue, // Giá tiền màu chính
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              // Custom Progress Bar
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final totalSold = product.sold ?? 0;
+                                  final totalStock = product.skus.isNotEmpty
+                                      ? product.skus.fold(0, (sum, sku) => sum + sku.stock)
+                                      : 100;
+                                  final total = totalSold + totalStock;
+                                  final ratio = total > 0
+                                      ? (totalSold / total).clamp(0.0, 1.0)
+                                      : 0.0;
 
-                            return Container(
-                              width: double.infinity,
-                              height: 16.h,
-                              decoration: BoxDecoration(
-                                color: AppColors.secondary,
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: Stack(
-                                children: [
-                                  FractionallySizedBox(
-                                    widthFactor: ratio,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primaryBlue,
-                                        borderRadius: BorderRadius.circular(8.r),
-                                      ),
+                                  return Container(
+                                    width: double.infinity,
+                                    height: 18.h,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface, // Trắng xám
+                                      borderRadius: BorderRadius.circular(10.r),
                                     ),
-                                  ),
-                                  Center(
-                                    child: Text(
-                                      '${product.sold ?? 0} ĐÃ BÁN',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    child: Stack(
+                                      children: [
+                                        FractionallySizedBox(
+                                          widthFactor: ratio == 0.0 ? 0.05 : ratio,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  AppColors.primaryBlue.withOpacity(0.6),
+                                                  AppColors.primaryBlue,
+                                                ],
+                                              ),
+                                              borderRadius: BorderRadius.circular(10.r),
+                                            ),
+                                          ),
+                                        ),
+                                        Center(
+                                          child: Text(
+                                            totalSold > 0 ? 'ĐÃ BÁN $totalSold' : 'SẮP BÁN HẾT',
+                                            style: TextStyle(
+                                              color: ratio > 0.3 ? Colors.white : AppColors.textPrimary,
+                                              fontSize: 9.sp,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
-                            );
-                          },
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -252,19 +302,28 @@ class _FlashSaleSectionState extends State<FlashSaleSection> {
     );
   }
 
+  TextStyle _colonStyle() {
+    return TextStyle(
+      color: AppColors.primaryBlue,
+      fontWeight: FontWeight.bold,
+      fontSize: 16.sp,
+    );
+  }
+
   Widget _buildTimerBox(String text) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 3.h),
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
       decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(4.r),
+        color: AppColors.primaryBlue,
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
         text,
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
-          fontSize: 12.sp,
+          fontSize: 13.sp,
         ),
       ),
     );

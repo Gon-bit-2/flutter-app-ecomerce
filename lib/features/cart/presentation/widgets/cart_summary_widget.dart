@@ -1,5 +1,4 @@
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
-import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -29,9 +28,9 @@ class CartSummaryWidget extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: const Offset(0, -2),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -40,17 +39,25 @@ class CartSummaryWidget extends StatelessWidget {
         child: Row(
           children: [
             // Checkbox "Chọn tất cả"
-            Checkbox(
-              value: isAllSelected,
-              onChanged: onSelectAll,
-              activeColor: AppColors.primaryBlue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4.r),
+            SizedBox(
+              width: 24.w,
+              height: 24.w,
+              child: Checkbox(
+                value: isAllSelected,
+                onChanged: onSelectAll,
+                activeColor: AppColors.primaryBlue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                side: BorderSide(color: AppColors.border, width: 1.5),
               ),
             ),
+            SizedBox(width: 8.w),
             Text(
               'Tất cả',
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -58,14 +65,17 @@ class CartSummaryWidget extends StatelessWidget {
             // Tổng tiền
             Expanded(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       'Tổng thanh toán',
-                      style: AppTextStyles.bodyMedium.copyWith(fontSize: 12.sp),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -73,9 +83,9 @@ class CartSummaryWidget extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
                       child: Text(
-                        '${_formatPrice(totalPrice)}đ',
-                        style: AppTextStyles.h3.copyWith(
-                          color: AppColors.error,
+                        'đ${_formatPrice(totalPrice)}',
+                        style: TextStyle(
+                          color: AppColors.primaryBlue, // Primary Blue instead of Red
                           fontWeight: FontWeight.bold,
                           fontSize: 18.sp,
                         ),
@@ -89,15 +99,14 @@ class CartSummaryWidget extends StatelessWidget {
 
             // Nút "Mua hàng"
             SizedBox(
-              width: 135.w,
-              height: 44.h,
+              height: 48.h, // Nút cao hơn chút cho hiện đại
               child: ElevatedButton(
                 onPressed: (!isLoading && selectedCount > 0) ? onCheckout : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
                   ),
@@ -115,7 +124,8 @@ class CartSummaryWidget extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           'Mua hàng ($selectedCount)',
-                          style: AppTextStyles.buttonText.copyWith(
+                          style: TextStyle(
+                            fontSize: 14.sp,
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),

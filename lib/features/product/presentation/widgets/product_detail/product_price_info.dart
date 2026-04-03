@@ -39,32 +39,36 @@ class ProductPriceInfo extends StatelessWidget {
               'đ${formatCurrency.format(displayPrice)}',
               style: TextStyle(
                 color: AppColors.primaryBlue,
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
+                fontSize: 28.sp,
+                fontWeight: FontWeight.w900, // Đậm hơn
               ),
             ),
             if (originalPrice != null && originalPrice > displayPrice) ...[
-              SizedBox(width: 8.w),
-              Text(
-                'đ${formatCurrency.format(originalPrice)}',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14.sp,
-                  decoration: TextDecoration.lineThrough,
+              SizedBox(width: 12.w),
+              Padding(
+                padding: EdgeInsets.only(bottom: 4.h),
+                child: Text(
+                  'đ${formatCurrency.format(originalPrice)}',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 16.sp,
+                    decoration: TextDecoration.lineThrough,
+                  ),
                 ),
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 12.w),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                margin: EdgeInsets.only(bottom: 4.h),
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  borderRadius: BorderRadius.circular(2.r),
+                  color: AppColors.secondary, // Nền xanh nhạt
+                  borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
                   "-${discount.toStringAsFixed(0)}%",
                   style: TextStyle(
-                    color: AppColors.primaryBlue,
-                    fontSize: 10.sp,
+                    color: AppColors.primaryBlue, // Chữ xanh da trời đậm
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -72,19 +76,6 @@ class ProductPriceInfo extends StatelessWidget {
             ],
           ],
         ),
-        // Hiển thị stock SKU đã chọn
-        if (selectedSku != null) ...[
-          SizedBox(height: 4.h),
-          Text(
-            selectedSku!.stock > 0
-                ? 'Còn ${selectedSku!.stock} sản phẩm'
-                : 'Hết hàng',
-            style: TextStyle(
-              color: selectedSku!.stock > 0 ? Colors.grey[600] : Colors.red,
-              fontSize: 12.sp,
-            ),
-          ),
-        ],
       ],
     );
   }

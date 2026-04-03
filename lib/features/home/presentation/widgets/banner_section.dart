@@ -21,60 +21,75 @@ class _BannerSectionState extends State<BannerSection> {
   Widget build(BuildContext context) {
     if (widget.banners.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      children: [
-        CarouselSlider(
-          options: CarouselOptions(
-            aspectRatio: 2.0, // 2:1 header
-            viewportFraction: 1.0,
-            autoPlay: true,
-            onPageChanged: (index, reason) {
-              setState(() {
-                _current = index;
-              });
-            },
-          ),
-          items: widget.banners.map((banner) {
-            return Builder(
-              builder: (BuildContext context) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: AppNetworkImage(
-                      imageUrl: banner.imageUrl,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                    ),
-                  ),
-                );
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      child: Column(
+        children: [
+          CarouselSlider(
+            options: CarouselOptions(
+              aspectRatio: 2.2, // Tỉ lệ khung hình rộng hơn một chút cho banner hiện đại
+              viewportFraction: 0.9, // Cho phép nhìn thấy mép của banner tiếp theo
+              enlargeCenterPage: true, // Phóng to banner ở giữa
+              enlargeFactor: 0.15, // Mức độ phóng to
+              autoPlay: true,
+              autoPlayInterval: const Duration(seconds: 4),
+              autoPlayAnimationDuration: const Duration(milliseconds: 800),
+              autoPlayCurve: Curves.fastOutSlowIn,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _current = index;
+                });
               },
-            );
-          }).toList(),
-        ),
-        // Indicators
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: widget.banners.asMap().entries.map((entry) {
-            return Container(
-              width: 8.0,
-              height: 8.0,
-              margin: const EdgeInsets.symmetric(
-                vertical: 8.0,
-                horizontal: 4.0,
-              ),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color:
-                    (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : AppColors.primaryBlue)
-                        .withOpacity(_current == entry.key ? 0.9 : 0.4),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+            ),
+            items: widget.banners.map((banner) {
+              return Builder(
+                builder: (BuildContext context) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: AppNetworkImage(
+                        imageUrl: banner.imageUrl,
+                        fit: BoxFit.cover, // Cover để ảnh lấp đầy khung
+                        width: double.infinity,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }).toList(),
+          ),
+          SizedBox(height: 12.h),
+          // Animated Indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: widget.banners.asMap().entries.map((entry) {
+              final isSelected = _current == entry.key;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: isSelected ? 24.w : 8.w,
+                height: 8.h,
+                margin: EdgeInsets.symmetric(horizontal: 4.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4.r),
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : AppColors.primaryBlue.withOpacity(0.2),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1899,6 +1899,30 @@ _No Body_
 **Response:**
 Trả về thông tin cửa hàng hiện tại của user đang đăng nhập. Nếu chưa tạo, trả về `null`. Nếu đã tạo, kèm theo field `status` (`PENDING`, `APPROVED`, `REJECTED`) để frontend render giao diện tương ứng.
 
+### Get Shop Statistics
+
+**GET** `/shop/statistics`
+
+**Headers**
+
+- `Authorization`: `Bearer <accessToken>`
+
+**Response:**
+Trả về thống kê đơn hàng và doanh thu của cửa hàng trong ngày hôm nay và trong tháng hiện tại.
+
+```json
+{
+  "today": {
+    "totalOrders": 15,
+    "totalRevenue": 2500000
+  },
+  "thisMonth": {
+    "totalOrders": 120,
+    "totalRevenue": 24500000
+  }
+}
+```
+
 ---
 
 ## Notification Module

@@ -186,7 +186,9 @@ import 'features/search/presentation/bloc/search_bloc.dart' as _i944;
 import 'features/shop/data/datasources/shop_remote_datasource.dart' as _i671;
 import 'features/shop/data/repositories/shop_repository_impl.dart' as _i632;
 import 'features/shop/domain/repositories/shop_repository.dart' as _i683;
+import 'features/shop/domain/usecases/get_shop_statistics.dart' as _i164;
 import 'features/shop/presentation/bloc/shop_registration_bloc.dart' as _i92;
+import 'features/shop/presentation/bloc/shop_statistics_cubit.dart' as _i419;
 import 'features/shop_video/data/datasources/shop_video_remote_datasource.dart'
     as _i861;
 import 'features/shop_video/data/repositories/shop_video_repository_impl.dart'
@@ -604,6 +606,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i92.ShopRegistrationBloc>(
       () => _i92.ShopRegistrationBloc(gh<_i683.ShopRepository>()),
     );
+    gh.lazySingleton<_i164.GetShopStatistics>(
+      () => _i164.GetShopStatistics(gh<_i683.ShopRepository>()),
+    );
     gh.lazySingleton<_i259.GetDailyDiscoverUseCase>(
       () => _i259.GetDailyDiscoverUseCase(gh<_i841.ProductRepository>()),
     );
@@ -627,6 +632,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i138.UpdateCartUseCase>(
       () => _i138.UpdateCartUseCase(gh<_i303.CartRepository>()),
+    );
+    gh.factory<_i419.ShopStatisticsCubit>(
+      () => _i419.ShopStatisticsCubit(gh<_i164.GetShopStatistics>()),
     );
     gh.factory<_i44.CartBloc>(
       () => _i44.CartBloc(
