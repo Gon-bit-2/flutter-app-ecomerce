@@ -238,18 +238,13 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 60.w,
-                      height: 60.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4.r),
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            item.image ?? 'https://via.placeholder.com/60',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: AppNetworkImage(
+                        imageUrl: item.image ?? '',
+                        width: 60.w,
+                        height: 60.w,
+                        fit: BoxFit.cover,
                       ),
                     ),
                     SizedBox(width: 12.w),

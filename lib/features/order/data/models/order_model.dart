@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../domain/entities/order_entity.dart';
 
 part 'order_model.g.dart';
@@ -44,7 +45,7 @@ class OrderModel extends OrderEntity {
       rPhone ??= addressMap['phoneNumber'] as String?;
       rAddress ??= addressMap['address'] as String?;
     }
-    
+
     // Fallback: Lấy thông tin từ user object nếu các field trên tiếp tục null
     if (json['user'] != null && json['user'] is Map) {
       final userMap = json['user'] as Map;
@@ -58,9 +59,9 @@ class OrderModel extends OrderEntity {
       if (itemsList != null) {
         num calculated = 0;
         for (var item in itemsList) {
-           final price = item['price'] ?? item['skuPrice'] ?? 0;
-           final quantity = item['quantity'] ?? 0;
-           calculated += (price * quantity);
+          final price = item['price'] ?? item['skuPrice'] ?? 0;
+          final quantity = item['quantity'] ?? 0;
+          calculated += (price * quantity);
         }
         totalAmountVal = calculated;
       }
@@ -107,8 +108,49 @@ class OrderItemModel extends OrderItemEntity {
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    // Helper to fix URL prefix
+    String fixUrl(String url) {
+      if (url.isEmpty || url.startsWith('http')) return url;
+      return url.startsWith('/')
+          ? '${AppConstants.baseUrl}$url'
+          : '${AppConstants.baseUrl}/$url';
+    }
+
+    // Helper to extract clean URL from potentially messy strings
+    String cleanUrl(dynamic input) {
+      if (input == null) return '';
+      String str = input.toString().trim();
+
+      // Xử lý đường dẫn tuyệt đối từ Backend (Ví dụ: D:/Works/app-ecomerce/app_fe_ecomerce/images/image.png)
+      // Chúng ta sẽ lấy phần từ /images/, /uploads/, hoặc /public/ trở đi
+
+      // Handle "url: " prefix
+      if (str.toLowerCase().startsWith('url:')) {
+        str = str.substring(4).trim();
+      }
+
+      // Handle accidentally JSON stringified values (e.g. "[\"url\"]")
+      if (str.startsWith('[') || str.startsWith('{')) {
+        try {
+          final decoded = jsonDecode(str);
+          if (decoded is List && decoded.isNotEmpty) {
+            return cleanUrl(decoded.first);
+          }
+          if (decoded is Map) {
+            if (decoded.containsKey('url')) return cleanUrl(decoded['url']);
+            if (decoded.containsKey('link')) return cleanUrl(decoded['link']);
+            if (decoded.containsKey('data') && decoded['data'] is List) {
+              final dataList = decoded['data'] as List;
+              if (dataList.isNotEmpty) return cleanUrl(dataList.first);
+            }
+          }
+        } catch (_) {}
+      }
+
+      return str;
+    }
+
     // Backend trả về skuPrice thay vì price
-    // Cần phải parse 'price' từ 'skuPrice'
     num priceVal = 0;
     if (json['price'] != null) {
       priceVal = json['price'] as num;
@@ -116,44 +158,44 @@ class OrderItemModel extends OrderItemEntity {
       priceVal = json['skuPrice'] as num;
     }
 
-    // Backend trả hình ảnh dưới dạng String JSON hoặc URL trực tiếp
+    // Thử lấy ảnh từ nhiều nguồn khác nhau
     String? imageUrl;
-    if (json['image'] != null) {
-      final imgDynamic = json['image'];
-      if (imgDynamic is String) {
-        if (imgDynamic.startsWith('{')) {
-          try {
-            final decoded = jsonDecode(imgDynamic);
-            if (decoded is Map && decoded.containsKey('data')) {
-              final dataList = decoded['data'] as List;
-              if (dataList.isNotEmpty && dataList.first is Map) {
-                imageUrl = dataList.first['url'];
-              }
-            }
-          } catch (e) {
-            imageUrl = imgDynamic;
-          }
-        } else if (imgDynamic.startsWith('url: ')) {
-          imageUrl = imgDynamic.replaceFirst('url: ', '').trim();
-        } else {
-          imageUrl = imgDynamic;
-        }
+
+    // 1. Lấy từ field 'image' trực tiếp (Ưu tiên ảnh từ Cloudinary)
+    if (json['image'] != null && json['image'].toString().isNotEmpty) {
+      imageUrl = cleanUrl(json['image']);
+    }
+
+    // 2. Nếu vẫn trống, thử lấy từ 'product' object nested (Thường Backend sẽ join thêm thông tin này)
+    if ((imageUrl == null || imageUrl.isEmpty) &&
+        json['product'] != null &&
+        json['product'] is Map) {
+      final productMap = json['product'] as Map;
+      if (productMap['images'] != null) {
+        imageUrl = cleanUrl(productMap['images']);
+      } else if (productMap['image'] != null) {
+        imageUrl = cleanUrl(productMap['image']);
       }
     }
 
-    // Fallback: Lấy ảnh từ object product nếu image vẫn null
-    if (imageUrl == null && json['product'] != null && json['product'] is Map) {
-      final productMap = json['product'] as Map;
-      if (productMap['images'] != null &&
-          productMap['images'] is List &&
-          (productMap['images'] as List).isNotEmpty) {
-        final imgRaw = (productMap['images'] as List).first.toString();
-        imageUrl = imgRaw.startsWith('url: ')
-            ? imgRaw.replaceFirst('url: ', '').trim()
-            : imgRaw;
-      } else if (productMap['image'] != null) {
-        imageUrl = productMap['image'] as String?;
+    // 3. Nếu vẫn trống, thử lấy từ 'productTranslations' (Nếu Backend trả về thông tin dịch)
+    if ((imageUrl == null || imageUrl.isEmpty) &&
+        json['productTranslations'] != null &&
+        json['productTranslations'] is List &&
+        (json['productTranslations'] as List).isNotEmpty) {
+      final trans = (json['productTranslations'] as List).first;
+      if (trans is Map && trans['image'] != null) {
+        imageUrl = cleanUrl(trans['image']);
       }
+    }
+
+    // 4. Fallback cuối cùng: Nếu hoàn toàn không có ảnh, và dự án dùng Cloudinary,
+    // Backend đáng lẽ phải trả về Public ID.
+    // Nếu imageUrl vẫn trống ở đây, UI sẽ hiển thị Placeholder Icon chuyên nghiệp.
+
+    // Fix URL nếu là path tương đối
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      imageUrl = fixUrl(imageUrl);
     }
 
     return OrderItemModel(
@@ -162,7 +204,7 @@ class OrderItemModel extends OrderItemEntity {
       productId: (json['productId'] as num?)?.toInt(),
       productName: json['productName'] as String?,
       skuValue: json['skuValue'] as String?,
-      image: imageUrl,
+      image: (imageUrl != null && imageUrl.isNotEmpty) ? imageUrl : null,
       price: priceVal,
       quantity: (json['quantity'] as num).toInt(),
       isReviewed: json['isReviewed'] as bool? ?? false,

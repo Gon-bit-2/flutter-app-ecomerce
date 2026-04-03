@@ -138,12 +138,23 @@ class OrderCardWidget extends StatelessWidget {
                     // Ảnh sản phẩm
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8.r),
-                      child: AppNetworkImage(
-                        imageUrl: firstItem.image ?? '',
-                        width: 70.w,
-                        height: 70.w,
-                        fit: BoxFit.cover,
-                      ),
+                      child: (firstItem.image != null && firstItem.image!.isNotEmpty)
+                        ? AppNetworkImage(
+                            imageUrl: firstItem.image!,
+                            width: 70.w,
+                            height: 70.w,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 70.w,
+                            height: 70.w,
+                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                            child: Icon(
+                              _getFallbackIcon(firstItem.productName),
+                              color: AppColors.primaryBlue,
+                              size: 32.sp,
+                            ),
+                          ),
                     ),
                     SizedBox(width: 12.w),
                     // Tên và phân loại
@@ -331,5 +342,22 @@ class OrderCardWidget extends StatelessWidget {
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
+  }
+
+  IconData _getFallbackIcon(String? name) {
+    if (name == null) return Icons.inventory_2_outlined;
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('giày') || lowerName.contains('shoes') || lowerName.contains('sneaker')) {
+      return Icons.ice_skating_rounded;
+    } else if (lowerName.contains('áo') || lowerName.contains('quần') || lowerName.contains('thời trang')) {
+      return Icons.checkroom_rounded;
+    } else if (lowerName.contains('điện thoại') || lowerName.contains('phone')) {
+      return Icons.smartphone_rounded;
+    } else if (lowerName.contains('máy tính') || lowerName.contains('laptop')) {
+      return Icons.laptop_mac_rounded;
+    } else if (lowerName.contains('đồng hồ') || lowerName.contains('watch')) {
+      return Icons.watch_rounded;
+    }
+    return Icons.inventory_2_outlined;
   }
 }
