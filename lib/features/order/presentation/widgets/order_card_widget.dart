@@ -5,6 +5,7 @@ import 'package:app_fe_ecomerce/features/order/presentation/pages/order_detail_p
 import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class OrderCardWidget extends StatelessWidget {
   final OrderEntity order;
@@ -91,8 +92,15 @@ class OrderCardWidget extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -128,19 +136,25 @@ class OrderCardWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Ảnh sản phẩm
-                    Container(
-                      width: 60.w,
-                      height: 60.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4.r),
-                        image: DecorationImage(
-                          image: NetworkImage(
-                            firstItem.image ?? 'https://via.placeholder.com/60',
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: (firstItem.image != null && firstItem.image!.isNotEmpty)
+                        ? AppNetworkImage(
+                            imageUrl: firstItem.image!,
+                            width: 70.w,
+                            height: 70.w,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 70.w,
+                            height: 70.w,
+                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                            child: Icon(
+                              _getFallbackIcon(firstItem.productName),
+                              color: AppColors.primaryBlue,
+                              size: 32.sp,
+                            ),
                           ),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
                     ),
                     SizedBox(width: 12.w),
                     // Tên và phân loại
@@ -169,14 +183,21 @@ class OrderCardWidget extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               Text(
-                                '${firstItem.price} đ',
-                                style: AppTextStyles.bodyMedium,
+                                '${_formatPrice(firstItem.price)} đ',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               Text(
                                 'x${firstItem.quantity}',
                                 style: AppTextStyles.bodyMedium,
                               ),
+                            ],
+                          ),
                             ],
                           ),
                         ],
@@ -203,8 +224,8 @@ class OrderCardWidget extends StatelessWidget {
                     children: [
                       Text('Thành tiền: ', style: AppTextStyles.bodyMedium),
                       Text(
-                        '${order.totalAmount ?? 0} đ',
-                        style: AppTextStyles.bodyLarge.copyWith(
+                        '${_formatPrice(order.totalAmount)} đ',
+                        style: AppTextStyles.h3.copyWith(
                           color: AppColors.error,
                           fontWeight: FontWeight.bold,
                         ),
@@ -314,5 +335,29 @@ class OrderCardWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+  String _formatPrice(num? price) {
+    if (price == null) return '0';
+    return price.toStringAsFixed(0).replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]}.',
+        );
+  }
+
+  IconData _getFallbackIcon(String? name) {
+    if (name == null) return Icons.inventory_2_outlined;
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('giày') || lowerName.contains('shoes') || lowerName.contains('sneaker')) {
+      return Icons.ice_skating_rounded;
+    } else if (lowerName.contains('áo') || lowerName.contains('quần') || lowerName.contains('thời trang')) {
+      return Icons.checkroom_rounded;
+    } else if (lowerName.contains('điện thoại') || lowerName.contains('phone')) {
+      return Icons.smartphone_rounded;
+    } else if (lowerName.contains('máy tính') || lowerName.contains('laptop')) {
+      return Icons.laptop_mac_rounded;
+    } else if (lowerName.contains('đồng hồ') || lowerName.contains('watch')) {
+      return Icons.watch_rounded;
+    }
+    return Icons.inventory_2_outlined;
   }
 }

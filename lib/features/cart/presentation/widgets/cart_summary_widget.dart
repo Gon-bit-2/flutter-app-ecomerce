@@ -1,4 +1,3 @@
-import 'package:app_fe_ecomerce/core/common/widgets/custom_button.dart';
 import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
@@ -56,37 +55,73 @@ class CartSummaryWidget extends StatelessWidget {
               ),
             ),
 
-            const Spacer(),
-
             // Tổng tiền
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Tổng thanh toán',
-                  style: AppTextStyles.bodyMedium.copyWith(fontSize: 12.sp),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Tổng thanh toán',
+                      style: AppTextStyles.bodyMedium.copyWith(fontSize: 12.sp),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '${_formatPrice(totalPrice)}đ',
+                        style: AppTextStyles.h3.copyWith(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.sp,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${_formatPrice(totalPrice)}đ',
-                  style: AppTextStyles.h3.copyWith(
-                    color: AppColors.error,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.sp,
-                  ),
-                ),
-              ],
+              ),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 8.w),
 
             // Nút "Mua hàng"
             SizedBox(
-              width: 120.w,
+              width: 135.w,
               height: 44.h,
-              child: CustomButton(
-                text: 'Mua hàng ($selectedCount)',
-                isLoading: isLoading,
-                onPressed: selectedCount > 0 ? onCheckout : () {},
+              child: ElevatedButton(
+                onPressed: (!isLoading && selectedCount > 0) ? onCheckout : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                child: isLoading
+                    ? SizedBox(
+                        height: 20.h,
+                        width: 20.h,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'Mua hàng ($selectedCount)',
+                          style: AppTextStyles.buttonText.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                        ),
+                      ),
               ),
             ),
           ],

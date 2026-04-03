@@ -115,13 +115,18 @@ class CartItemWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Giá
-                    Text(
-                      '${_formatPrice(item.price)}đ',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.error,
-                        fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Text(
+                        '${_formatPrice(item.price)}đ',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    SizedBox(width: 8.w),
 
                     // Nút +/-
                     Container(

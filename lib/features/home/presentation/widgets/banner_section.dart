@@ -43,7 +43,7 @@ class _BannerSectionState extends State<BannerSection> {
                     borderRadius: BorderRadius.circular(12.r),
                     child: AppNetworkImage(
                       imageUrl: banner.imageUrl,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                       width: double.infinity,
                     ),
                   ),

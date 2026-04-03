@@ -63,7 +63,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
               _isExpired = true;
             });
           }
-        }
+        },
       );
     } catch (_) {}
   }
@@ -112,17 +112,10 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
           .setTransports(['websocket'])
           .disableMultiplex() // Force a new manager connection
           .setExtraHeaders({
-            if (accessToken != null)
-              'Authorization': 'Bearer $accessToken',
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
           })
-          .setQuery({
-            if (accessToken != null)
-              'token': accessToken,
-          })
-          .setAuth({
-            if (accessToken != null)
-              'token': accessToken,
-          })
+          .setQuery({if (accessToken != null) 'token': accessToken})
+          .setAuth({if (accessToken != null) 'token': accessToken})
           .enableAutoConnect()
           .enableReconnection()
           .build(),
@@ -134,7 +127,9 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
 
     _socket.onAny((event, data) {
       debugPrint('Payment Socket received event: $event, data: $data');
-      if (event == 'payment' || event == 'payment_success' || event == 'paymentSuccess') {
+      if (event == 'payment' ||
+          event == 'payment_success' ||
+          event == 'paymentSuccess') {
         _handlePaymentPush(event, data);
       }
     });
@@ -150,7 +145,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
 
   void _handlePaymentPush(String event, dynamic data) {
     debugPrint('Handling payment push event: $event, data: $data');
-    
+
     // Nếu event đã tường minh là thành công
     if (event == 'payment_success' || event == 'paymentSuccess') {
       _triggerSuccess();
@@ -162,13 +157,13 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
         final status = data['status']?.toString().toLowerCase();
         // Chấp nhận 'success' hoặc 'paid'
         if (status != 'success' && status != 'paid') return;
-        
+
         // Kiểm tra paymentId nếu có
         if (data['paymentId'] != null) {
           final pId = int.tryParse(data['paymentId'].toString());
           if (pId != null && pId != widget.paymentId) {
-             debugPrint('PaymentId mismatch: $pId != ${widget.paymentId}');
-             return;
+            debugPrint('PaymentId mismatch: $pId != ${widget.paymentId}');
+            return;
           }
         }
       } else if (data is String) {
@@ -176,7 +171,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
         if (!lower.contains('success') && !lower.contains('paid')) return;
       }
     }
-    
+
     _triggerSuccess();
   }
 
@@ -185,7 +180,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
       setState(() {
         _isPaymentSuccess = true;
       });
-      
+
       // Auto redirect sau 2s khi success
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
@@ -206,16 +201,18 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
 
       // Thử tối đa 3 lần, mỗi lần cách nhau 2 giây (tổng ~6s)
       for (int i = 0; i < 3; i++) {
-        final response = await dioClient.get('/payment/${widget.paymentId}/status');
-        
+        final response = await dioClient.get(
+          '/payment/${widget.paymentId}/status',
+        );
+
         final data = response.data;
         debugPrint('--- MANUAL CHECK RESPONSE PING $i ---');
         debugPrint(data.toString());
-        
+
         if (data != null) {
           // Xử lý cả trường hợp response bọc trong { "data": { "status": "..." } }
-          final payload = data['data'] != null ? data['data'] : data;
-          
+          final payload = data['data'] ?? data;
+
           if (payload['status'] != null) {
             lastStatus = payload['status'].toString().toUpperCase();
             if (lastStatus == 'SUCCESS' || lastStatus == 'PAID') {
@@ -224,7 +221,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
             }
           }
         }
-        
+
         // Nghỉ 2s trước khi thử lại nếu chưa thành công (trừ lần cuối cùng)
         if (i < 2) {
           await Future.delayed(const Duration(seconds: 2));
@@ -240,7 +237,10 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
         );
       }
     } catch (e) {
-      _showSnackBar('Lỗi khi kiểm tra thanh toán. Vui lòng thử lại sau.', isError: true);
+      _showSnackBar(
+        'Lỗi khi kiểm tra thanh toán. Vui lòng thử lại sau.',
+        isError: true,
+      );
       debugPrint('Error manually checking payment status: $e');
     } finally {
       if (mounted) setState(() => _isCheckingPayment = false);
@@ -257,7 +257,6 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
       ),
     );
   }
-
 
   @override
   void dispose() {
@@ -320,9 +319,9 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
                 style: AppTextStyles.bodyMedium,
                 textAlign: TextAlign.center,
               ),
-            ]
-          )
-        )
+            ],
+          ),
+        ),
       );
     }
 
@@ -366,7 +365,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
                     child: const Center(child: Icon(Icons.qr_code, size: 100)),
                   )
                 : AppNetworkImage(
-                    imageUrl: qrUrl, 
+                    imageUrl: qrUrl,
                     width: 250.w,
                     height: 250.w,
                     fit: BoxFit.contain,
@@ -385,15 +384,23 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
               children: [
                 _buildInfoRow('Ngân hàng', _config!.bankCode),
                 const Divider(),
-                _buildInfoRowWithCopy('Số tài khoản', _config!.accountNumber, _config!.accountNumber),
+                _buildInfoRowWithCopy(
+                  'Số tài khoản',
+                  _config!.accountNumber,
+                  _config!.accountNumber,
+                ),
                 const Divider(),
-                _buildInfoRow('Số tiền', '${widget.totalAmount} đ', isHighlight: true),
+                _buildInfoRow(
+                  'Số tiền',
+                  '${widget.totalAmount} đ',
+                  isHighlight: true,
+                ),
                 const Divider(),
                 _buildInfoRowWithCopy(
-                  'Nội dung chuyển khoản', 
+                  'Nội dung chuyển khoản',
                   transferContent,
                   transferContent,
-                  isHighlight: true
+                  isHighlight: true,
                 ),
               ],
             ),
@@ -417,7 +424,9 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
                 SizedBox(height: 16.h),
                 Text(
                   'Thanh toán thành công. Đang chuyển hướng...',
-                  style: AppTextStyles.bodyLarge.copyWith(color: AppColors.success),
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.success,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -450,20 +459,37 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 12.h,
+                    ),
                   ),
-                  child: _isCheckingPayment 
+                  child: _isCheckingPayment
                       ? SizedBox(
-                          width: 20.w, 
-                          height: 20.w, 
-                          child: const CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AppColors.primaryBlue))
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(
+                              AppColors.primaryBlue,
+                            ),
+                          ),
                         )
                       : Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.refresh, color: AppColors.primaryBlue, size: 20.sp),
+                            Icon(
+                              Icons.refresh,
+                              color: AppColors.primaryBlue,
+                              size: 20.sp,
+                            ),
                             SizedBox(width: 8.w),
-                            Text('Tôi đã thanh toán', style: AppTextStyles.buttonText.copyWith(color: AppColors.primaryBlue)),
+                            Text(
+                              'Tôi đã thanh toán',
+                              style: AppTextStyles.buttonText.copyWith(
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
                           ],
                         ),
                 ),
@@ -474,13 +500,21 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
     );
   }
 
-  Widget _buildInfoRowWithCopy(String label, String displayValue, String copyValue, {bool isHighlight = false}) {
+  Widget _buildInfoRowWithCopy(
+    String label,
+    String displayValue,
+    String copyValue, {
+    bool isHighlight = false,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(flex: 3, child: Text(label, style: AppTextStyles.bodyMedium)),
+          Expanded(
+            flex: 3,
+            child: Text(label, style: AppTextStyles.bodyMedium),
+          ),
           Expanded(
             flex: 5,
             child: Row(
@@ -515,7 +549,11 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
                   },
                   child: Padding(
                     padding: EdgeInsets.all(4.w),
-                    child: Icon(Icons.copy, size: 20.sp, color: AppColors.primaryBlue),
+                    child: Icon(
+                      Icons.copy,
+                      size: 20.sp,
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
                 ),
               ],
@@ -525,6 +563,7 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
       ),
     );
   }
+
   Widget _buildInfoRow(String label, String value, {bool isHighlight = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
