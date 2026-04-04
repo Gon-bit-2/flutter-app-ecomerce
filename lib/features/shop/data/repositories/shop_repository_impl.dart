@@ -1,9 +1,10 @@
-import 'package:dartz/dartz.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/shop_entity.dart';
+import '../../domain/entities/shop_statistics.dart';
 import '../../domain/repositories/shop_repository.dart';
 import '../datasources/shop_remote_datasource.dart';
 
@@ -55,6 +56,26 @@ class ShopRepositoryImpl implements ShopRepository {
         return Left(
           ServerFailure(
             e.response?.data['message'] ?? 'Lỗi khi lấy thông tin shop',
+          ),
+        );
+      } else {
+        return Left(ServerFailure(e.message ?? 'Lỗi kết nối máy chủ'));
+      }
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ShopStatistics>> getShopStatistics() async {
+    try {
+      final data = await remoteDataSource.getShopStatistics();
+      return Right(data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return Left(
+          ServerFailure(
+            e.response?.data['message'] ?? 'Lỗi khi lấy thống kê shop',
           ),
         );
       } else {

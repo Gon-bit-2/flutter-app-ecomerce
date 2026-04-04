@@ -24,7 +24,7 @@ class MessageBubbleWidget extends StatelessWidget {
             isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isMe) SizedBox(width: 40.w), // Space cho avatar nếu cần
+          if (isMe) SizedBox(width: 40.w), // Space bên trái khi là tin nhắn của mình (đẩy sang phải)
           Flexible(
             child: Container(
               constraints: BoxConstraints(
@@ -74,7 +74,7 @@ class MessageBubbleWidget extends StatelessWidget {
               ),
             ),
           ),
-          if (isMe) SizedBox(width: 40.w), // Space bên phải
+          if (!isMe) SizedBox(width: 40.w), // Space bên phải khi là tin nhắn người khác (đẩy sang trái)
         ],
       ),
     );

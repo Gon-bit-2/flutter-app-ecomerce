@@ -6,8 +6,8 @@ import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
-import 'package:app_fe_ecomerce/features/chat/presentation/pages/chat_detail_page.dart' as app_fe_ecomerce_chat;
-import 'package:app_fe_ecomerce/features/shop/presentation/pages/shop_profile_page.dart';
+import 'package:app_fe_ecomerce/features/chat/presentation/pages/chat_detail_page.dart'
+    as app_fe_ecomerce_chat;
 
 class ProductBottomActionBar extends StatelessWidget {
   final Product product;
@@ -26,15 +26,21 @@ class ProductBottomActionBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            // Nút Chat
-            Expanded(
-              flex: 1,
-              child: InkWell(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          child: Row(
+            children: [
+              // Nút Chat
+              InkWell(
                 onTap: () {
                   if (product.createdById != null) {
                     final authState = context.read<AuthBloc>().state;
@@ -47,7 +53,7 @@ class ProductBottomActionBar extends StatelessWidget {
                     }
 
                     final shopName = product.shopName ?? 'Shop';
-                    
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -61,113 +67,81 @@ class ProductBottomActionBar extends StatelessWidget {
                     );
                   }
                 },
+                borderRadius: BorderRadius.circular(12.r),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 4.h,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.chat_bubble_outline,
-                        color: AppColors.primaryBlue,
-                        size: 20.sp,
+                        color: AppColors.textPrimary,
+                        size: 22.sp,
                       ),
-                      SizedBox(height: 2.h),
+                      SizedBox(height: 4.h),
                       Text(
                         "Chat",
                         style: TextStyle(
                           fontSize: 10.sp,
-                          color: Colors.grey[700],
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-            Container(width: 1, height: 30.h, color: Colors.grey.shade300),
-            // Nút Xem Shop
-            Expanded(
-              flex: 1,
-              child: InkWell(
-                onTap: () {
-                  if (product.createdById != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ShopProfilePage(
-                          shopId: product.createdById!,
-                          shopName: product.shopName,
-                          shopAvatar: product.shopAvatar,
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.store_outlined,
-                        color: AppColors.primaryBlue,
-                        size: 20.sp,
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        "Shop",
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
+              SizedBox(width: 8.w),
+              // Thêm vào giỏ
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onAddToCart,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary, // Xanh nhạt E3F2FD
+                    foregroundColor: AppColors.primaryBlue,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r), // Bo góc 12px
+                    ),
                   ),
-                ),
-              ),
-            ),
-            Container(width: 1, height: 30.h, color: Colors.grey.shade300),
-            // Thêm vào giỏ
-            Expanded(
-              flex: 3,
-              child: InkWell(
-                onTap: onAddToCart,
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                  color: AppColors.secondary,
                   child: Text(
-                    "Thêm vào giỏ hàng",
-                    textAlign: TextAlign.center,
+                    "Thêm vào giỏ",
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: AppColors.primaryBlue,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-            ),
-            // Mua ngay
-            Expanded(
-              flex: 3,
-              child: InkWell(
-                onTap: onBuyNow,
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                  color: AppColors.primaryBlue,
+              SizedBox(width: 12.w),
+              // Mua ngay
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onBuyNow,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r), // Bo góc 12px
+                    ),
+                  ),
                   child: Text(
                     "Mua ngay",
-                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

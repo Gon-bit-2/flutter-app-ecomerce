@@ -37,42 +37,44 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  // Danh sách ID các sản phẩm đã chọn (để xóa hàng loạt / tính tổng tiền)
   final Set<int> _selectedIds = {};
-
-  // Voucher đang được chọn ở giỏ hàng
   Discount? _appliedDiscount;
-  double _discountAmount = 0.0; // Số tiền được giảm
+  double _discountAmount = 0.0;
 
   @override
   void initState() {
     super.initState();
-    // Tải giỏ hàng khi mở trang
     context.read<CartBloc>().add(const CartLoadRequested(page: 1, limit: 100));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.inputBackground,
+      backgroundColor: AppColors.surface, // Trắng xám F5F5F7
       appBar: AppBar(
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: Colors.white, // Trắng để sáng app
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Giỏ hàng',
-          style: AppTextStyles.h3.copyWith(color: Colors.white),
+          style: AppTextStyles.h2.copyWith(color: AppColors.textPrimary), // Chữ đen xám
         ),
         centerTitle: true,
         actions: [
-          // Nút xóa các sản phẩm đã chọn
           if (_selectedIds.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.white),
+            TextButton(
               onPressed: () => _showDeleteConfirmDialog(context),
+              child: Text(
+                'Xóa',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
         ],
       ),
@@ -82,55 +84,35 @@ class _CartViewState extends State<CartView> {
             listener: (context, state) {
               if (state is CartFailure) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: AppColors.error,
-                  ),
+                  SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
                 );
               }
               if (state is CartOperationSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: AppColors.success,
-                    duration: const Duration(seconds: 1),
-                  ),
+                  SnackBar(content: Text(state.message), backgroundColor: AppColors.success, duration: const Duration(seconds: 1)),
                 );
               }
               if (state is CartLoaded) {
-                // Giỏ hàng thay đổi -> tính lại voucher nếu có
                 _previewDiscount(state.items);
               }
             },
           ),
           BlocListener<DiscountBloc, DiscountState>(
             listener: (context, state) {
-              if (state is DiscountPreviewLoading) {
-                // Có thể show dialog loading
-              }
               if (state is DiscountError) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: AppColors.error,
-                  ),
+                  SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
                 );
                 setState(() {
-                  // _appliedDiscount = null;
                   _discountAmount = 0.0;
                 });
               }
               if (state is DiscountPreviewLoaded) {
                 setState(() {
-                  // data từ backend preview, ví dụ: { "discountValue": 15000, "finalPrice": ... }
-                  // Tuỳ format APi, giả định backend trả về field `discountValue`
-                  _discountAmount = (state.previewData['discountValue'] ?? 0.0)
-                      .toDouble();
+                  _discountAmount = (state.previewData['discountValue'] ?? 0.0).toDouble();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        'Áp dụng mã giảm thành công: -$_discountAmountđ',
-                      ),
+                      content: Text('Áp dụng mã giảm thành công: -$_discountAmountđ'),
                       backgroundColor: AppColors.success,
                       duration: const Duration(seconds: 1),
                     ),
@@ -142,35 +124,29 @@ class _CartViewState extends State<CartView> {
         ],
         child: BlocBuilder<CartBloc, CartState>(
           buildWhen: (previous, current) {
-            // Không rebuild khi đang ở CartOperationSuccess (snackbar xử lý riêng)
             if (current is CartOperationSuccess) return false;
             return true;
           },
           builder: (context, state) {
-            // Chỉ hiện loading lần đầu khi chưa có data
             if (state is CartLoading || state is CartInitial) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primaryBlue),
-              );
+              return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
             }
 
-            // Lấy danh sách items từ state
             List<CartEntity> items = [];
             if (state is CartLoaded) {
               items = state.items;
             }
 
-            // Giỏ hàng trống
             if (items.isEmpty) {
               return _buildEmptyCart();
             }
 
             return Column(
               children: [
-                // Danh sách sản phẩm
                 Expanded(
                   child: ListView.builder(
-                    padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    physics: const BouncingScrollPhysics(),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
@@ -187,21 +163,11 @@ class _CartViewState extends State<CartView> {
                           });
                         },
                         onIncrease: () {
-                          context.read<CartBloc>().add(
-                            CartItemUpdated(
-                              id: item.id,
-                              quantity: item.quantity + 1,
-                            ),
-                          );
+                          context.read<CartBloc>().add(CartItemUpdated(id: item.id, quantity: item.quantity + 1));
                         },
                         onDecrease: () {
                           if (item.quantity > 1) {
-                            context.read<CartBloc>().add(
-                              CartItemUpdated(
-                                id: item.id,
-                                quantity: item.quantity - 1,
-                              ),
-                            );
+                            context.read<CartBloc>().add(CartItemUpdated(id: item.id, quantity: item.quantity - 1));
                           }
                         },
                         onRemove: () {
@@ -212,13 +178,10 @@ class _CartViewState extends State<CartView> {
                   ),
                 ),
 
-                // Khối Voucher / Mã giảm giá
                 _buildDiscountSection(context, items),
 
-                // Thanh tổng kết
                 CartSummaryWidget(
-                  isAllSelected:
-                      items.isNotEmpty && _selectedIds.length == items.length,
+                  isAllSelected: items.isNotEmpty && _selectedIds.length == items.length,
                   onSelectAll: (selected) {
                     setState(() {
                       if (selected == true) {
@@ -231,17 +194,10 @@ class _CartViewState extends State<CartView> {
                   selectedCount: _selectedIds.length,
                   totalPrice: _calculateTotalPrice(items),
                   onCheckout: () {
-                    final checkoutItems = items
-                        .where((e) => _selectedIds.contains(e.id))
-                        .toList();
+                    final checkoutItems = items.where((e) => _selectedIds.contains(e.id)).toList();
                     if (checkoutItems.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Vui lòng chọn ít nhất 1 sản phẩm để thanh toán',
-                          ),
-                          backgroundColor: AppColors.error,
-                        ),
+                        const SnackBar(content: Text('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán'), backgroundColor: AppColors.error),
                       );
                       return;
                     }
@@ -249,14 +205,11 @@ class _CartViewState extends State<CartView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            app_fe_ecomerce_order.CheckoutPage(
-                              selectedItems: checkoutItems,
-                              totalPrice:
-                                  _calculateTotalPrice(items) +
-                                  _discountAmount, // Pass subtotal
-                              discountAmount: _discountAmount,
-                            ),
+                        builder: (context) => app_fe_ecomerce_order.CheckoutPage(
+                          selectedItems: checkoutItems,
+                          totalPrice: _calculateTotalPrice(items) + _discountAmount,
+                          discountAmount: _discountAmount,
+                        ),
                       ),
                     );
                   },
@@ -269,7 +222,6 @@ class _CartViewState extends State<CartView> {
     );
   }
 
-  // Khối Voucher UI
   Widget _buildDiscountSection(BuildContext context, List<CartEntity> items) {
     return InkWell(
       onTap: () {
@@ -277,9 +229,7 @@ class _CartViewState extends State<CartView> {
           context,
           currentSelectedDiscount: _appliedDiscount,
           onDiscountSelected: (discount) {
-            setState(() {
-              _appliedDiscount = discount;
-            });
+            setState(() => _appliedDiscount = discount);
             _previewDiscount(items);
           },
           onClearDiscount: () {
@@ -291,91 +241,67 @@ class _CartViewState extends State<CartView> {
         );
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white, // Khối độc lập màu trắng
           border: Border(
-            bottom: BorderSide(
-              color: AppColors.border.withOpacity(0.5),
-              width: 1,
-            ),
-            top: BorderSide(color: AppColors.border.withOpacity(0.5), width: 1),
+            top: BorderSide(color: AppColors.border.withOpacity(0.5)),
           ),
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.local_activity,
-              color: Theme.of(context).primaryColor,
-              size: 24.sp,
-            ),
+            Icon(Icons.local_activity, color: AppColors.primaryBlue, size: 24.sp),
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
-                _appliedDiscount != null
-                    ? 'Đã áp dụng mã: ${_appliedDiscount!.code}'
-                    : 'Shopee Voucher / Chọn hoặc Nhập Mã',
+                _appliedDiscount != null ? 'Đã áp dụng mã: ${_appliedDiscount!.code}' : 'App Voucher / Chọn hoặc Nhập Mã',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: _appliedDiscount != null
-                      ? Colors.green
-                      : AppColors.textPrimary,
-                  fontWeight: _appliedDiscount != null
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  color: _appliedDiscount != null ? AppColors.success : AppColors.textPrimary,
+                  fontWeight: _appliedDiscount != null ? FontWeight.bold : FontWeight.w500,
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.textSecondary,
-              size: 20.sp,
-            ),
+            Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20.sp),
           ],
         ),
       ),
     );
   }
 
-  // Widget giỏ hàng trống
   Widget _buildEmptyCart() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 80.sp,
-            color: AppColors.border,
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Giỏ hàng trống',
-            style: AppTextStyles.h3.copyWith(color: AppColors.textSecondary),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Hãy thêm sản phẩm vào giỏ hàng nhé!',
-            style: AppTextStyles.bodyMedium,
+          Container(
+            padding: EdgeInsets.all(24.w),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.shopping_cart_outlined, size: 80.sp, color: AppColors.primaryBlue),
           ),
           SizedBox(height: 24.h),
+          Text('Giỏ hàng trống', style: AppTextStyles.h2.copyWith(color: AppColors.textPrimary)),
+          SizedBox(height: 8.h),
+          Text('Hãy thêm sản phẩm vào giỏ hàng nhé!', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+          SizedBox(height: 32.h),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst), // Trở về trang chủ
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryBlue,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 14.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
             ),
-            child: Text('Mua sắm ngay', style: AppTextStyles.buttonText),
+            child: Text('Mua sắm ngay', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
 
-  // Tính tổng tiền các sản phẩm đã chọn (Sau khi đã trừ discount)
   num _calculateTotalPrice(List<CartEntity> items) {
     num total = 0;
     for (final item in items) {
@@ -387,18 +313,13 @@ class _CartViewState extends State<CartView> {
     return finalPrice > 0 ? finalPrice : 0;
   }
 
-  // Helper trigger preview
   void _previewDiscount(List<CartEntity> items) {
     if (_appliedDiscount == null || _selectedIds.isEmpty) {
-      setState(() {
-        _discountAmount = 0.0;
-      });
+      setState(() => _discountAmount = 0.0);
       return;
     }
 
-    final selectedItems = items
-        .where((e) => _selectedIds.contains(e.id))
-        .toList();
+    final selectedItems = items.where((e) => _selectedIds.contains(e.id)).toList();
     num subTotal = 0;
     for (final item in selectedItems) {
       subTotal += (item.price ?? 0) * item.quantity;
@@ -416,42 +337,27 @@ class _CartViewState extends State<CartView> {
         orderValue: subTotal.toDouble(),
         userId: currentUserId,
         shopId: _appliedDiscount!.shopId ?? 0,
-        items: selectedItems
-            .map(
-              (e) => {
-                "productId": e.productId,
-                "price": e.price,
-                "quantity": e.quantity,
-              },
-            )
-            .toList(),
+        items: selectedItems.map((e) => {"productId": e.productId, "price": e.price, "quantity": e.quantity}).toList(),
       ),
     );
   }
 
-  // Dialog xác nhận xóa nhiều sản phẩm
   void _showDeleteConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         title: const Text('Xóa sản phẩm'),
-        content: Text(
-          'Bạn có chắc muốn xóa ${_selectedIds.length} sản phẩm đã chọn?',
-        ),
+        content: Text('Bạn có chắc muốn xóa ${_selectedIds.length} sản phẩm đã chọn?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy', style: TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<CartBloc>().add(
-                CartItemsRemoved(cartItemIds: _selectedIds.toList()),
-              );
+              context.read<CartBloc>().add(CartItemsRemoved(cartItemIds: _selectedIds.toList()));
               setState(() => _selectedIds.clear());
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r))),
             child: const Text('Xóa', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -459,28 +365,21 @@ class _CartViewState extends State<CartView> {
     );
   }
 
-  // Dialog xác nhận xóa 1 sản phẩm
   void _showDeleteSingleConfirmDialog(BuildContext context, CartEntity item) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         title: const Text('Xóa sản phẩm'),
-        content: Text(
-          'Bạn có chắc muốn xóa "${item.productName ?? 'sản phẩm này'}" khỏi giỏ hàng?',
-        ),
+        content: Text('Bạn có chắc muốn xóa "${item.productName ?? 'sản phẩm này'}" khỏi giỏ hàng?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy', style: TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<CartBloc>().add(
-                CartItemsRemoved(cartItemIds: [item.id]),
-              );
+              context.read<CartBloc>().add(CartItemsRemoved(cartItemIds: [item.id]));
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r))),
             child: const Text('Xóa', style: TextStyle(color: Colors.white)),
           ),
         ],

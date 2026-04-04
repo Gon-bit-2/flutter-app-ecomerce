@@ -53,7 +53,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   ) async {
     final query = event.query.trim();
 
-    if (query.isEmpty) {
+    if (query.isEmpty && state.categoryId == null) {
       final historyResult = await _getSearchHistoryUseCase(NoParams());
       final history = historyResult.getOrElse((_) => []);
       emit(SearchInitial(
@@ -229,15 +229,6 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     SearchFilterChanged event,
     Emitter<SearchState> emit,
   ) async {
-    final newState = SearchInitial(
-      history: state.history,
-      minPrice: event.minPrice,
-      maxPrice: event.maxPrice,
-      sortBy: event.sortBy,
-      categoryId: event.categoryId,
-    );
-    emit(newState);
-    
     // If there was a query, re-run search with new filters
     String query = "";
     if (state is SearchLoaded) {
@@ -245,9 +236,25 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     } else if (state is SearchError) {
       query = (state as SearchError).query;
     }
-    
-    if (query.isNotEmpty) {
+
+    // Cho phép tìm kiếm nếu có query hoặc nếu CÓ categoryId (để hiển thị kho theo danh mục)
+    if (query.isNotEmpty || event.categoryId != null) {
+      emit(SearchLoading(
+        history: state.history,
+        minPrice: event.minPrice,
+        maxPrice: event.maxPrice,
+        sortBy: event.sortBy,
+        categoryId: event.categoryId,
+      ));
       await _performSearch(query, emit);
+    } else {
+      emit(SearchInitial(
+        history: state.history,
+        minPrice: event.minPrice,
+        maxPrice: event.maxPrice,
+        sortBy: event.sortBy,
+        categoryId: event.categoryId,
+      ));
     }
   }
 

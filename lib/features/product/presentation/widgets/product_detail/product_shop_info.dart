@@ -16,19 +16,19 @@ class ProductShopInfo extends StatelessWidget {
     final shopAvatar = product.shopAvatar;
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 12.h),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Row(
         children: [
           // Shop Avatar
           CircleAvatar(
-            radius: 22.r,
-            backgroundColor: AppColors.secondary,
+            radius: 28.r,
+            backgroundColor: AppColors.surface,
             backgroundImage: shopAvatar != null ? NetworkImage(shopAvatar) : null,
             child: shopAvatar == null
-                ? Icon(Icons.storefront, size: 22.r, color: AppColors.primaryBlue)
+                ? Icon(Icons.storefront, size: 28.r, color: AppColors.primaryBlue)
                 : null,
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 16.w),
           // Shop Info
           Expanded(
             child: Column(
@@ -37,22 +37,24 @@ class ProductShopInfo extends StatelessWidget {
                 Text(
                   shopName,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 2.h),
+                SizedBox(height: 4.h),
                 Row(
                   children: [
-                    Icon(Icons.verified, size: 12.sp, color: AppColors.primaryBlue),
+                    Icon(Icons.verified, size: 14.sp, color: AppColors.primaryBlue),
                     SizedBox(width: 4.w),
                     Text(
                       'Shop Uy Tín',
                       style: TextStyle(
-                        fontSize: 11.sp,
-                        color: AppColors.primaryBlue,
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -60,7 +62,7 @@ class ProductShopInfo extends StatelessWidget {
               ],
             ),
           ),
-          // Nút Xem Shop nhỏ
+          // Nút Xem Shop
           OutlinedButton(
             onPressed: () {
               if (product.createdById != null) {
@@ -77,17 +79,17 @@ class ProductShopInfo extends StatelessWidget {
               }
             },
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.primaryBlue),
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-              minimumSize: Size.zero,
+              side: const BorderSide(color: AppColors.primaryBlue),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4.r),
+                borderRadius: BorderRadius.circular(20.r), // Bo góc viên thuốc
               ),
             ),
             child: Text(
               'Xem Shop',
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
                 color: AppColors.primaryBlue,
               ),
             ),

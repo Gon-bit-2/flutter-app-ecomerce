@@ -40,7 +40,25 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
 
     if (minPrice != null) queryParams['minPrice'] = minPrice;
     if (maxPrice != null) queryParams['maxPrice'] = maxPrice;
-    if (sortBy != null) queryParams['sortBy'] = sortBy;
+    
+    if (sortBy != null) {
+      if (sortBy == 'price_asc') {
+        queryParams['sortBy'] = 'price';
+        queryParams['orderBy'] = 'asc';
+      } else if (sortBy == 'price_desc') {
+        queryParams['sortBy'] = 'price';
+        queryParams['orderBy'] = 'desc';
+      } else if (sortBy == 'newest') {
+        queryParams['sortBy'] = 'createdAt';
+        queryParams['orderBy'] = 'desc';
+      } else if (sortBy == 'best_seller') {
+        queryParams['sortBy'] = 'sale';
+        queryParams['orderBy'] = 'desc';
+      } else {
+        queryParams['sortBy'] = sortBy;
+      }
+    }
+    
     if (categoryId != null) queryParams['categoryId'] = categoryId;
 
     final response = await _dioClient.get(

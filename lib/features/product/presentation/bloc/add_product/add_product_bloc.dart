@@ -281,6 +281,7 @@ class AddProductBloc extends Bloc<AddProductEvent, AddProductState> {
 
     final Map<String, dynamic> payload = {
       "name": event.name,
+      "description": event.description,
       "basePrice": event.basePrice,
       "virtualPrice": event.virtualPrice,
       "brandId": 1,

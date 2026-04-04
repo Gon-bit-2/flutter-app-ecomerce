@@ -300,24 +300,24 @@ class _FlashSalePageState extends State<FlashSalePage> {
                   ),
                   if (discountPercent != null)
                     Positioned(
-                      top: 0,
-                      right: 0,
+                      top: 8.h,
+                      left: 0,
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 6.w,
-                          vertical: 3.h,
+                          horizontal: 8.w,
+                          vertical: 4.h,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.warning,
+                          color: const Color(0xFFFF9800), // Vàng cam để nổi bật trên nền xanh
                           borderRadius: BorderRadius.only(
                             topRight: Radius.circular(8.r),
-                            bottomLeft: Radius.circular(8.r),
+                            bottomRight: Radius.circular(8.r),
                           ),
                         ),
                         child: Text(
                           discountPercent,
                           style: TextStyle(
-                            fontSize: 11.sp,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -362,37 +362,55 @@ class _FlashSalePageState extends State<FlashSalePage> {
                         ),
                       ),
                     SizedBox(height: 4.h),
-                    // Progress bar bán
-                    Container(
-                      width: double.infinity,
-                      height: 16.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Stack(
-                        children: [
-                          FractionallySizedBox(
-                            widthFactor: 0.6, // Mock progress
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryBlue,
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                            ),
+                    // Custom Progress Bar
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final totalSold = product.sold ?? 0;
+                        final totalStock = product.skus.isNotEmpty
+                            ? product.skus.fold(0, (sum, sku) => sum + sku.stock)
+                            : 100;
+                        final total = totalSold + totalStock;
+                        final ratio = total > 0
+                            ? (totalSold / total).clamp(0.0, 1.0)
+                            : 0.0;
+
+                        return Container(
+                          width: double.infinity,
+                          height: 18.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface, // Trắng xám
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
-                          Center(
-                            child: Text(
-                              '${product.sold ?? 0} ĐÃ BÁN',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.bold,
+                          child: Stack(
+                            children: [
+                              FractionallySizedBox(
+                                widthFactor: ratio == 0.0 ? 0.05 : ratio,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.primaryBlue.withOpacity(0.6),
+                                        AppColors.primaryBlue,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                  ),
+                                ),
                               ),
-                            ),
+                              Center(
+                                child: Text(
+                                  totalSold > 0 ? 'ĐÃ BÁN $totalSold' : 'SẮP BÁN HẾT',
+                                  style: TextStyle(
+                                    color: ratio > 0.3 ? Colors.white : AppColors.textPrimary,
+                                    fontSize: 9.sp,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ],
                 ),

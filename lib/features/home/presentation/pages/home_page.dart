@@ -17,9 +17,11 @@ import 'package:app_fe_ecomerce/features/auth/domain/entities/user_entity.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/profile_page.dart';
-import 'package:app_fe_ecomerce/features/shop_video/presentation/pages/video_feed_page.dart' as app_fe_ecomerce_shop_video;
+import 'package:app_fe_ecomerce/features/shop_video/presentation/pages/video_feed_page.dart'
+    as app_fe_ecomerce_shop_video;
 import 'package:app_fe_ecomerce/features/notification/presentation/bloc/notification_bloc.dart';
 import 'package:app_fe_ecomerce/features/notification/presentation/pages/notification_page.dart';
+import 'package:app_fe_ecomerce/features/notification/domain/entities/notification_entity.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -82,195 +84,246 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          // Index 0: Home — với pull-to-refresh
-          RefreshIndicator(
-            onRefresh: () async {
-              context.read<HomeBloc>().add(HomeRefreshed());
-            },
-            color: AppColors.primaryBlue,
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                const HomeAppBar(),
-                BlocBuilder<HomeBloc, HomeState>(
-                  builder: (context, state) {
-                    if (state is HomeLoading) {
-                      return const SliverFillRemaining(
-                        child: HomePageSkeleton(),
-                      );
-                    }
-                    if (state is HomeError) {
-                      return SliverFillRemaining(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.cloud_off, size: 64, color: AppColors.textSecondary),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Đã có lỗi xảy ra',
-                                style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                state.message,
-                                style: AppTextStyles.bodyMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton.icon(
-                                onPressed: () => context.read<HomeBloc>().add(HomeRefreshed()),
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Thử lại'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryBlue,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                    if (state is HomeLoaded) {
-                      return SliverList(
-                        delegate: SliverChildListDelegate([
-                          BannerSection(banners: state.banners),
-                          SizedBox(height: 10.h),
-                          CategorySection(categories: state.categories),
-                          SizedBox(height: 10.h),
-                          FlashSaleSection(flashSale: state.flashSale),
-                          SizedBox(height: 10.h),
-                        ]),
-                      );
-                    }
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  },
-                ),
-                const DailyDiscoverHeader(),
-                BlocBuilder<HomeBloc, HomeState>(
-                  builder: (context, state) {
-                    if (state is HomeLoaded) {
-                      return DailyDiscoverSection(
-                        products: state.dailyDiscoverProducts,
-                      );
-                    }
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  },
-                ),
-                BlocBuilder<HomeBloc, HomeState>(
-                  builder: (context, state) {
-                    if (state is HomeLoaded && state.hasMoreDailyDiscover) {
-                      return SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthSuccess) {
+              // Khi đăng nhập thành công, tự động chuyển người dùng về tab Trang chủ (0)
+              // thay vì để họ ở lại tab Thông báo hoặc tab trống.
+              if (_currentIndex != 0) {
+                setState(() {
+                  _currentIndex = 0;
+                });
+              }
+            }
+          },
+        ),
+        BlocListener<NotificationBloc, NotificationState>(
+          listenWhen: (previous, current) {
+            // Chỉ trigger khi có thông báo mới (id của thông báo đầu tiên thay đổi)
+            // hoặc khi unreadCount tăng lên
+            return current.notifications.isNotEmpty &&
+                (previous.notifications.isEmpty ||
+                    current.notifications.first.id != previous.notifications.first.id) &&
+                current.unreadCount > previous.unreadCount;
+          },
+          listener: (context, state) {
+            if (state.notifications.isNotEmpty) {
+              _showInAppNotification(context, state.notifications.first);
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            // Index 0: Home — với pull-to-refresh
+            RefreshIndicator(
+              onRefresh: () async {
+                context.read<HomeBloc>().add(HomeRefreshed());
+              },
+              color: AppColors.primaryBlue,
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  const HomeAppBar(),
+                  BlocBuilder<HomeBloc, HomeState>(
+                    builder: (context, state) {
+                      if (state is HomeLoading) {
+                        return const SliverFillRemaining(
+                          child: HomePageSkeleton(),
+                        );
+                      }
+                      if (state is HomeError) {
+                        return SliverFillRemaining(
                           child: Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: AppColors.textSecondary,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.cloud_off,
+                                  size: 64,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Đã có lỗi xảy ra',
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  state.message,
+                                  style: AppTextStyles.bodyMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: () => context.read<HomeBloc>().add(
+                                    HomeRefreshed(),
+                                  ),
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Thử lại'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryBlue,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      if (state is HomeLoaded) {
+                        return SliverList(
+                          delegate: SliverChildListDelegate([
+                            BannerSection(banners: state.banners),
+                            SizedBox(height: 10.h),
+                            CategorySection(categories: state.categories),
+                            SizedBox(height: 10.h),
+                            FlashSaleSection(flashSale: state.flashSale),
+                            SizedBox(height: 10.h),
+                          ]),
+                        );
+                      }
+                      return const SliverToBoxAdapter(child: SizedBox.shrink());
+                    },
+                  ),
+                  const DailyDiscoverHeader(),
+                  BlocBuilder<HomeBloc, HomeState>(
+                    builder: (context, state) {
+                      if (state is HomeLoaded) {
+                        return DailyDiscoverSection(
+                          products: state.dailyDiscoverProducts,
+                        );
+                      }
+                      return const SliverToBoxAdapter(child: SizedBox.shrink());
+                    },
+                  ),
+                  BlocBuilder<HomeBloc, HomeState>(
+                    builder: (context, state) {
+                      if (state is HomeLoaded && state.hasMoreDailyDiscover) {
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    }
-                    return const SliverToBoxAdapter(child: SizedBox.shrink());
-                  },
-                ),
-              ],
+                        );
+                      }
+                      return const SliverToBoxAdapter(child: SizedBox.shrink());
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-          
-          // Index 1: Video Feed
-          const app_fe_ecomerce_shop_video.VideoFeedPage(),
 
-          // Index 2: Thông báo
-          const NotificationPage(),
+            // Index 1: Video Feed
+            const app_fe_ecomerce_shop_video.VideoFeedPage(),
 
-          // Index 3: Tôi / Profile
-          BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              final user = _getUserFromState(state);
+            // Index 2: Thông báo
+            const NotificationPage(),
 
-              if (user != null) {
-                final content = ProfilePage(user: user);
-                if (state is AuthLoading) {
-                  return Stack(
-                    children: [
-                      content,
-                      Container(
-                        color: Colors.black.withOpacity(0.1),
-                        alignment: Alignment.center,
-                        child: const CircularProgressIndicator(),
-                      ),
-                    ],
-                  );
+            // Index 3: Tôi / Profile
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                final user = _getUserFromState(state);
+
+                if (user != null) {
+                  final content = ProfilePage(user: user);
+                  if (state is AuthLoading) {
+                    return Stack(
+                      children: [
+                        content,
+                        Container(
+                          color: Colors.black.withOpacity(0.1),
+                          alignment: Alignment.center,
+                          child: const CircularProgressIndicator(),
+                        ),
+                      ],
+                    );
+                  }
+                  return content;
                 }
-                return content;
-              }
 
-              // Fallback for loading without user
-              if (state is AuthLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
+                // Fallback for loading without user
+                if (state is AuthLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              return _buildGuestProfile(context);
-            },
-          ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              offset: const Offset(0, -1),
-              blurRadius: 8,
+                return _buildGuestProfile(context);
+              },
             ),
           ],
         ),
-        child: BlocBuilder<NotificationBloc, NotificationState>(
-          builder: (context, notifState) {
-            return BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              elevation: 0,
-              backgroundColor: Colors.white,
-              items: [
-                const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-                const BottomNavigationBarItem(icon: Icon(Icons.ondemand_video_outlined), label: 'Video'),
-                BottomNavigationBarItem(
-                  icon: Badge(
-                    isLabelVisible: notifState.unreadCount > 0,
-                    label: Text(
-                      notifState.unreadCount > 99 ? '99+' : '${notifState.unreadCount}',
-                      style: const TextStyle(fontSize: 10, color: Colors.white),
-                    ),
-                    child: const Icon(Icons.notifications_outlined),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                offset: const Offset(0, -1),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, notifState) {
+              return BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                elevation: 0,
+                backgroundColor: Colors.white,
+                items: [
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.home),
+                    label: 'Trang chủ',
                   ),
-                  label: 'Thông báo',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  label: 'Tôi',
-                ),
-              ],
-              selectedItemColor: AppColors.primaryBlue,
-              unselectedItemColor: AppColors.textSecondary,
-              currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() => _currentIndex = index);
-              },
-            );
-          },
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.ondemand_video_outlined),
+                    label: 'Video',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Badge(
+                      isLabelVisible: notifState.unreadCount > 0,
+                      label: Text(
+                        notifState.unreadCount > 99
+                            ? '99+'
+                            : '${notifState.unreadCount}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                        ),
+                      ),
+                      child: const Icon(Icons.notifications_outlined),
+                    ),
+                    label: 'Thông báo',
+                  ),
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.person_outline),
+                    label: 'Tôi',
+                  ),
+                ],
+                selectedItemColor: AppColors.primaryBlue,
+                unselectedItemColor: AppColors.textSecondary,
+                currentIndex: _currentIndex,
+                onTap: (index) {
+                  setState(() => _currentIndex = index);
+                },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -283,10 +336,7 @@ class _HomeViewState extends State<HomeView> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFF0F2F5),
-            Colors.white,
-          ],
+          colors: [Color(0xFFF0F2F5), Colors.white],
         ),
       ),
       child: Column(
@@ -442,4 +492,85 @@ class _HomeViewState extends State<HomeView> {
       ],
     );
   }
+
+  void _showInAppNotification(BuildContext context, NotificationEntity notif) {
+    // Determine icon and color based on content exactly like in NotificationItemWidget
+    final t = notif.type.toUpperCase();
+    final title = notif.title.toLowerCase();
+    
+    IconData icon = Icons.notifications_active_outlined;
+    Color color = AppColors.primaryBlue;
+
+    if (t == 'ORDER_SUCCESS' || title.contains('đặt hàng thành công') || t == 'ORDER') {
+      icon = Icons.check_circle_outline_rounded;
+      color = AppColors.success;
+    } else if (t == 'PAYMENT_SUCCESS' || title.contains('thanh toán thành công') || t == 'PAYMENT') {
+      icon = Icons.account_balance_wallet_outlined;
+      color = AppColors.primaryBlue;
+    } else if (t == 'ORDER_CANCELLED' || t == 'CANCELLED' || title.contains('hủy đơn') || title.contains('đã hủy')) {
+      icon = Icons.cancel_outlined;
+      color = AppColors.error;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 24.sp),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notif.title,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    notif.body,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'XEM',
+          textColor: Colors.white,
+          onPressed: () {
+            setState(() {
+              _currentIndex = 2; // Navigate to notification tab
+            });
+          },
+        ),
+      ),
+    );
+  }
 }
+
