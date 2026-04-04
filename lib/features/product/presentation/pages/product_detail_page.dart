@@ -506,11 +506,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       children: [
         Icon(Icons.star, color: const Color(0xFFFFC107), size: 18.sp),
         SizedBox(width: 4.w),
-        Text("${_currentProduct.rating ?? 4.9}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+        Text("${_currentProduct.rating ?? 0.0}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
         SizedBox(width: 12.w),
         Container(height: 14.h, width: 1, color: AppColors.border),
         SizedBox(width: 12.w),
-        Text("${_currentProduct.sold ?? 100} Đã bán", style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+        Text("${_currentProduct.sold ?? 0} Đã bán", style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
         const Spacer(),
         Row(
           children: [

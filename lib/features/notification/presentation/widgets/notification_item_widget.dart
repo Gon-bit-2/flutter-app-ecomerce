@@ -5,6 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+enum AppNotificationType {
+  orderSuccess,
+  paymentSuccess,
+  orderCancelled,
+  promotion,
+  system,
+  other,
+}
+
 class NotificationItemWidget extends StatelessWidget {
   final NotificationEntity notification;
   final VoidCallback onTap;
@@ -15,39 +24,101 @@ class NotificationItemWidget extends StatelessWidget {
     required this.onTap,
   });
 
-  IconData _getIconForType(String type) {
-    switch (type.toUpperCase()) {
-      case 'ORDER':
-        return Icons.local_shipping_outlined;
-      case 'PAYMENT':
-        return Icons.payment_outlined;
-      case 'PROMOTION':
+  AppNotificationType _parseType() {
+    final t = notification.type.toUpperCase();
+    final title = notification.title.toLowerCase();
+
+    if (t == 'ORDER_SUCCESS' || title.contains('đặt hàng thành công')) {
+      return AppNotificationType.orderSuccess;
+    }
+    if (t == 'PAYMENT_SUCCESS' || title.contains('thanh toán thành công') || t == 'PAYMENT') {
+      return AppNotificationType.paymentSuccess;
+    }
+    if (t == 'ORDER_CANCELLED' || t == 'CANCELLED' || title.contains('hủy đơn') || title.contains('đã hủy')) {
+      return AppNotificationType.orderCancelled;
+    }
+    if (t == 'PROMOTION') return AppNotificationType.promotion;
+    if (t == 'SYSTEM') return AppNotificationType.system;
+    
+    // Fallback cho order nói chung nếu chưa map được
+    if (t == 'ORDER') return AppNotificationType.orderSuccess;
+
+    return AppNotificationType.other;
+  }
+
+  IconData _getIcon(AppNotificationType type) {
+    switch (type) {
+      case AppNotificationType.orderSuccess:
+        return Icons.check_circle_outline_rounded;
+      case AppNotificationType.paymentSuccess:
+        return Icons.account_balance_wallet_outlined;
+      case AppNotificationType.orderCancelled:
+        return Icons.cancel_outlined;
+      case AppNotificationType.promotion:
         return Icons.local_offer_outlined;
-      case 'SYSTEM':
-        return Icons.info_outline;
-      default:
-        return Icons.notifications_outlined;
+      case AppNotificationType.system:
+        return Icons.info_outline_rounded;
+      case AppNotificationType.other:
+        return Icons.notifications_none_rounded;
     }
   }
 
-  Color _getColorForType(String type) {
-    switch (type.toUpperCase()) {
-      case 'ORDER':
-        return AppColors.primaryBlue;
-      case 'PAYMENT':
+  Color _getPrimaryColor(AppNotificationType type) {
+    switch (type) {
+      case AppNotificationType.orderSuccess:
         return AppColors.success;
-      case 'PROMOTION':
+      case AppNotificationType.paymentSuccess:
+        return AppColors.primaryBlue; // Hoặc một màu nổi bật cho thanh toán
+      case AppNotificationType.orderCancelled:
+        return AppColors.error;
+      case AppNotificationType.promotion:
         return AppColors.warning;
-      case 'SYSTEM':
+      case AppNotificationType.system:
         return AppColors.textSecondary;
-      default:
+      case AppNotificationType.other:
         return AppColors.primaryBlue;
+    }
+  }
+
+  LinearGradient _getIconGradient(AppNotificationType type) {
+    switch (type) {
+      case AppNotificationType.orderSuccess:
+        return LinearGradient(
+          colors: [AppColors.success.withOpacity(0.2), AppColors.success.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case AppNotificationType.paymentSuccess:
+        return LinearGradient(
+          colors: [AppColors.primaryBlue.withOpacity(0.2), AppColors.primaryBlue.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case AppNotificationType.orderCancelled:
+        return LinearGradient(
+          colors: [AppColors.error.withOpacity(0.2), AppColors.error.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case AppNotificationType.promotion:
+        return LinearGradient(
+          colors: [AppColors.warning.withOpacity(0.2), AppColors.warning.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      default:
+        return LinearGradient(
+          colors: [Colors.grey.withOpacity(0.2), Colors.grey.withOpacity(0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = _getColorForType(notification.type);
+    final type = _parseType();
+    final primaryColor = _getPrimaryColor(type);
     final timeAgo = notification.createdAt != null
         ? timeago.format(notification.createdAt!, locale: 'vi')
         : '';
@@ -55,81 +126,120 @@ class NotificationItemWidget extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: notification.isRead
-              ? Colors.white
-              : AppColors.primaryBlue.withOpacity(0.04),
-          border: Border(
-            bottom: BorderSide(color: AppColors.border, width: 0.5),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: notification.isRead 
+                  ? Colors.black.withOpacity(0.03)
+                  : primaryColor.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: notification.isRead 
+                ? AppColors.border.withOpacity(0.5)
+                : primaryColor.withOpacity(0.3),
+            width: notification.isRead ? 0.5 : 1.5,
           ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon tròn
+            // Icon Background
             Container(
-              width: 44.w,
-              height: 44.w,
+              width: 48.w,
+              height: 48.w,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                gradient: _getIconGradient(type),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: primaryColor.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
               child: Icon(
-                _getIconForType(notification.type),
-                color: iconColor,
-                size: 22.sp,
+                _getIcon(type),
+                color: primaryColor,
+                size: 24.sp,
               ),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 16.w),
             // Nội dung
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           notification.title,
                           style: AppTextStyles.bodyMedium.copyWith(
                             fontWeight: notification.isRead
-                                ? FontWeight.w400
-                                : FontWeight.w600,
-                            color: AppColors.textPrimary,
+                                ? FontWeight.w500
+                                : FontWeight.w700,
+                            color: notification.isRead 
+                                ? AppColors.textPrimary.withOpacity(0.8)
+                                : AppColors.textPrimary,
+                            height: 1.3,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (!notification.isRead)
                         Container(
-                          width: 8.w,
-                          height: 8.w,
-                          margin: EdgeInsets.only(left: 8.w),
-                          decoration: const BoxDecoration(
-                            color: AppColors.primaryBlue,
+                          width: 10.w,
+                          height: 10.w,
+                          margin: EdgeInsets.only(left: 10.w, top: 4.h),
+                          decoration: BoxDecoration(
+                            color: primaryColor,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: primaryColor.withOpacity(0.4),
+                                blurRadius: 4,
+                                spreadRadius: 1,
+                              )
+                            ],
                           ),
                         ),
                     ],
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 6.h),
                   Text(
                     notification.body,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
+                      height: 1.4,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    timeAgo,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary.withOpacity(0.7),
-                      fontSize: 11.sp,
-                    ),
+                  SizedBox(height: 8.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 14.sp,
+                        color: AppColors.textSecondary.withOpacity(0.6),
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        timeAgo,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary.withOpacity(0.8),
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

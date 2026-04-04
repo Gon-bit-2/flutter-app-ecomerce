@@ -42,20 +42,26 @@ class _MyShopPageState extends State<MyShopPage> {
           return Scaffold(
             backgroundColor: AppColors.surface,
             appBar: AppBar(
-              title: const Text("Kênh người bán", style: TextStyle(fontWeight: FontWeight.bold)),
-              centerTitle: true,
               backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
               elevation: 0,
             ),
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.storefront_outlined, size: 64.sp, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.storefront_outlined,
+                    size: 64.sp,
+                    color: Colors.grey.shade400,
+                  ),
                   SizedBox(height: 16.h),
                   Text(
                     'Vui lòng đăng nhập để tiếp tục',
-                    style: TextStyle(fontSize: 16.sp, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
@@ -68,9 +74,8 @@ class _MyShopPageState extends State<MyShopPage> {
           child: Scaffold(
             backgroundColor: AppColors.surface,
             appBar: AppBar(
-              title: const Text("Kênh người bán", style: TextStyle(fontWeight: FontWeight.bold)),
-              centerTitle: true,
               backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
               elevation: 0,
               scrolledUnderElevation: 0,
             ),
@@ -84,7 +89,10 @@ class _MyShopPageState extends State<MyShopPage> {
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 20.h,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -139,7 +147,11 @@ class _MyShopPageState extends State<MyShopPage> {
                   ? CachedNetworkImageProvider(user.avatar!)
                   : null,
               child: user.avatar == null
-                  ? Icon(Icons.storefront, size: 35.r, color: AppColors.primaryBlue)
+                  ? Icon(
+                      Icons.storefront,
+                      size: 35.r,
+                      color: AppColors.primaryBlue,
+                    )
                   : null,
             ),
           ),
@@ -162,7 +174,10 @@ class _MyShopPageState extends State<MyShopPage> {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 4.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20.r),
@@ -181,14 +196,21 @@ class _MyShopPageState extends State<MyShopPage> {
                           SizedBox(width: 6.w),
                           Text(
                             "Đang hoạt động",
-                            style: TextStyle(fontSize: 12.sp, color: Colors.white, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     SizedBox(width: 8.w),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20.r),
@@ -236,7 +258,11 @@ class _MyShopPageState extends State<MyShopPage> {
               SizedBox(height: 4.h),
               Text(
                 "Hôm nay",
-                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
               ),
               SizedBox(height: 12.h),
               Row(
@@ -263,7 +289,11 @@ class _MyShopPageState extends State<MyShopPage> {
               SizedBox(height: 20.h),
               Text(
                 "Tháng này",
-                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
               ),
               SizedBox(height: 12.h),
               Row(
@@ -271,7 +301,9 @@ class _MyShopPageState extends State<MyShopPage> {
                   Expanded(
                     child: StatisticCard(
                       title: "Doanh thu",
-                      value: CurrencyFormatter.format(stats.thisMonth.totalRevenue),
+                      value: CurrencyFormatter.format(
+                        stats.thisMonth.totalRevenue,
+                      ),
                       icon: Icons.account_balance_wallet_outlined,
                       color: Colors.orange,
                     ),
@@ -306,13 +338,20 @@ class _MyShopPageState extends State<MyShopPage> {
                     Expanded(
                       child: Text(
                         "Không thể tải thống kê",
-                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16.sp),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.sp,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 SizedBox(height: 8.h),
-                Text(state.message, style: TextStyle(color: Colors.red.shade700)),
+                Text(
+                  state.message,
+                  style: TextStyle(color: Colors.red.shade700),
+                ),
                 SizedBox(height: 12.h),
                 ElevatedButton(
                   onPressed: () {
@@ -348,7 +387,10 @@ class _MyShopPageState extends State<MyShopPage> {
           child: Container(
             width: 180.w,
             height: 24.h,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.r)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
           ),
         ),
         SizedBox(height: 16.h),
@@ -358,7 +400,10 @@ class _MyShopPageState extends State<MyShopPage> {
           child: Container(
             width: 80.w,
             height: 16.h,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.r)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
           ),
         ),
         SizedBox(height: 12.h),
@@ -376,7 +421,10 @@ class _MyShopPageState extends State<MyShopPage> {
           child: Container(
             width: 80.w,
             height: 16.h,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.r)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
           ),
         ),
         SizedBox(height: 12.h),
@@ -418,19 +466,30 @@ class _MyShopPageState extends State<MyShopPage> {
             icon: Icons.add_circle_outline_rounded,
             title: "Thêm sản phẩm",
             color: Colors.blue,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddProductPage())),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddProductPage()),
+            ),
           ),
           _buildListTile(
             icon: Icons.inventory_2_outlined,
             title: "Sản phẩm của tôi",
             color: Colors.orange,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyProductsPage())),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MyProductsPage()),
+            ),
           ),
           _buildListTile(
             icon: Icons.category_outlined,
             title: "Quản lý danh mục",
             color: Colors.purple,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CategoryPage(isAdmin: true))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CategoryPage(isAdmin: true),
+              ),
+            ),
           ),
         ]),
         SizedBox(height: 24.h),
@@ -440,20 +499,33 @@ class _MyShopPageState extends State<MyShopPage> {
             icon: Icons.receipt_long_outlined,
             title: "Quản lý đơn hàng",
             color: Colors.green,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerOrdersPage())),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SellerOrdersPage()),
+            ),
           ),
           _buildListTile(
             icon: Icons.local_offer_outlined,
             title: "Khuyến mãi Shop",
             color: Colors.redAccent,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SellerDiscountListPage(shopId: shopId))),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SellerDiscountListPage(shopId: shopId),
+              ),
+            ),
           ),
           if (isAdmin)
             _buildListTile(
               icon: Icons.public,
               title: "Voucher toàn sàn",
               color: Colors.deepPurple,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SellerDiscountListPage(isAdmin: true))),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SellerDiscountListPage(isAdmin: true),
+                ),
+              ),
             ),
         ]),
         SizedBox(height: 24.h),
@@ -468,7 +540,9 @@ class _MyShopPageState extends State<MyShopPage> {
               MaterialPageRoute(
                 builder: (_) => ShopSettingsPage(
                   shopName: context.read<AuthBloc>().state is AuthSuccess
-                      ? (context.read<AuthBloc>().state as AuthSuccess).user.name
+                      ? (context.read<AuthBloc>().state as AuthSuccess)
+                            .user
+                            .name
                       : "Shop của tôi",
                 ),
               ),
@@ -508,9 +582,7 @@ class _MyShopPageState extends State<MyShopPage> {
           ),
         ],
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -548,7 +620,11 @@ class _MyShopPageState extends State<MyShopPage> {
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 22.sp),
+              Icon(
+                Icons.chevron_right,
+                color: Colors.grey.shade400,
+                size: 22.sp,
+              ),
             ],
           ),
         ),

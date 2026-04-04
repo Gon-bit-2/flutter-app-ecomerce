@@ -911,6 +911,8 @@ _No Body_
 - `q`: string (required) — search keyword
 - `page`: number (default 1)
 - `limit`: number (default 10)
+- `orderBy`: "asc" | "desc" (default "desc")
+- `sortBy`: "price" | "createdAt" | "sale" (default "createdAt")
 
 ### Get Product Detail
 

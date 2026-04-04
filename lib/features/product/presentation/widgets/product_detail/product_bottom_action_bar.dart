@@ -6,8 +6,8 @@ import 'package:app_fe_ecomerce/core/styles/app_colors.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_fe_ecomerce/features/auth/presentation/pages/login_page.dart';
 import 'package:app_fe_ecomerce/features/product/domain/entities/product.dart';
-import 'package:app_fe_ecomerce/features/chat/presentation/pages/chat_detail_page.dart' as app_fe_ecomerce_chat;
-import 'package:app_fe_ecomerce/features/shop/presentation/pages/shop_profile_page.dart';
+import 'package:app_fe_ecomerce/features/chat/presentation/pages/chat_detail_page.dart'
+    as app_fe_ecomerce_chat;
 
 class ProductBottomActionBar extends StatelessWidget {
   final Product product;
@@ -53,7 +53,7 @@ class ProductBottomActionBar extends StatelessWidget {
                     }
 
                     final shopName = product.shopName ?? 'Shop';
-                    
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -69,7 +69,10 @@ class ProductBottomActionBar extends StatelessWidget {
                 },
                 borderRadius: BorderRadius.circular(12.r),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 4.h,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

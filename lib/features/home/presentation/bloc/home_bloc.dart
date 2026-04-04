@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/usecase/usecase.dart';
@@ -37,12 +38,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           HomeError(failure.message),
         ), // Or Partial success? Use fallback
         (products) {
+          // Trộn ngẫu nhiên danh sách sản phẩm gợi ý
+          final shuffled = List.of(products)..shuffle(Random());
           emit(
             HomeLoaded(
               banners: data.banners,
-              categories: data.categories,
+              categories: data.categories.where((cat) {
+                // Loại bỏ category "giày dép" để chỉ giữ lại 1 category "giày" hiển thị trên Home
+                return cat.name.toLowerCase().trim() != 'giày dép';
+              }).toList(),
               flashSale: data.flashSale,
-              dailyDiscoverProducts: products,
+              dailyDiscoverProducts: shuffled,
               dailyDiscoverPage: 1,
               hasMoreDailyDiscover: products.length >= 10, // Assuming limit 10
             ),
@@ -78,10 +84,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       result.fold(
         (failure) {}, // Ignore error on infinite scroll or show toast
         (newProducts) {
+          // Trộn ngẫu nhiên sản phẩm mới trước khi thêm vào danh sách
+          final shuffledNew = List.of(newProducts)..shuffle(Random());
           emit(
             currentState.copyWith(
               dailyDiscoverProducts:
-                  currentState.dailyDiscoverProducts + newProducts,
+                  currentState.dailyDiscoverProducts + shuffledNew,
               dailyDiscoverPage: nextPage,
               hasMoreDailyDiscover: newProducts.length >= 10,
             ),

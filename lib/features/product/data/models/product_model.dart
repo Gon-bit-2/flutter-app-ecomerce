@@ -158,6 +158,20 @@ class ProductModel extends Product {
       parsedCreatedById ??= (user['id'] as num?)?.toInt();
     }
 
+    // Extract description from productTranslations if available
+    String? parsedDescription = model.description;
+    if (params['productTranslations'] != null && params['productTranslations'] is List) {
+      final translations = params['productTranslations'] as List;
+      var vnTrans = translations.firstWhere((t) => t is Map && t['languageId'] == 'vn', orElse: () => null);
+      var enTrans = translations.firstWhere((t) => t is Map && t['languageId'] == 'en', orElse: () => null);
+
+      if (vnTrans != null && vnTrans['description'] != null && vnTrans['description'].toString().trim().isNotEmpty) {
+        parsedDescription = vnTrans['description'] as String;
+      } else if (enTrans != null && enTrans['description'] != null && enTrans['description'].toString().trim().isNotEmpty) {
+         parsedDescription = enTrans['description'] as String;
+      }
+    }
+
     return ProductModel(
       id: model.id,
       name: model.name,
@@ -170,7 +184,7 @@ class ProductModel extends Product {
       publishedAt: model.publishedAt,
       skus: fixedSkus,
       variants: model.variants,
-      description: model.description,
+      description: parsedDescription,
       createdById: parsedCreatedById,
       shopName: parsedShopName,
       shopAvatar: parsedShopAvatar,

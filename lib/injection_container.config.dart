@@ -432,7 +432,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i803.UpdateAddressUseCase(gh<_i535.AddressRepository>()),
     );
     gh.lazySingleton<_i608.OrderRepository>(
-      () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>()),
+      () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>(), gh<_i143.ProductRemoteDataSource>()),
     );
     gh.lazySingleton<_i5.CategoryRepository>(
       () => _i44.CategoryRepositoryImpl(gh<_i979.CategoryRemoteDataSource>()),

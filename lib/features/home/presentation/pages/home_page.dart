@@ -21,6 +21,7 @@ import 'package:app_fe_ecomerce/features/shop_video/presentation/pages/video_fee
     as app_fe_ecomerce_shop_video;
 import 'package:app_fe_ecomerce/features/notification/presentation/bloc/notification_bloc.dart';
 import 'package:app_fe_ecomerce/features/notification/presentation/pages/notification_page.dart';
+import 'package:app_fe_ecomerce/features/notification/domain/entities/notification_entity.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -83,18 +84,37 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthSuccess) {
-          // Khi đăng nhập thành công, tự động chuyển người dùng về tab Trang chủ (0)
-          // thay vì để họ ở lại tab Thông báo hoặc tab trống.
-          if (_currentIndex != 0) {
-            setState(() {
-              _currentIndex = 0;
-            });
-          }
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthSuccess) {
+              // Khi đăng nhập thành công, tự động chuyển người dùng về tab Trang chủ (0)
+              // thay vì để họ ở lại tab Thông báo hoặc tab trống.
+              if (_currentIndex != 0) {
+                setState(() {
+                  _currentIndex = 0;
+                });
+              }
+            }
+          },
+        ),
+        BlocListener<NotificationBloc, NotificationState>(
+          listenWhen: (previous, current) {
+            // Chỉ trigger khi có thông báo mới (id của thông báo đầu tiên thay đổi)
+            // hoặc khi unreadCount tăng lên
+            return current.notifications.isNotEmpty &&
+                (previous.notifications.isEmpty ||
+                    current.notifications.first.id != previous.notifications.first.id) &&
+                current.unreadCount > previous.unreadCount;
+          },
+          listener: (context, state) {
+            if (state.notifications.isNotEmpty) {
+              _showInAppNotification(context, state.notifications.first);
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: AppColors.surface,
         body: IndexedStack(
@@ -472,4 +492,85 @@ class _HomeViewState extends State<HomeView> {
       ],
     );
   }
+
+  void _showInAppNotification(BuildContext context, NotificationEntity notif) {
+    // Determine icon and color based on content exactly like in NotificationItemWidget
+    final t = notif.type.toUpperCase();
+    final title = notif.title.toLowerCase();
+    
+    IconData icon = Icons.notifications_active_outlined;
+    Color color = AppColors.primaryBlue;
+
+    if (t == 'ORDER_SUCCESS' || title.contains('đặt hàng thành công') || t == 'ORDER') {
+      icon = Icons.check_circle_outline_rounded;
+      color = AppColors.success;
+    } else if (t == 'PAYMENT_SUCCESS' || title.contains('thanh toán thành công') || t == 'PAYMENT') {
+      icon = Icons.account_balance_wallet_outlined;
+      color = AppColors.primaryBlue;
+    } else if (t == 'ORDER_CANCELLED' || t == 'CANCELLED' || title.contains('hủy đơn') || title.contains('đã hủy')) {
+      icon = Icons.cancel_outlined;
+      color = AppColors.error;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 24.sp),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notif.title,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    notif.body,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'XEM',
+          textColor: Colors.white,
+          onPressed: () {
+            setState(() {
+              _currentIndex = 2; // Navigate to notification tab
+            });
+          },
+        ),
+      ),
+    );
+  }
 }
+

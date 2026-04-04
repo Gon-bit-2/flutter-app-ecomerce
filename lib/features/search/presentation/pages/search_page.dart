@@ -8,14 +8,27 @@ import '../../../home/presentation/widgets/product_card.dart';
 import '../bloc/search_bloc.dart';
 import '../bloc/search_event.dart';
 import '../bloc/search_state.dart';
+import '../../../category/presentation/bloc/category/category_bloc.dart';
 
 class SearchPage extends StatelessWidget {
-  const SearchPage({super.key});
+  final String? initialCategoryId;
+  
+  const SearchPage({super.key, this.initialCategoryId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<SearchBloc>()..add(SearchInitRequested()),
+      create: (_) {
+        final bloc = getIt<SearchBloc>()..add(SearchInitRequested());
+        if (initialCategoryId != null) {
+          // Tự động filter category ngay khi mở trang
+          // Chúng ta dùng future delay để tránh bị ghi đè bởi SearchInitRequested 
+          Future.microtask(() => 
+            bloc.add(SearchFilterChanged(categoryId: initialCategoryId))
+          );
+        }
+        return bloc;
+      },
       child: const _SearchPageBody(),
     );
   }
@@ -196,9 +209,7 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
                 label: 'Danh mục',
                 icon: Icons.grid_view,
                 isSelected: state.categoryId != null,
-                onTap: () {
-                  // TODO: Implement category filter
-                },
+                onTap: () => _showCategoryFilter(context),
               ),
             ],
           ),
@@ -577,6 +588,117 @@ class _SearchPageBodyState extends State<_SearchPageBody> {
         ));
         Navigator.pop(context);
       },
+    );
+  }
+
+  void _showCategoryFilter(BuildContext context) {
+    final searchBloc = context.read<SearchBloc>();
+    final searchState = searchBloc.state;
+    
+    final categoryBloc = context.read<CategoryBloc>();
+    if (categoryBloc.state is CategoryInitial || categoryBloc.state is CategoryFailure) {
+      categoryBloc.add(const CategoryLoadRequested());
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Text(
+                'Chọn danh mục',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: BlocBuilder<CategoryBloc, CategoryState>(
+                builder: (context, catState) {
+                  if (catState is CategoryLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  if (catState is CategoryLoaded) {
+                    final categories = catState.categories;
+                    return ListView(
+                      controller: scrollController,
+                      children: [
+                        ListTile(
+                          title: Text(
+                            'Tất cả danh mục',
+                            style: TextStyle(
+                              color: searchState.categoryId == null ? AppColors.primaryBlue : Colors.black87,
+                              fontWeight: searchState.categoryId == null ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          trailing: searchState.categoryId == null ? const Icon(Icons.check, color: AppColors.primaryBlue) : null,
+                          onTap: () {
+                            searchBloc.add(SearchFilterChanged(
+                              categoryId: null,
+                              minPrice: searchState.minPrice,
+                              maxPrice: searchState.maxPrice,
+                              sortBy: searchState.sortBy,
+                            ));
+                            Navigator.pop(context);
+                          },
+                        ),
+                        ...categories.map((cat) {
+                          final isSelected = searchState.categoryId == cat.id.toString();
+                          return ListTile(
+                            title: Text(
+                              cat.name,
+                              style: TextStyle(
+                                color: isSelected ? AppColors.primaryBlue : Colors.black87,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            trailing: isSelected ? const Icon(Icons.check, color: AppColors.primaryBlue) : null,
+                            onTap: () {
+                              searchBloc.add(SearchFilterChanged(
+                                categoryId: cat.id.toString(),
+                                minPrice: searchState.minPrice,
+                                maxPrice: searchState.maxPrice,
+                                sortBy: searchState.sortBy,
+                              ));
+                              Navigator.pop(context);
+                            },
+                          );
+                        }),
+                      ],
+                    );
+                  }
+                  
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Không thể tải danh mục'),
+                        SizedBox(height: 8.h),
+                        ElevatedButton(
+                          onPressed: () {
+                            categoryBloc.add(const CategoryLoadRequested());
+                          },
+                          child: const Text('Thử lại'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

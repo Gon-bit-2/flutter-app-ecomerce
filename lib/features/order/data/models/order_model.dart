@@ -108,6 +108,13 @@ class OrderItemModel extends OrderItemEntity {
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    // Debug: In ra toàn bộ keys để biết backend trả về gì
+    print('🔍 [OrderItem] JSON keys: ${json.keys.toList()}');
+    print('🔍 [OrderItem] image field: ${json['image']}');
+    if (json['product'] != null) print('🔍 [OrderItem] product: ${json['product']}');
+    if (json['sku'] != null) print('🔍 [OrderItem] sku: ${json['sku']}');
+    if (json['productSku'] != null) print('🔍 [OrderItem] productSku: ${json['productSku']}');
+
     // Helper to fix URL prefix
     String fixUrl(String url) {
       if (url.isEmpty || url.startsWith('http')) return url;
@@ -120,9 +127,6 @@ class OrderItemModel extends OrderItemEntity {
     String cleanUrl(dynamic input) {
       if (input == null) return '';
       String str = input.toString().trim();
-
-      // Xử lý đường dẫn tuyệt đối từ Backend (Ví dụ: D:/Works/app-ecomerce/app_fe_ecomerce/images/image.png)
-      // Chúng ta sẽ lấy phần từ /images/, /uploads/, hoặc /public/ trở đi
 
       // Handle "url: " prefix
       if (str.toLowerCase().startsWith('url:')) {
@@ -150,6 +154,28 @@ class OrderItemModel extends OrderItemEntity {
       return str;
     }
 
+    // Helper to extract first image URL from a list or string
+    String? extractFirstImage(dynamic rawImages) {
+      if (rawImages == null) return null;
+      if (rawImages is List && rawImages.isNotEmpty) {
+        final cleaned = cleanUrl(rawImages.first);
+        if (cleaned.isNotEmpty) return cleaned;
+      } else if (rawImages is String && rawImages.isNotEmpty) {
+        // Có thể là JSON stringified list
+        try {
+          final decoded = jsonDecode(rawImages);
+          if (decoded is List && decoded.isNotEmpty) {
+            final cleaned = cleanUrl(decoded.first);
+            if (cleaned.isNotEmpty) return cleaned;
+          }
+        } catch (_) {
+          final cleaned = cleanUrl(rawImages);
+          if (cleaned.isNotEmpty) return cleaned;
+        }
+      }
+      return null;
+    }
+
     // Backend trả về skuPrice thay vì price
     num priceVal = 0;
     if (json['price'] != null) {
@@ -161,42 +187,103 @@ class OrderItemModel extends OrderItemEntity {
     // Thử lấy ảnh từ nhiều nguồn khác nhau
     String? imageUrl;
 
-    // 1. Lấy từ field 'image' trực tiếp (Ưu tiên ảnh từ Cloudinary)
+    // 1. Lấy từ field 'image' trực tiếp
     if (json['image'] != null && json['image'].toString().isNotEmpty) {
       imageUrl = cleanUrl(json['image']);
     }
 
-    // 2. Nếu vẫn trống, thử lấy từ 'product' object nested (Thường Backend sẽ join thêm thông tin này)
+    // 2. Thử lấy từ 'sku' object nested (sku.image)
+    if ((imageUrl == null || imageUrl.isEmpty) &&
+        json['sku'] != null &&
+        json['sku'] is Map) {
+      final skuMap = json['sku'] as Map;
+      if (skuMap['image'] != null && skuMap['image'].toString().isNotEmpty) {
+        imageUrl = cleanUrl(skuMap['image']);
+      }
+      // Nếu sku có product nested
+      if ((imageUrl == null || imageUrl.isEmpty) &&
+          skuMap['product'] != null &&
+          skuMap['product'] is Map) {
+        final skuProduct = skuMap['product'] as Map;
+        imageUrl = extractFirstImage(skuProduct['images']);
+        imageUrl ??= extractFirstImage(skuProduct['image']);
+        // Thử lấy từ productTranslations bên trong sku.product
+        if ((imageUrl == null || imageUrl.isEmpty) &&
+            skuProduct['productTranslations'] != null &&
+            skuProduct['productTranslations'] is List &&
+            (skuProduct['productTranslations'] as List).isNotEmpty) {
+          for (final trans in (skuProduct['productTranslations'] as List)) {
+            if (trans is Map && trans['image'] != null && trans['image'].toString().isNotEmpty) {
+              imageUrl = cleanUrl(trans['image']);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Thử lấy từ 'productSku' object nested
+    if ((imageUrl == null || imageUrl.isEmpty) &&
+        json['productSku'] != null &&
+        json['productSku'] is Map) {
+      final productSkuMap = json['productSku'] as Map;
+      if (productSkuMap['image'] != null && productSkuMap['image'].toString().isNotEmpty) {
+        imageUrl = cleanUrl(productSkuMap['image']);
+      }
+      if ((imageUrl == null || imageUrl.isEmpty) &&
+          productSkuMap['product'] != null &&
+          productSkuMap['product'] is Map) {
+        final pMap = productSkuMap['product'] as Map;
+        imageUrl = extractFirstImage(pMap['images']);
+        imageUrl ??= extractFirstImage(pMap['image']);
+      }
+    }
+
+    // 4. Thử lấy từ 'product' object nested
     if ((imageUrl == null || imageUrl.isEmpty) &&
         json['product'] != null &&
         json['product'] is Map) {
       final productMap = json['product'] as Map;
-      if (productMap['images'] != null) {
-        imageUrl = cleanUrl(productMap['images']);
-      } else if (productMap['image'] != null) {
-        imageUrl = cleanUrl(productMap['image']);
+      imageUrl = extractFirstImage(productMap['images']);
+      imageUrl ??= extractFirstImage(productMap['image']);
+      // Thử productTranslations bên trong product
+      if ((imageUrl == null || imageUrl.isEmpty) &&
+          productMap['productTranslations'] != null &&
+          productMap['productTranslations'] is List &&
+          (productMap['productTranslations'] as List).isNotEmpty) {
+        for (final trans in (productMap['productTranslations'] as List)) {
+          if (trans is Map && trans['image'] != null && trans['image'].toString().isNotEmpty) {
+            imageUrl = cleanUrl(trans['image']);
+            break;
+          }
+        }
       }
     }
 
-    // 3. Nếu vẫn trống, thử lấy từ 'productTranslations' (Nếu Backend trả về thông tin dịch)
+    // 5. Thử lấy từ 'productTranslations' trực tiếp trên order item
     if ((imageUrl == null || imageUrl.isEmpty) &&
         json['productTranslations'] != null &&
         json['productTranslations'] is List &&
         (json['productTranslations'] as List).isNotEmpty) {
-      final trans = (json['productTranslations'] as List).first;
-      if (trans is Map && trans['image'] != null) {
-        imageUrl = cleanUrl(trans['image']);
+      for (final trans in (json['productTranslations'] as List)) {
+        if (trans is Map && trans['image'] != null && trans['image'].toString().isNotEmpty) {
+          imageUrl = cleanUrl(trans['image']);
+          break;
+        }
       }
     }
 
-    // 4. Fallback cuối cùng: Nếu hoàn toàn không có ảnh, và dự án dùng Cloudinary,
-    // Backend đáng lẽ phải trả về Public ID.
-    // Nếu imageUrl vẫn trống ở đây, UI sẽ hiển thị Placeholder Icon chuyên nghiệp.
+    // 6. Thử lấy từ 'productImages' trực tiếp trên order item
+    if ((imageUrl == null || imageUrl.isEmpty) && json['productImages'] != null) {
+      imageUrl = extractFirstImage(json['productImages']);
+    }
 
     // Fix URL nếu là path tương đối
     if (imageUrl != null && imageUrl.isNotEmpty) {
       imageUrl = fixUrl(imageUrl);
     }
+
+    print('🔍 [OrderItem] Final imageUrl: $imageUrl');
 
     return OrderItemModel(
       id: (json['id'] as num).toInt(),

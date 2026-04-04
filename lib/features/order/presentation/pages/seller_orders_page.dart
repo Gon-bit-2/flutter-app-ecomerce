@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
+import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
 class SellerOrdersPage extends StatefulWidget {
   const SellerOrdersPage({super.key});
@@ -277,22 +278,21 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
                 padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 8.h),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48.w,
-                      height: 48.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4.r),
-                        image: firstItem.image != null
-                            ? DecorationImage(
-                                image: NetworkImage(firstItem.image!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: firstItem.image == null
-                          ? Icon(Icons.image, size: 20.sp, color: Colors.grey)
-                          : null,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: (firstItem.image != null && firstItem.image!.isNotEmpty)
+                        ? AppNetworkImage(
+                            imageUrl: firstItem.image!,
+                            width: 48.w,
+                            height: 48.w,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: 48.w,
+                            height: 48.w,
+                            color: Colors.grey[200],
+                            child: Icon(Icons.image, size: 20.sp, color: Colors.grey),
+                          ),
                     ),
                     SizedBox(width: 8.w),
                     Expanded(

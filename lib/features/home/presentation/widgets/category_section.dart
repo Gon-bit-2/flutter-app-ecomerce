@@ -3,6 +3,7 @@ import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../category/domain/entities/category.dart';
+import '../../../../features/search/presentation/pages/search_page.dart';
 
 class CategorySection extends StatelessWidget {
   final List<CategoryEntity> categories;
@@ -44,7 +45,14 @@ class CategorySection extends StatelessWidget {
                 final cat = categories[index];
                 return GestureDetector(
                   onTap: () {
-                    // TODO: Navigate to Category Products
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SearchPage(
+                          initialCategoryId: cat.id.toString(),
+                        ),
+                      ),
+                    );
                   },
                   child: SizedBox(
                     width: 70.w, // Đặt chiều rộng cố định để các item đều nhau
