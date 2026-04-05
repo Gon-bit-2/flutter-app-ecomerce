@@ -168,7 +168,10 @@ class _VideoFeedViewState extends State<VideoFeedView> {
                   scrollDirection: Axis.vertical,
                   itemCount: videos.length,
                   onPageChanged: (index) {
-                    if (index >= videos.length - 2) {
+                    // Chỉ load thêm khi gần cuối danh sách VÀ state cho phép
+                    final currentState = context.read<VideoFeedBloc>().state;
+                    final hasReachedMax = currentState is VideoFeedLoaded && currentState.hasReachedMax;
+                    if (!hasReachedMax && videos.length > 1 && index >= videos.length - 2) {
                       context.read<VideoFeedBloc>().add(LoadMoreVideoFeedEvent());
                     }
                   },
@@ -258,14 +261,15 @@ class _VideoFeedViewState extends State<VideoFeedView> {
                         ),
                         
                         // Back button
-                        Positioned(
-                          top: 48,
-                          left: 16,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        )
+                        if (Navigator.canPop(context))
+                          Positioned(
+                            top: 48,
+                            left: 16,
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          )
                       ],
                     );
                   },

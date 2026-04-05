@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/shop_video.dart';
 import 'video_comments_bottom_sheet.dart';
 import 'video_products_bottom_sheet.dart';
+import '../../../shop/presentation/pages/shop_profile_page.dart';
 
 class VideoActionButtons extends StatelessWidget {
   final ShopVideo video;
@@ -23,7 +24,16 @@ class VideoActionButtons extends StatelessWidget {
         // Shop Avatar (có thể bấm vào shop)
         GestureDetector(
           onTap: () {
-            // Navigator.pushNamed(context, RouteName.shopDetail, arguments: video.shopId);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ShopProfilePage(
+                  shopId: video.shopId,
+                  shopName: video.shop?.name,
+                  shopAvatar: video.shop?.avatar,
+                ),
+              ),
+            );
           },
           child: Container(
             width: 48.w,

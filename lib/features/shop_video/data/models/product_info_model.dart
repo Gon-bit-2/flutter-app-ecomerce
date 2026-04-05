@@ -3,7 +3,7 @@ import '../../domain/entities/product_info.dart';
 
 part 'product_info_model.g.dart';
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable()
 class ProductInfoModel extends ProductInfo {
   const ProductInfoModel({
     required super.id,

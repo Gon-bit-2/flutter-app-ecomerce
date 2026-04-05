@@ -6,15 +6,26 @@ class ConversationModel extends ConversationEntity {
     required super.id,
     required super.otherUser,
     super.lastMessage,
+    super.unreadCount,
     super.createdAt,
     super.updatedAt,
   });
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     // Xử lý thông tin người chat (otherUser)
-    final otherUserJson = json['otherUser'] ?? json['user'] ?? {};
+    var otherUserJson = json['otherUser'] ?? json['user'] ?? json['shop'];
+    
+    if (otherUserJson == null || otherUserJson is! Map<String, dynamic>) {
+      // Fallback cho trường hợp dữ liệu được làm phẳng (flattened)
+      otherUserJson = <String, dynamic>{
+        'id': json['shopId'] ?? json['partnerId'] ?? json['userId'],
+        'name': json['shopName'] ?? json['partnerName'] ?? json['userName'],
+        'avatar': json['shopLogo'] ?? json['shopAvatar'] ?? json['partnerAvatar'] ?? json['userAvatar'],
+      };
+    }
+    
     final otherUser = ConversationUserModel.fromJson(
-      otherUserJson is Map<String, dynamic> ? otherUserJson : {},
+      otherUserJson,
     );
 
     // Xử lý tin nhắn gần nhất
@@ -27,6 +38,7 @@ class ConversationModel extends ConversationEntity {
       id: json['id'] as int? ?? 0,
       otherUser: otherUser,
       lastMessage: lastMessage,
+      unreadCount: json['unreadCount'] is num ? (json['unreadCount'] as num).toInt() : (int.tryParse(json['unreadCount']?.toString() ?? '0') ?? 0),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
@@ -46,10 +58,11 @@ class ConversationUserModel extends ConversationUserEntity {
   });
 
   factory ConversationUserModel.fromJson(Map<String, dynamic> json) {
+    final parsedId = json['id'] ?? json['userId'] ?? json['shopId'] ?? json['partnerId'];
     return ConversationUserModel(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? 'Người dùng',
-      avatar: json['avatar'] as String?,
+      id: parsedId is num ? parsedId.toInt() : (int.tryParse(parsedId?.toString() ?? '0') ?? 0),
+      name: json['name'] as String? ?? json['shopName'] as String? ?? json['userName'] as String? ?? 'Người dùng',
+      avatar: json['avatar'] as String? ?? json['logo'] as String? ?? json['shopAvatar'] as String?,
       email: json['email'] as String?,
     );
   }

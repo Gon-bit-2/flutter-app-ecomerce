@@ -13,13 +13,20 @@ class MessageModel extends MessageEntity {
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
+    int parseIntRobust(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
     return MessageModel(
-      id: json['id'] as int,
-      senderId: json['senderId'] as int? ?? json['sender']?['id'] as int? ?? 0,
-      receiverId: json['receiverId'] as int? ?? json['receiver']?['id'] as int? ?? 0,
+      id: parseIntRobust(json['id']),
+      senderId: parseIntRobust(json['senderId'] ?? json['sender']?['id'] ?? json['fromUserId']),
+      receiverId: parseIntRobust(json['receiverId'] ?? json['receiver']?['id'] ?? json['toUserId']),
       content: json['content'] as String? ?? '',
       type: json['type'] as String? ?? 'TEXT',
-      conversationId: json['conversationId'] as int?,
+      conversationId: parseIntRobust(json['conversationId']),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,

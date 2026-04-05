@@ -19,7 +19,11 @@ class VideoCommentsBottomSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => VideoCommentsBottomSheet(videoId: videoId),
+      builder: (context) => BlocProvider<VideoCommentsBloc>(
+        create: (context) => GetIt.I<VideoCommentsBloc>()
+          ..add(LoadVideoCommentsEvent(videoId, isRefresh: true)),
+        child: VideoCommentsBottomSheet(videoId: videoId),
+      ),
     );
   }
 
@@ -72,20 +76,16 @@ class _VideoCommentsBottomSheetState extends State<VideoCommentsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Provide new BLoC instance just for this bottom sheet lifecycle
-    return BlocProvider<VideoCommentsBloc>(
-      create: (context) => GetIt.I<VideoCommentsBloc>()
-        ..add(LoadVideoCommentsEvent(widget.videoId, isRefresh: true)),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.75,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16.r),
-            topRight: Radius.circular(16.r),
-          ),
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(16.r),
+          topRight: Radius.circular(16.r),
         ),
-        child: Column(
+      ),
+      child: Column(
           children: [
             // Header
             Container(
@@ -248,8 +248,7 @@ class _VideoCommentsBottomSheetState extends State<VideoCommentsBottomSheet> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildCommentItem(BuildContext context, ShopVideoComment comment, {bool isReply = false}) {

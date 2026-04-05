@@ -58,11 +58,36 @@ class ConversationItemWidget extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 4.h),
-                  Text(
-                    conversation.lastMessage?.content ?? 'Bắt đầu trò chuyện',
-                    style: AppTextStyles.bodyMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conversation.lastMessage?.content ?? 'Bắt đầu trò chuyện',
+                          style: conversation.unreadCount > 0 
+                             ? AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary) 
+                             : AppTextStyles.bodyMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (conversation.unreadCount > 0)
+                        Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            conversation.unreadCount > 99 ? '99+' : conversation.unreadCount.toString(),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),

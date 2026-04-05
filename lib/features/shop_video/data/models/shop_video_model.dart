@@ -50,12 +50,22 @@ class ShopVideoModel extends ShopVideo {
   factory ShopVideoModel.fromJson(Map<String, dynamic> json) {
     // Xử lý an toàn cho response từ API khi tạo video mới
     // Backend có thể trả về thiếu một số trường trong response tạo mới
+    
+    // API có thể trả về danh sách products được bọc trong object (ví dụ: {videoId: 1, productId: 2, product: {...}})
+    final productsJson = json['products'] as List<dynamic>?;
+    final parsedProducts = productsJson?.map((p) {
+      if (p is Map<String, dynamic> && p.containsKey('product') && p['product'] != null) {
+        return p['product'];
+      }
+      return p;
+    }).toList() ?? [];
+
     final safeJson = <String, dynamic>{
       ...json,
       'likeCount': json['likeCount'] ?? 0,
       'commentCount': json['commentCount'] ?? 0,
       'isLiked': json['isLiked'] ?? false,
-      'products': json['products'] ?? [],
+      'products': parsedProducts,
     };
     return _$ShopVideoModelFromJson(safeJson);
   }

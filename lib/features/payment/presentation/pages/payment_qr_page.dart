@@ -4,6 +4,7 @@ import 'package:app_fe_ecomerce/core/styles/app_text_styles.dart';
 import 'package:app_fe_ecomerce/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:app_fe_ecomerce/features/payment/domain/entities/payment_config_entity.dart';
 import 'package:app_fe_ecomerce/features/payment/domain/usecases/get_payment_config_usecase.dart';
+import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_success_page.dart';
 
 import 'package:app_fe_ecomerce/features/order/domain/usecases/get_order_detail_usecase.dart';
 import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
@@ -184,7 +185,12 @@ class _PaymentQRPageState extends State<PaymentQRPage> {
       // Auto redirect sau 2s khi success
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CheckoutSuccessPage(),
+            ),
+          );
         }
       });
     }
