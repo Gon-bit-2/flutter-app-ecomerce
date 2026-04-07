@@ -32,6 +32,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   Future<void> _initializePlayer() async {
     try {
+      print('VideoPlayer initialized with URL: ${widget.videoUrl}');
       _videoPlayerController =
           VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
 
@@ -91,7 +92,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   @override
   Widget build(BuildContext context) {
     return VisibilityDetector(
-      key: Key(widget.videoUrl),
+      key: Key('${widget.videoUrl}_${widget.hashCode}'),
       onVisibilityChanged: _onVisibilityChanged,
       child: GestureDetector(
         onTap: () {
@@ -115,7 +116,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 ),
               if (_hasError)
                 const Center(
-                  child: Icon(Icons.error_outline, color: Colors.white, size: 40),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.white54, size: 40),
+                      SizedBox(height: 8),
+                      Text(
+                        'Video bị lỗi hoặc không tồn tại',
+                        style: TextStyle(color: Colors.white54, fontSize: 13),
+                      ),
+                    ],
+                  ),
                 )
               else if (_isInitialized && _chewieController != null)
                 Chewie(controller: _chewieController!)

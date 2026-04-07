@@ -4,6 +4,7 @@ import 'package:app_fe_ecomerce/features/cart/domain/entities/cart_entity.dart';
 import 'package:app_fe_ecomerce/features/order/domain/usecases/create_order_usecase.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/bloc/order/order_bloc.dart';
 import 'package:app_fe_ecomerce/features/order/presentation/widgets/checkout_item_widget.dart';
+import 'package:app_fe_ecomerce/features/order/presentation/pages/checkout_success_page.dart';
 import 'package:app_fe_ecomerce/features/payment/presentation/pages/payment_qr_page.dart';
 import 'package:app_fe_ecomerce/features/address/domain/entities/address_entity.dart';
 import 'package:app_fe_ecomerce/features/address/presentation/pages/address_list_page.dart';
@@ -332,7 +333,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                         );
                       } else {
-                        _showSuccessDialog();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CheckoutSuccessPage(),
+                          ),
+                        );
                       }
                     }
                   },
@@ -1065,57 +1071,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle, color: AppColors.success, size: 60.sp),
-            SizedBox(height: 16.h),
-            Text(
-              'Đặt hàng thành công!',
-              style: AppTextStyles.h3,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Đơn hàng của bạn đang được xử lý.',
-              style: AppTextStyles.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 24.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-                child: Text(
-                  'Tiếp tục mua sắm',
-                  style: AppTextStyles.buttonText,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

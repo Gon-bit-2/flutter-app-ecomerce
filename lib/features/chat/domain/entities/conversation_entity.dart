@@ -7,6 +7,7 @@ class ConversationEntity extends Equatable {
   final MessageEntity? lastMessage;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int unreadCount;
 
   const ConversationEntity({
     required this.id,
@@ -14,6 +15,7 @@ class ConversationEntity extends Equatable {
     this.lastMessage,
     this.createdAt,
     this.updatedAt,
+    this.unreadCount = 0,
   });
 
   @override
@@ -23,6 +25,7 @@ class ConversationEntity extends Equatable {
     lastMessage,
     createdAt,
     updatedAt,
+    unreadCount,
   ];
 }
 

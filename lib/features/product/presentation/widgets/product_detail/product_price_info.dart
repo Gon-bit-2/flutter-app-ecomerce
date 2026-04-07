@@ -32,8 +32,10 @@ class ProductPriceInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 8.w,
+          runSpacing: 4.h,
           children: [
             Text(
               'đ${formatCurrency.format(displayPrice)}',
@@ -44,7 +46,6 @@ class ProductPriceInfo extends StatelessWidget {
               ),
             ),
             if (originalPrice != null && originalPrice > displayPrice) ...[
-              SizedBox(width: 12.w),
               Padding(
                 padding: EdgeInsets.only(bottom: 4.h),
                 child: Text(
@@ -56,7 +57,6 @@ class ProductPriceInfo extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: 12.w),
               Container(
                 margin: EdgeInsets.only(bottom: 4.h),
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),

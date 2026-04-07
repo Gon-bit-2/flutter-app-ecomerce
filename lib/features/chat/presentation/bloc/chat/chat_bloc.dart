@@ -3,12 +3,14 @@ import 'package:app_fe_ecomerce/core/services/chat_socket_service.dart';
 import 'package:app_fe_ecomerce/core/usecase/usecase.dart';
 import 'package:app_fe_ecomerce/features/chat/data/models/message_model.dart';
 import 'package:app_fe_ecomerce/features/chat/domain/entities/conversation_entity.dart';
+import 'package:app_fe_ecomerce/features/chat/data/models/conversation_model.dart';
 import 'package:app_fe_ecomerce/features/chat/domain/entities/message_entity.dart';
 import 'package:app_fe_ecomerce/features/chat/domain/usecases/get_conversations_usecase.dart';
 import 'package:app_fe_ecomerce/features/chat/domain/usecases/get_messages_usecase.dart';
 import 'package:app_fe_ecomerce/features/chat/domain/usecases/send_message_usecase.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:injectable/injectable.dart';
 
 part 'chat_event.dart';
@@ -167,6 +169,35 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           messages: [...currentState.messages, event.message],
           conversationId: currentState.conversationId,
         ));
+      }
+    } else if (state is ConversationsLoaded) {
+      final currentState = state as ConversationsLoaded;
+      bool hasUpdated = false;
+      final updatedConversations = currentState.conversations.map((c) {
+        if (c.id == event.message.conversationId) {
+          hasUpdated = true;
+          return ConversationModel(
+            id: c.id,
+            otherUser: c.otherUser,
+            lastMessage: event.message as MessageModel,
+            unreadCount: c.unreadCount + 1,
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt,
+          );
+        }
+        return c;
+      }).toList();
+
+      if (hasUpdated) {
+        try {
+          final conv = currentState.conversations.firstWhere((c) => c.id == event.message.conversationId);
+          Fluttertoast.showToast(
+            msg: "Tin nhắn mới từ ${conv.otherUser.name}",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+          );
+        } catch (_) {}
+        emit(ConversationsLoaded(conversations: updatedConversations));
       }
     }
   }

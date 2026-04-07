@@ -214,9 +214,7 @@ class _AddressFormPageState extends State<AddressFormPage> {
                               'Đặt làm địa chỉ mặc định',
                               style: TextStyle(fontSize: 14),
                             ),
-                            activeThumbColor: const Color(
-                              0xFFEE4D2D,
-                            ), // Shopee orange
+                            activeThumbColor: const Color.fromARGB(255, 59, 146, 245), // Shopee orange
                             value: _isDefault,
                             onChanged: isLoading
                                 ? null

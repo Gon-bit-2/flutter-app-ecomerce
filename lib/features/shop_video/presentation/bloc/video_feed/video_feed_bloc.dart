@@ -15,6 +15,7 @@ class VideoFeedBloc extends Bloc<VideoFeedEvent, VideoFeedState> {
   int _currentPage = 1;
   static const int _limit = 10;
   int? _currentShopId;
+  bool _isLoadingMore = false;
 
   VideoFeedBloc(this.getShopVideosUseCase, this.toggleLikeUseCase) : super(VideoFeedInitial()) {
     on<LoadVideoFeedEvent>(_onLoadVideoFeed);
@@ -29,6 +30,7 @@ class VideoFeedBloc extends Bloc<VideoFeedEvent, VideoFeedState> {
     _currentShopId = event.shopId;
     if (event.isRefresh) {
       _currentPage = 1;
+      _isLoadingMore = false;
     }
 
     emit(const VideoFeedLoading([], isFirstFetch: true));
@@ -42,8 +44,11 @@ class VideoFeedBloc extends Bloc<VideoFeedEvent, VideoFeedState> {
     result.fold(
       (failure) => emit(VideoFeedError(failure.message)),
       (videos) {
+        // Loại bỏ video trùng ID ngay từ lần load đầu
+        final seen = <int>{};
+        final uniqueVideos = videos.where((v) => seen.add(v.id)).toList();
         bool hasReachedMax = videos.length < _limit;
-        emit(VideoFeedLoaded(videos, hasReachedMax: hasReachedMax));
+        emit(VideoFeedLoaded(uniqueVideos, hasReachedMax: hasReachedMax));
       },
     );
   }
@@ -52,10 +57,12 @@ class VideoFeedBloc extends Bloc<VideoFeedEvent, VideoFeedState> {
     LoadMoreVideoFeedEvent event,
     Emitter<VideoFeedState> emit,
   ) async {
+    if (_isLoadingMore) return;
     if (state is VideoFeedLoaded) {
       final currentState = state as VideoFeedLoaded;
       if (currentState.hasReachedMax) return;
 
+      _isLoadingMore = true;
       emit(VideoFeedLoading(currentState.videos));
       _currentPage++;
 
@@ -67,12 +74,20 @@ class VideoFeedBloc extends Bloc<VideoFeedEvent, VideoFeedState> {
 
       result.fold(
         (failure) {
+          _currentPage--; // Revert page on failure
+          _isLoadingMore = false;
           emit(VideoFeedError(failure.message, oldVideos: currentState.videos));
         },
-        (videos) {
-          bool hasReachedMax = videos.length < _limit;
+        (newVideos) {
+          // Lọc video trùng ID để tránh duplicate
+          final existingIds = currentState.videos.map((v) => v.id).toSet();
+          final uniqueNewVideos = newVideos.where((v) => !existingIds.contains(v.id)).toList();
+          
+          // Nếu API trả về 0 video mới (hoặc toàn trùng) → đã hết
+          bool hasReachedMax = newVideos.length < _limit || uniqueNewVideos.isEmpty;
+          _isLoadingMore = false;
           emit(VideoFeedLoaded(
-            [...currentState.videos, ...videos],
+            [...currentState.videos, ...uniqueNewVideos],
             hasReachedMax: hasReachedMax,
           ));
         },

@@ -96,14 +96,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final dioClient = GetIt.I<DioClient>();
       final data = <String, dynamic>{
         'name': _nameController.text.trim(),
+        'avatar': _avatarUrl ?? '',
       };
 
       if (_phoneController.text.trim().isNotEmpty) {
         data['phoneNumber'] = _phoneController.text.trim();
-      }
-
-      if (_avatarUrl != null) {
-        data['avatar'] = _avatarUrl;
       }
 
       await dioClient.put(

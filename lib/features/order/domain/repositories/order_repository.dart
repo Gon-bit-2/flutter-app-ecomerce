@@ -11,6 +11,12 @@ abstract class OrderRepository {
     String? status,
   });
 
+  Future<Either<Failure, List<OrderEntity>>> getSellerOrders({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  });
+
   Future<Either<Failure, OrderEntity>> getOrderDetail(int id);
 
   Future<Either<Failure, OrderCreationResultEntity>> createOrder({

@@ -135,6 +135,34 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
+  Future<Either<Failure, List<OrderEntity>>> getSellerOrders({
+    int page = 1,
+    int limit = 10,
+    String? status,
+  }) async {
+    try {
+      final orders = await remoteDataSource.getSellerOrders(
+        page: page,
+        limit: limit,
+        status: status,
+      );
+
+      // Enrich mỗi order với ảnh sản phẩm nếu thiếu
+      final enrichedOrders = <OrderEntity>[];
+      for (final order in orders) {
+        final enriched = await _enrichOrderWithImages(order);
+        enrichedOrders.add(enriched);
+      }
+
+      return Right(enrichedOrders);
+    } on DioException catch (e) {
+      return Left(_handleError(e));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, OrderEntity>> getOrderDetail(int id) async {
     try {
       final order = await remoteDataSource.getOrderDetail(id);

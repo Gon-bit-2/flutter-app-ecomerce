@@ -66,6 +66,8 @@ class AppConstants {
 
   // Order Endpoints
   static const String ordersEndpoint = '/order';
+  static const String buyerOrdersEndpoint = '/order/buyer';
+  static const String sellerOrdersEndpoint = '/order';
 
   // Payment Endpoints
   static const String paymentConfigEndpoint = '/payment/config';

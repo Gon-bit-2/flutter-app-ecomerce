@@ -24,10 +24,20 @@ class ShopVideoCommentModel extends ShopVideoComment {
 
   factory ShopVideoCommentModel.fromJson(Map<String, dynamic> json) {
     // Xử lý an toàn cho các trường có thể bị null từ API
+    // API comment trả về user thiếu trường email → thêm fallback
     final safeJson = <String, dynamic>{
       ...json,
       'replies': json['replies'] ?? [],
     };
+    
+    // Đảm bảo user object có đủ các trường bắt buộc cho UserModel
+    if (safeJson['user'] != null && safeJson['user'] is Map<String, dynamic>) {
+      final userMap = Map<String, dynamic>.from(safeJson['user'] as Map<String, dynamic>);
+      userMap['email'] = userMap['email'] ?? '';
+      userMap['name'] = userMap['name'] ?? 'Người dùng';
+      safeJson['user'] = userMap;
+    }
+    
     return _$ShopVideoCommentModelFromJson(safeJson);
   }
 

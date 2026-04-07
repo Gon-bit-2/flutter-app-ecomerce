@@ -188,6 +188,7 @@ import 'features/shop/data/repositories/shop_repository_impl.dart' as _i632;
 import 'features/shop/domain/repositories/shop_repository.dart' as _i683;
 import 'features/shop/domain/usecases/get_shop_statistics.dart' as _i164;
 import 'features/shop/presentation/bloc/shop_registration_bloc.dart' as _i92;
+import 'features/shop/presentation/bloc/shop_settings_cubit.dart' as _i1005;
 import 'features/shop/presentation/bloc/shop_statistics_cubit.dart' as _i419;
 import 'features/shop_video/data/datasources/shop_video_remote_datasource.dart'
     as _i861;
@@ -345,6 +346,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i588.AuthRemoteDataSource>(
       () => _i588.AuthRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.factory<_i1005.ShopSettingsCubit>(
+      () => _i1005.ShopSettingsCubit(gh<_i45.DioClient>()),
+    );
     gh.lazySingleton<_i176.OrderRemoteDataSource>(
       () => _i176.OrderRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
@@ -410,6 +414,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1043.BrandRemoteDataSource>(
       () => _i1043.BrandRemoteDataSourceImpl(gh<_i45.DioClient>()),
     );
+    gh.lazySingleton<_i608.OrderRepository>(
+      () => _i113.OrderRepositoryImpl(
+        gh<_i176.OrderRemoteDataSource>(),
+        gh<_i143.ProductRemoteDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i303.CartRepository>(
       () => _i302.CartRepositoryImpl(gh<_i987.CartRemoteDataSource>()),
     );
@@ -430,9 +440,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i803.UpdateAddressUseCase>(
       () => _i803.UpdateAddressUseCase(gh<_i535.AddressRepository>()),
-    );
-    gh.lazySingleton<_i608.OrderRepository>(
-      () => _i113.OrderRepositoryImpl(gh<_i176.OrderRemoteDataSource>(), gh<_i143.ProductRemoteDataSource>()),
     );
     gh.lazySingleton<_i5.CategoryRepository>(
       () => _i44.CategoryRepositoryImpl(gh<_i979.CategoryRemoteDataSource>()),

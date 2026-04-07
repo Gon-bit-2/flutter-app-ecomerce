@@ -23,21 +23,6 @@ abstract class AuthRemoteDataSource {
     required String confirmPassword,
     required String code,
   });
-  // Re-reading API_LIST... "Register" doesn't show response. "Login" shows response.
-  // "Register" -> usually simply creates user. But if we want to auto login, it might return token.
-  // Let's assume for now it returns void (success) or maybe TokenModel if backend supports it.
-  // Checking `login` response: `accessToken`, `refreshToken`.
-  // Checking `register` usually doesn't return token unless specified.
-  // Let's make it return `Future<void>` for now, or `Future<TokenModel>` if I want to be safe?
-  // User asked to "Follow docs". Docs don't say.
-  // Safest is `Future<dynamic>` or check standard.
-  // Let's look at `login` again.
-  // I will assume simple implementation: `Future<void>` for register unless user wants auto-login.
-  // However, looking at the code `AuthRepositoryImpl` references `register` returning `Either<Failure, UserEntity>`. So `RemoteDataSource` should probably return `UserModel` or `void`.
-  // Let's stick to `Future<void>` for register if the backend just says "Created". If it returns data, I can change.
-  // Actually, standard usually returns the created user. I'll define it as `Future<UserModel>` or `Future<void>`.
-  // Let's check `AuthRemoteDataSource::login` returns `TokenModel`.
-  // Let's check `AuthRepositoryImpl::register` which creates `UserEntity`. So `register` probably returns `UserModel`.
 
   Future<TokenModel> refreshToken(String refreshToken); // New
   Future<void> logout(String refreshToken); // New
