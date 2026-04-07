@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 
 abstract class OrderRemoteDataSource {
   Future<List<OrderModel>> getOrders({int? page, int? limit, String? status});
+  Future<List<OrderModel>> getSellerOrders({int? page, int? limit, String? status});
   Future<OrderModel> getOrderDetail(int id);
   Future<OrderCreationResultModel> createOrder({
     required List<ShopOrderParams> orders,
@@ -33,7 +34,28 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       if (status != null) 'status': status,
     };
     final response = await _dioClient.get(
-      AppConstants.ordersEndpoint,
+      AppConstants.buyerOrdersEndpoint,
+      queryParameters: queryParams,
+    );
+    final List<dynamic> data = response.data is List
+        ? response.data
+        : (response.data['data'] as List? ?? []);
+    return data.map((item) => OrderModel.fromJson(item)).toList();
+  }
+
+  @override
+  Future<List<OrderModel>> getSellerOrders({
+    int? page,
+    int? limit,
+    String? status,
+  }) async {
+    final queryParams = <String, dynamic>{
+      if (page != null) 'page': page,
+      if (limit != null) 'limit': limit,
+      if (status != null) 'status': status,
+    };
+    final response = await _dioClient.get(
+      AppConstants.sellerOrdersEndpoint,
       queryParameters: queryParams,
     );
     final List<dynamic> data = response.data is List

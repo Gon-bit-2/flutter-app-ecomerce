@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
+import 'package:app_fe_ecomerce/features/auth/presentation/bloc/auth/auth_bloc.dart';
 
 class SellerOrdersPage extends StatefulWidget {
   const SellerOrdersPage({super.key});
@@ -354,7 +355,7 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
             ),
 
             // Action buttons for seller
-            if (_canUpdateStatus(order.status)) ...[
+            if (_canUpdateStatus(order.status, order.shopId)) ...[
               const Divider(height: 1),
               Padding(
                 padding: EdgeInsets.all(8.w),
@@ -370,7 +371,15 @@ class _SellerOrdersPageState extends State<SellerOrdersPage>
     );
   }
 
-  bool _canUpdateStatus(String? status) {
+  bool _canUpdateStatus(String? status, int? shopId) {
+    // Admin có thể xem tất cả đơn, nhưng chỉ seller sở hữu đơn mới được cập nhật
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess) {
+      if (shopId != null && shopId != authState.user.id) {
+        return false;
+      }
+    }
+
     return status == 'UNPAID' ||
         status == 'READY_TO_SHIP' ||
         status == 'SHIPPED';

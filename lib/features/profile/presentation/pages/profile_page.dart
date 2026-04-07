@@ -16,6 +16,7 @@ import 'package:app_fe_ecomerce/features/discount/presentation/pages/voucher_wal
 import 'package:app_fe_ecomerce/features/discount/presentation/pages/seller_discount_list_page.dart';
 import 'package:app_fe_ecomerce/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:app_fe_ecomerce/features/shop/presentation/pages/register_shop_page.dart';
+import 'package:app_fe_ecomerce/features/chat/presentation/pages/chat_detail_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final UserEntity user;
@@ -539,7 +540,19 @@ class ProfilePage extends StatelessWidget {
               iconBgColor: const Color(0xFFECEFF1),
               title: 'Trung tâm trợ giúp',
               subtitle: 'Hỏi đáp và hướng dẫn sử dụng',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChatDetailPage(
+                      conversationId: 0,
+                      otherUserName: 'Trung tâm trợ giúp',
+                      otherUserAvatar: null,
+                      receiverId: 1, // ID của Admin
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

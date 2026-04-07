@@ -25,7 +25,7 @@ class SellerOrderBloc extends Bloc<SellerOrderEvent, SellerOrderState> {
       emit(SellerOrderLoading());
     }
 
-    final result = await _orderRepository.getOrders(
+    final result = await _orderRepository.getSellerOrders(
       page: event.page,
       limit: event.limit,
       status: event.status,
