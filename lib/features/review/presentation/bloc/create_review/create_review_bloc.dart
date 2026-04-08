@@ -37,7 +37,12 @@ class CreateReviewBloc extends Bloc<CreateReviewEvent, CreateReviewState> {
   }
 
   Future<void> _onSubmit(SubmitReviewEvent event, Emitter<CreateReviewState> emit) async {
-    if (state.content.trim().isEmpty) {
+    // Sử dụng data trực tiếp từ event thay vì state để tránh race condition
+    final content = event.content;
+    final rating = event.rating;
+    final mediaPaths = event.mediaPaths;
+
+    if (content.trim().isEmpty) {
       emit(state.copyWith(status: CreateReviewStatus.failure, errorMessage: 'Vui lòng nhập nội dung đánh giá'));
       return;
     }
@@ -48,7 +53,7 @@ class CreateReviewBloc extends Bloc<CreateReviewEvent, CreateReviewState> {
       List<Map<String, String>> uploadedMedias = [];
       
       // Upload từng ảnh/video từ path local
-      for (String path in state.mediaPaths) {
+      for (String path in mediaPaths) {
         final File file = File(path);
         final bool isVideo = path.toLowerCase().endsWith('.mp4') || path.toLowerCase().endsWith('.mov');
         final url = await remoteDataSource.uploadMedia(file);
@@ -59,8 +64,8 @@ class CreateReviewBloc extends Bloc<CreateReviewEvent, CreateReviewState> {
       }
 
       final payload = {
-        "content": state.content,
-        "rating": state.rating,
+        "content": content,
+        "rating": rating,
         "productId": event.productId,
         "orderId": event.orderId,
         "userId": event.userId,

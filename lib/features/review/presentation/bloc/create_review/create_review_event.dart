@@ -32,12 +32,18 @@ class SubmitReviewEvent extends CreateReviewEvent {
   final int productId;
   final int orderId;
   final int userId;
+  final String content;
+  final int rating;
+  final List<String> mediaPaths;
   const SubmitReviewEvent({
     required this.productId,
     required this.orderId,
     required this.userId,
+    required this.content,
+    required this.rating,
+    this.mediaPaths = const [],
   });
 
   @override
-  List<Object?> get props => [productId, orderId, userId];
+  List<Object?> get props => [productId, orderId, userId, content, rating, mediaPaths];
 }

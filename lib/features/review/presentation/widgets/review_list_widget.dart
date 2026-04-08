@@ -8,6 +8,7 @@ import '../bloc/review_list/review_list_bloc.dart';
 import '../bloc/create_review/create_review_bloc.dart';
 import '../../../auth/presentation/bloc/auth/auth_bloc.dart';
 import '../../../auth/presentation/pages/login_page.dart';
+import '../../domain/entities/review.dart';
 import 'create_review_bottom_sheet.dart';
 import 'package:app_fe_ecomerce/core/common/widgets/app_network_image.dart';
 
@@ -217,8 +218,11 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
     );
   }
 
-  Widget _buildReviewItem(dynamic review) {
-    // review is Review entity
+  Widget _buildReviewItem(Review review) {
+    final userName = review.user?.name ?? 'Người dùng ẩn danh';
+    final userAvatar = review.user?.avatar;
+    final hasAvatar = userAvatar != null && userAvatar.isNotEmpty;
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Column(
@@ -229,12 +233,10 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               CircleAvatar(
                 radius: 16.r,
                 backgroundColor: Colors.grey[300],
-                backgroundImage: review.userId != null
-                    ? const NetworkImage(
-                        'https://i.pravatar.cc/100',
-                      ) // Placeholder for user avatar
+                backgroundImage: hasAvatar
+                    ? NetworkImage(userAvatar)
                     : null,
-                child: review.userId == null
+                child: !hasAvatar
                     ? Icon(Icons.person, size: 20.sp, color: Colors.white)
                     : null,
               ),
@@ -244,7 +246,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "User ${review.userId}", // Replace with real username if available
+                      userName,
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
@@ -266,9 +268,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                 ),
               ),
               Text(
-                review.createdAt != null
-                    ? DateFormat('dd/MM/yyyy').format(review.createdAt!)
-                    : DateFormat('dd/MM/yyyy').format(DateTime.now()),
+                DateFormat('dd/MM/yyyy').format(review.createdAt),
                 style: TextStyle(fontSize: 12.sp, color: Colors.grey),
               ),
             ],
@@ -278,16 +278,16 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
             review.content ?? "",
             style: TextStyle(fontSize: 14.sp, height: 1.4),
           ),
-          if (review.mediaUrls != null && review.mediaUrls!.isNotEmpty) ...[
+          if (review.medias.isNotEmpty) ...[
             SizedBox(height: 8.h),
             SizedBox(
               height: 70.h,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: review.mediaUrls!.length,
+                itemCount: review.medias.length,
                 separatorBuilder: (context, _) => SizedBox(width: 8.w),
                 itemBuilder: (context, imgIndex) {
-                  final media = review.mediaUrls![imgIndex];
+                  final media = review.medias[imgIndex];
                   final url = media.url;
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(4.r),

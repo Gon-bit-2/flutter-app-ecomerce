@@ -89,14 +89,17 @@ class _CategoryViewState extends State<CategoryView> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(20.r),
         ),
-        title: Text('Xóa danh mục', style: AppTextStyles.h3),
+        title: Text('Xóa danh mục', style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w700)),
         content: Text(
           'Bạn có chắc chắn muốn xóa danh mục "$categoryName"?\n\nHành động này không thể hoàn tác.',
           style: AppTextStyles.bodyLarge,
         ),
+        actionsPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -104,6 +107,7 @@ class _CategoryViewState extends State<CategoryView> {
               'Hủy',
               style: AppTextStyles.bodyLarge.copyWith(
                 color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -115,11 +119,13 @@ class _CategoryViewState extends State<CategoryView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(12.r),
               ),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
             ),
-            child: const Text('Xóa'),
+            child: const Text('Xóa', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -129,27 +135,34 @@ class _CategoryViewState extends State<CategoryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.inputBackground,
+      backgroundColor: Colors.grey.shade50, // Sạch sẽ và hiện đại hơn
       appBar: AppBar(
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.title ?? (widget.isAdmin ? 'Quản lý danh mục' : 'Danh mục'),
-          style: AppTextStyles.h3.copyWith(color: Colors.white),
+          style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.border.withOpacity(0.3), height: 1),
+        ),
       ),
       floatingActionButton: widget.isAdmin
           ? FloatingActionButton.extended(
               onPressed: _navigateToAdd,
               backgroundColor: AppColors.primaryBlue,
               foregroundColor: Colors.white,
-              icon: const Icon(Icons.add),
-              label: const Text('Thêm'),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Thêm danh mục', style: TextStyle(fontWeight: FontWeight.w600)),
+              elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.r),
               ),
@@ -162,6 +175,8 @@ class _CategoryViewState extends State<CategoryView> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
               ),
             );
           }
@@ -170,22 +185,21 @@ class _CategoryViewState extends State<CategoryView> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                 duration: const Duration(seconds: 1),
               ),
             );
-            // Reload danh sách sau thao tác CRUD
             _loadCategories();
           }
         },
         builder: (context, state) {
-          // Đang tải
           if (state is CategoryLoading) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.primaryBlue),
             );
           }
 
-          // Tải thành công
           if (state is CategoryLoaded) {
             final categories = state.categories;
 
@@ -196,13 +210,14 @@ class _CategoryViewState extends State<CategoryView> {
             return RefreshIndicator(
               onRefresh: () async => _loadCategories(),
               color: AppColors.primaryBlue,
+              backgroundColor: Colors.white,
               child: GridView.builder(
-                padding: EdgeInsets.fromLTRB(16.w, 16.w, 16.w, 80.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h).copyWith(bottom: 100.h),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 12.w,
-                  mainAxisSpacing: 12.h,
-                  childAspectRatio: widget.isAdmin ? 0.7 : 0.8,
+                  crossAxisCount: 3, // Giảm xuống 3 cột để thẻ to và rõ ràng hơn
+                  crossAxisSpacing: 16.w,
+                  mainAxisSpacing: 16.h,
+                  childAspectRatio: widget.isAdmin ? 0.75 : 0.85,
                 ),
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
@@ -211,7 +226,6 @@ class _CategoryViewState extends State<CategoryView> {
                     category: category,
                     isAdmin: widget.isAdmin,
                     onTap: () {
-                      // Điều hướng vào xem danh mục con
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -234,7 +248,6 @@ class _CategoryViewState extends State<CategoryView> {
             );
           }
 
-          // Mặc định: Trạng thái ban đầu
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primaryBlue),
           );
@@ -243,38 +256,46 @@ class _CategoryViewState extends State<CategoryView> {
     );
   }
 
-  // Widget danh mục trống
   Widget _buildEmpty() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.category_outlined, size: 80.sp, color: AppColors.border),
-          SizedBox(height: 16.h),
+          Container(
+            padding: EdgeInsets.all(24.w),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.category_rounded, size: 64.sp, color: AppColors.primaryBlue.withOpacity(0.5)),
+          ),
+          SizedBox(height: 24.h),
           Text(
             'Chưa có danh mục nào',
-            style: AppTextStyles.h3.copyWith(color: AppColors.textSecondary),
+            style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8.h),
           Text(
             widget.isAdmin
-                ? 'Nhấn nút "+" để thêm danh mục mới'
+                ? 'Nhấn nút "+" ở góc dưới để thêm danh mục mới'
                 : 'Danh mục sẽ được hiển thị tại đây',
-            style: AppTextStyles.bodyMedium,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
           ),
           if (widget.isAdmin) ...[
-            SizedBox(height: 24.h),
+            SizedBox(height: 32.h),
             ElevatedButton.icon(
               onPressed: _navigateToAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('Thêm danh mục đầu tiên'),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Thêm danh mục đầu tiên', style: TextStyle(fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
               ),
             ),
           ],

@@ -57,12 +57,6 @@ class _CreateReviewBottomSheetState extends State<CreateReviewBottomSheet> {
       return;
     }
 
-    context.read<CreateReviewBloc>().add(FormRatingChanged(_rating));
-    context.read<CreateReviewBloc>().add(FormContentChanged(content));
-    context.read<CreateReviewBloc>().add(
-      FormMediasChanged(_selectedImages.map((e) => e.path).toList()),
-    );
-
     if (widget.orderId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -90,6 +84,9 @@ class _CreateReviewBottomSheetState extends State<CreateReviewBottomSheet> {
         productId: widget.productId,
         orderId: widget.orderId!,
         userId: authState.user.id,
+        content: content,
+        rating: _rating,
+        mediaPaths: _selectedImages.map((e) => e.path).toList(),
       ),
     );
   }

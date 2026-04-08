@@ -309,24 +309,51 @@ class OrderCardWidget extends StatelessWidget {
                         child: const Text('Đã nhận được hàng', style: TextStyle(color: Colors.white)),
                       ),
                     // Nút đánh giá cho đơn đã giao thành công
-                    if (order.status == 'COMPLETED')
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => OrderDetailPage(orderId: order.id),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber.shade600,
-                          minimumSize: Size(100.w, 36.h),
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    if (order.status == 'COMPLETED') ...[
+                      // Kiểm tra tất cả items đã được đánh giá chưa
+                      if (order.items != null && order.items!.every((item) => item.isReviewed))
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle_outline, size: 16.sp, color: Colors.green.shade700),
+                              SizedBox(width: 4.w),
+                              Text(
+                                'Đã đánh giá',
+                                style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => OrderDetailPage(orderId: order.id),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber.shade600,
+                            minimumSize: Size(100.w, 36.h),
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          ),
+                          icon: const Icon(Icons.star_border, color: Colors.white, size: 16),
+                          label: const Text('Đánh giá', style: TextStyle(color: Colors.white)),
                         ),
-                        icon: const Icon(Icons.star_border, color: Colors.white, size: 16),
-                        label: const Text('Đánh giá', style: TextStyle(color: Colors.white)),
-                      ),
+                    ],
                   ],
                 ),
               ),

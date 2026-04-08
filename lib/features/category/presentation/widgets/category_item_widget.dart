@@ -28,116 +28,63 @@ class CategoryItemWidget extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: AppColors.primaryBlue.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
             ),
           ],
+          border: Border.all(color: AppColors.border.withOpacity(0.5), width: 1),
         ),
         child: Stack(
           children: [
-            // Nội dung chính
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 6.w),
+              padding: EdgeInsets.all(12.w),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo danh mục (Ưu tiên Icon thông minh nếu ảnh là placeholder)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: _shouldShowPlaceholder(category.logo)
-                        ? _buildPlaceholderIcon()
-                        : AppNetworkImage(
-                            imageUrl: category.logo!,
-                            width: 60.w,
-                            height: 60.w,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  SizedBox(height: 10.h),
-
-                  // Tên danh mục (Cố định chiều cao hoặc dùng Expanded để cân đối hàng ngang)
                   Expanded(
+                    flex: 3,
                     child: Center(
-                      child: Text(
-                        category.name,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          fontSize: 11.5.sp,
-                          height: 1.2,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14.r),
+                        child: _shouldShowPlaceholder(category.logo)
+                            ? _buildPlaceholderIcon()
+                            : AppNetworkImage(
+                                imageUrl: category.logo!,
+                                width: 64.w,
+                                height: 64.w,
+                                fit: BoxFit.cover,
+                              ),
                       ),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      category.name,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        fontSize: 12.sp,
+                        height: 1.3,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Menu admin (sửa/xóa) — chỉ hiện khi isAdmin = true
             if (isAdmin)
               Positioned(
-                top: 2,
-                right: 2,
-                child: PopupMenuButton<String>(
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(minWidth: 120.w),
-                  icon: Icon(
-                    Icons.more_vert,
-                    size: 18.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      onEdit?.call();
-                    } else if (value == 'delete') {
-                      onDelete?.call();
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 18.sp,
-                            color: AppColors.primaryBlue,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text('Sửa', style: AppTextStyles.bodyMedium),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete_outlined,
-                            size: 18.sp,
-                            color: AppColors.error,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Xóa',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.error,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                top: 6.w,
+                right: 6.w,
+                child: _buildAdminMenu(),
               ),
           ],
         ),
@@ -145,10 +92,58 @@ class CategoryItemWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildAdminMenu() {
+    return Container(
+      width: 28.w,
+      height: 28.w,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: PopupMenuButton<String>(
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.more_horiz, size: 16.sp, color: AppColors.textSecondary),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        onSelected: (value) {
+          if (value == 'edit') onEdit?.call();
+          if (value == 'delete') onDelete?.call();
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'edit',
+            child: Row(
+              children: [
+                Icon(Icons.edit_rounded, size: 18.sp, color: AppColors.primaryBlue),
+                SizedBox(width: 8.w),
+                Text('Chỉnh sửa', style: AppTextStyles.bodyMedium),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_rounded, size: 18.sp, color: AppColors.error),
+                SizedBox(width: 8.w),
+                Text('Xóa', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPlaceholderIcon() {
     IconData iconData = _getCategoryIcon(category.name);
 
-    // Tạo màu sắc dựa trên hash code của tên danh mục để mỗi loại có một màu riêng biệt
     final colorIndex = category.name.hashCode % 5;
     final List<Color> bgColors = [
       Colors.blue.shade50,
@@ -166,11 +161,11 @@ class CategoryItemWidget extends StatelessWidget {
     ];
 
     return Container(
-      width: 60.w,
-      height: 60.w,
+      width: 64.w,
+      height: 64.w,
       decoration: BoxDecoration(
         color: bgColors[colorIndex],
-        borderRadius: BorderRadius.circular(16.r), // Bo tròn hơn cho hiện đại
+        borderRadius: BorderRadius.circular(14.r), 
       ),
       child: Icon(
         iconData,
@@ -196,7 +191,7 @@ class CategoryItemWidget extends StatelessWidget {
         lowerName.contains('fashion')) {
       return Icons.checkroom_rounded;
     } else if (lowerName.contains('giày') || lowerName.contains('shoes')) {
-      return Icons.snowshoeing_rounded; // Icon giống hình đôi giày hơn
+      return Icons.snowshoeing_rounded;
     } else if (lowerName.contains('túi') || lowerName.contains('bag')) {
       return Icons.shopping_bag_rounded;
     } else if (lowerName.contains('công nghệ') ||
@@ -241,7 +236,6 @@ class CategoryItemWidget extends StatelessWidget {
   bool _shouldShowPlaceholder(String? logo) {
     if (logo == null || logo.isEmpty) return true;
     final lowerLogo = logo.toLowerCase();
-    // Danh sách các URL placeholder phổ biến cần bỏ qua để hiện Icon thông minh
     return lowerLogo.contains('picsum.photos') ||
         lowerLogo.contains('via.placeholder') ||
         lowerLogo.contains('example.com') ||

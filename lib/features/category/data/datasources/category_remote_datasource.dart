@@ -65,11 +65,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   }) async {
     final response = await _dioClient.post(
       AppConstants.categoriesEndpoint,
-      data: {
-        'name': name,
-        'logo': logo,
-        'parent_category_id': parentCategoryId,
-      },
+      data: {'name': name, 'logo': logo, 'parentCategoryId': parentCategoryId},
     );
     return CategoryModel.fromJson(response.data);
   }
@@ -83,11 +79,7 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
   }) async {
     final response = await _dioClient.put(
       '${AppConstants.categoriesEndpoint}/$id',
-      data: {
-        'name': name,
-        'logo': logo,
-        'parent_category_id': parentCategoryId,
-      },
+      data: {'name': name, 'logo': logo, 'parentCategoryId': parentCategoryId},
     );
     return CategoryModel.fromJson(response.data);
   }
